@@ -4,67 +4,174 @@
     <meta charset="UTF-8">
     <title>Fiche technique — {{ recipe.name }}</title>
     <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { font-family: 'Helvetica Neue', Arial, sans-serif; font-size: 10pt; color: #333; line-height: 1.4; }
+        body {
+            font-family: Arial, Helvetica, sans-serif;
+            font-size: 10pt;
+            color: #333;
+            margin: 0;
+            padding: 0;
+        }
 
-        .header { border-bottom: 2px solid #1c2434; padding-bottom: 12px; margin-bottom: 20px; }
-        .header h1 { font-size: 20pt; font-weight: 700; color: #1c2434; margin-bottom: 2px; }
-        .header .subtitle { font-size: 11pt; color: #666; }
-        .header .company { font-size: 9pt; color: #999; text-align: right; float: right; margin-top: -30px; }
+        /* ===== EN-TÊTE ===== */
+        .header-table {
+            width: 100%;
+            border-bottom: 3px solid #1c2434;
+            padding-bottom: 10px;
+            margin-bottom: 18px;
+        }
+        .header-table td { vertical-align: bottom; padding: 0; }
+        .header-title { font-size: 22pt; font-weight: bold; color: #1c2434; letter-spacing: 1px; }
+        .header-subtitle { font-size: 11pt; color: #555; margin-top: 4px; }
+        .header-company { font-size: 9pt; color: #999; text-align: right; }
 
-        .meta { display: flex; gap: 30px; margin-bottom: 20px; padding: 10px 14px; background: #f8fafc; border-radius: 6px; border: 1px solid #e2e8f0; }
-        .meta div { font-size: 9pt; }
-        .meta strong { color: #1c2434; }
+        /* ===== MÉTA ===== */
+        .meta-table {
+            width: 100%;
+            margin-bottom: 18px;
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 4px;
+        }
+        .meta-table td {
+            padding: 8px 14px;
+            font-size: 9pt;
+            color: #555;
+        }
+        .meta-table strong { color: #1c2434; }
 
-        .kpi-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 20px; }
-        .kpi { padding: 10px 14px; border: 1px solid #e2e8f0; border-radius: 6px; background: white; }
-        .kpi .label { font-size: 8pt; text-transform: uppercase; letter-spacing: 0.5px; color: #94a3b8; font-weight: 600; }
-        .kpi .value { font-size: 14pt; font-weight: 700; color: #1c2434; margin-top: 2px; }
-        .kpi .value.blue { color: #2563eb; }
-        .kpi .value.green { color: #059669; }
+        /* ===== KPI ===== */
+        .kpi-table {
+            width: 100%;
+            margin-bottom: 18px;
+            border-spacing: 8px;
+            border-collapse: separate;
+        }
+        .kpi-cell {
+            border: 1px solid #e2e8f0;
+            border-radius: 4px;
+            padding: 8px 12px;
+            background: #fff;
+            width: 33.33%;
+        }
+        .kpi-label {
+            font-size: 7pt;
+            text-transform: uppercase;
+            letter-spacing: 0.8px;
+            color: #94a3b8;
+            font-weight: bold;
+        }
+        .kpi-value {
+            font-size: 15pt;
+            font-weight: bold;
+            color: #1c2434;
+            margin-top: 2px;
+        }
+        .kpi-blue { color: #2563eb; }
+        .kpi-green { color: #059669; }
 
-        h2 { font-size: 12pt; font-weight: 700; color: #1c2434; margin-bottom: 10px; padding-bottom: 4px; border-bottom: 1px solid #e2e8f0; }
-
-        table { width: 100%; border-collapse: collapse; margin-bottom: 20px; }
-        th { font-size: 8pt; text-transform: uppercase; letter-spacing: 0.5px; color: #64748b; font-weight: 600; padding: 8px 10px; border-bottom: 2px solid #1c2434; text-align: left; }
-        td { padding: 7px 10px; border-bottom: 1px solid #e2e8f0; font-size: 9.5pt; }
-        .tr { text-align: right; }
-        .tc { text-align: center; }
-        tr:last-child td { border-bottom: none; }
+        /* ===== COMPOSITION ===== */
+        h2 {
+            font-size: 13pt;
+            font-weight: bold;
+            color: #1c2434;
+            margin-bottom: 8px;
+            padding-bottom: 5px;
+            border-bottom: 1px solid #e2e8f0;
+        }
+        .comp-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 18px;
+        }
+        .comp-table th {
+            font-size: 7.5pt;
+            text-transform: uppercase;
+            letter-spacing: 0.8px;
+            color: #64748b;
+            font-weight: bold;
+            padding: 8px 10px;
+            border-bottom: 2px solid #1c2434;
+            text-align: left;
+        }
+        .comp-table th.r { text-align: right; }
+        .comp-table th.c { text-align: center; }
+        .comp-table td {
+            padding: 6px 10px;
+            border-bottom: 1px solid #e9ecef;
+            font-size: 9.5pt;
+        }
+        .comp-table td.r { text-align: right; }
+        .comp-table td.c { text-align: center; }
+        .comp-table td.bold { font-weight: bold; }
         .sub-recipe { color: #2563eb; font-style: italic; }
-
-        .totals { border-top: 2px solid #1c2434; padding-top: 12px; margin-top: 8px; }
-        .total-row { display: flex; justify-content: space-between; padding: 3px 0; font-size: 10pt; }
-        .total-row.big { font-size: 12pt; font-weight: 700; border-top: 1px solid #cbd5e1; padding-top: 8px; margin-top: 6px; }
-        .total-row.highlight { color: #059669; font-weight: 700; }
-
         .note { font-size: 8pt; color: #b45309; font-style: italic; }
-        .footer { margin-top: 30px; padding-top: 10px; border-top: 1px solid #e2e8f0; font-size: 8pt; color: #94a3b8; text-align: center; }
+
+        /* ===== TOTAUX ===== */
+        .totals-table {
+            width: 100%;
+            border-top: 3px solid #1c2434;
+            padding-top: 10px;
+            margin-bottom: 18px;
+        }
+        .totals-table td {
+            padding: 3px 0;
+            font-size: 10pt;
+        }
+        .totals-table td.r { text-align: right; }
+        .totals-table tr.big td {
+            font-size: 13pt;
+            font-weight: bold;
+            padding-top: 8px;
+            border-top: 1px solid #cbd5e1;
+        }
+
+        /* ===== PIED ===== */
+        .footer {
+            margin-top: 25px;
+            padding-top: 8px;
+            border-top: 1px solid #e2e8f0;
+            font-size: 8pt;
+            color: #94a3b8;
+            text-align: center;
+        }
     </style>
 </head>
 <body>
-    <div class="header">
-        <div class="company">Pierrick Bougerolle<br>Charcutier-Traiteur</div>
-        <h1>FICHE TECHNIQUE</h1>
-        <div class="subtitle">{{ recipe.name }} — {{ recipe.family }}</div>
-    </div>
 
-    <div class="meta">
-        <div>Sortie cible : <strong>{{ totals.output_target }} {{ recipe.outputUnitLabel }}</strong></div>
-        <div>Perte : <strong>{{ recipe.lossPercent|number_format(1) }}%</strong></div>
-        <div>Rendement : <strong>{{ recipe.yieldPercent|number_format(1) }}%</strong></div>
-        <div>Sortie effective : <strong>{{ totals.output_effective }} {{ recipe.outputUnitLabel }}</strong></div>
-    </div>
+    <!-- EN-TÊTE -->
+    <table class="header-table">
+        <tr>
+            <td>
+                <div class="header-title">FICHE TECHNIQUE</div>
+                <div class="header-subtitle">{{ recipe.name }} — {{ recipe.family }}</div>
+            </td>
+            <td class="header-company">
+                Pierrick Bougerolle<br>
+                Charcutier-Traiteur
+            </td>
+        </tr>
+    </table>
 
+    <!-- MÉTA -->
+    <table class="meta-table">
+        <tr>
+            <td>Sortie cible : <strong>{{ totals.output_target }} {{ recipe.outputUnitLabel }}</strong></td>
+            <td>Perte : <strong>{{ recipe.lossPercent|number_format(1) }}%</strong></td>
+            <td>Rendement : <strong>{{ recipe.yieldPercent|number_format(1) }}%</strong></td>
+            <td>Sortie effective : <strong>{{ totals.output_effective }} {{ recipe.outputUnitLabel }}</strong></td>
+        </tr>
+    </table>
+
+    <!-- COMPOSITION -->
     <h2>Composition</h2>
-    <table>
+    <table class="comp-table">
         <thead>
             <tr>
                 <th>Élément</th>
-                <th class="tc">Qté brute</th>
-                <th class="tc">Unité</th>
-                <th class="tr">P.U. HT</th>
-                <th class="tr">Coût HT</th>
+                <th class="c" style="width: 80px;">Qté brute</th>
+                <th class="c" style="width: 60px;">Unité</th>
+                <th class="r" style="width: 90px;">P.U. HT</th>
+                <th class="r" style="width: 90px;">Coût HT</th>
             </tr>
         </thead>
         <tbody>
@@ -78,33 +185,71 @@
                     {% endif %}
                     {% if l.note %}<br><span class="note">→ {{ l.note }}</span>{% endif %}
                 </td>
-                <td class="tc">{{ l.qty_brute }}</td>
-                <td class="tc">{{ l.unit }}</td>
-                <td class="tr">{{ l.price_ht_per_base_unit|number_format(2, ',', ' ') }} €</td>
-                <td class="tr" style="font-weight: 600">{{ l.line_cost_ht|number_format(2, ',', ' ') }} €</td>
+                <td class="c">{{ l.qty_brute }}</td>
+                <td class="c">{{ l.unit }}</td>
+                <td class="r">{{ l.price_ht_per_base_unit|number_format(2, ',', ' ') }} €</td>
+                <td class="r bold">{{ l.line_cost_ht|number_format(2, ',', ' ') }} €</td>
             </tr>
             {% endfor %}
         </tbody>
     </table>
 
-    <div class="totals">
-        <div class="total-row"><span>Coût matière HT</span><span>{{ totals.material_cost_ht|number_format(2, ',', ' ') }} €</span></div>
-        <div class="total-row"><span>Main d'œuvre HT</span><span>{{ totals.labor_cost_ht|number_format(2, ',', ' ') }} €</span></div>
-        <div class="total-row"><span>Emballage HT</span><span>{{ totals.packaging_cost_ht|number_format(2, ',', ' ') }} €</span></div>
-        <div class="total-row big"><span>Coût total HT</span><span>{{ totals.total_cost_ht|number_format(2, ',', ' ') }} €</span></div>
-    </div>
+    <!-- TOTAUX -->
+    <table class="totals-table">
+        <tr>
+            <td>Coût matière HT</td>
+            <td class="r">{{ totals.material_cost_ht|number_format(2, ',', ' ') }} €</td>
+        </tr>
+        <tr>
+            <td>Main d'œuvre HT</td>
+            <td class="r">{{ totals.labor_cost_ht|number_format(2, ',', ' ') }} €</td>
+        </tr>
+        <tr>
+            <td>Emballage HT</td>
+            <td class="r">{{ totals.packaging_cost_ht|number_format(2, ',', ' ') }} €</td>
+        </tr>
+        <tr class="big">
+            <td>Coût total HT</td>
+            <td class="r">{{ totals.total_cost_ht|number_format(2, ',', ' ') }} €</td>
+        </tr>
+    </table>
 
-    <div class="kpi-grid" style="margin-top: 20px">
-        <div class="kpi"><div class="label">Coût / {{ recipe.outputUnitLabel }} HT</div><div class="value blue">{{ totals.cost_per_output_ht|number_format(2, ',', ' ') }} €</div></div>
-        <div class="kpi"><div class="label">Prix conseillé / {{ recipe.outputUnitLabel }} HT</div><div class="value">{{ totals.advised_sell_ht|number_format(2, ',', ' ') }} €</div></div>
-        <div class="kpi"><div class="label">Prix conseillé / {{ recipe.outputUnitLabel }} TTC</div><div class="value blue">{{ totals.advised_sell_ttc|number_format(2, ',', ' ') }} €</div></div>
-        <div class="kpi"><div class="label">Marge HT</div><div class="value green">{{ totals.margin_ht|number_format(2, ',', ' ') }} €</div></div>
-        <div class="kpi"><div class="label">Taux de marge</div><div class="value green">{{ totals.margin_percent|number_format(1) }} %</div></div>
-        <div class="kpi"><div class="label">TVA produit</div><div class="value">{{ recipe.productVatRate|number_format(1) }} %</div></div>
-    </div>
+    <!-- KPI -->
+    <table class="kpi-table">
+        <tr>
+            <td class="kpi-cell">
+                <div class="kpi-label">Coût / {{ recipe.outputUnitLabel }} HT</div>
+                <div class="kpi-value kpi-blue">{{ totals.cost_per_output_ht|number_format(2, ',', ' ') }} €</div>
+            </td>
+            <td class="kpi-cell">
+                <div class="kpi-label">Prix conseillé / {{ recipe.outputUnitLabel }} HT</div>
+                <div class="kpi-value">{{ totals.advised_sell_ht|number_format(2, ',', ' ') }} €</div>
+            </td>
+            <td class="kpi-cell">
+                <div class="kpi-label">Prix conseillé / {{ recipe.outputUnitLabel }} TTC</div>
+                <div class="kpi-value kpi-blue">{{ totals.advised_sell_ttc|number_format(2, ',', ' ') }} €</div>
+            </td>
+        </tr>
+        <tr>
+            <td class="kpi-cell">
+                <div class="kpi-label">Marge HT</div>
+                <div class="kpi-value kpi-green">{{ totals.margin_ht|number_format(2, ',', ' ') }} €</div>
+            </td>
+            <td class="kpi-cell">
+                <div class="kpi-label">Taux de marge</div>
+                <div class="kpi-value kpi-green">{{ totals.margin_percent|number_format(1) }} %</div>
+            </td>
+            <td class="kpi-cell">
+                <div class="kpi-label">TVA produit</div>
+                <div class="kpi-value">{{ recipe.productVatRate|number_format(1) }} %</div>
+            </td>
+        </tr>
+    </table>
 
+    <!-- PIED -->
     <div class="footer">
         Généré le {{ 'now'|date('d/m/Y à H:i') }} — Pierrick Bougerolle, Charcutier-Traiteur
     </div>
+
 </body>
 </html>

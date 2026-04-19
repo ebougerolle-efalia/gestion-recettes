@@ -12,7 +12,33 @@ if [ "$EUID" -ne 0 ]; then echo "Ce script doit être lancé avec sudo."; exit 1
 
 log "Installation des paquets…"
 apt update
-apt install -y php8.3-cli php8.3-fpm php8.3-sqlite3 php8.3-xml php8.3-intl php8.3-mbstring php8.3-curl nginx git unzip curl
+apt install -y software-properties-common curl git unzip nginx
+
+# Ajouter le PPA PHP (Ondřej Surý) si pas déjà présent
+if ! ls /etc/apt/sources.list.d/*ondrej* &>/dev/null && ! ls /etc/apt/sources.list.d/*sury* &>/dev/null; then
+    log "Ajout du dépôt PHP (ondrej/php)…"
+    add-apt-repository -y ppa:ondrej/php 2>/dev/null || {
+        # Debian (pas Ubuntu) : utiliser sury.org
+        curl -sSL https://packages.sury.org/php/README.txt | bash -x
+    }
+    apt update
+fi
+
+# Détecter la meilleure version PHP disponible (8.4 > 8.3 > 8.2 > 8.1)
+PHP_V=""
+for v in 8.4 8.3 8.2 8.1; do
+    if apt-cache show php${v}-cli &>/dev/null 2>&1; then
+        PHP_V=$v
+        break
+    fi
+done
+if [ -z "$PHP_V" ]; then
+    echo "[ERROR] Aucune version PHP 8.x trouvée dans les dépôts."
+    exit 1
+fi
+log "PHP $PHP_V détecté."
+
+apt install -y php${PHP_V}-cli php${PHP_V}-fpm php${PHP_V}-sqlite3 php${PHP_V}-xml php${PHP_V}-intl php${PHP_V}-mbstring php${PHP_V}-curl
 
 # --- Docker + Gotenberg -------------------------------------------------------
 if ! command -v docker &>/dev/null; then
@@ -81,7 +107,7 @@ server {
     }
 
     location ~ ^/index\\.php(/|$) {
-        fastcgi_pass unix:/run/php/php8.3-fpm.sock;
+        fastcgi_pass unix:/run/php/php${PHP_V}-fpm.sock;
         fastcgi_param SCRIPT_FILENAME \$realpath_root\$fastcgi_script_name;
         include fastcgi_params;
         fastcgi_buffer_size 128k;

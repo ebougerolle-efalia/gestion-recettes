@@ -261,9 +261,10 @@ class RecipeController extends AbstractController
                 'lines' => $computed['lines'],
                 'totals' => $computed['totals'],
             ])
-            ->paperSize(210, 297) // A4 en mm
-            ->margins(15, 15, 15, 15)
+            ->paperSize(8.27, 11.69)       // A4 en pouces
+            ->margins(0.59, 0.59, 0.59, 0.59) // ~15mm en pouces
             ->printBackground(true)
+            ->preferCssPageSize(false)
             ->fileName('fiche-recette-' . $computed['recipe']->getId() . '.pdf')
             ->generate()
             ->stream();
@@ -282,9 +283,10 @@ class RecipeController extends AbstractController
                 'lines' => $computed['lines'],
                 'totals' => $computed['totals'],
             ])
-            ->paperSize(210, 297)
-            ->margins(15, 15, 15, 15)
+            ->paperSize(8.27, 11.69)
+            ->margins(0.59, 0.59, 0.59, 0.59)
             ->printBackground(true)
+            ->preferCssPageSize(false)
             ->fileName('fiche-labo-' . $computed['recipe']->getId() . '.pdf')
             ->generate()
             ->stream();
