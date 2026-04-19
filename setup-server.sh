@@ -12,17 +12,7 @@ if [ "$EUID" -ne 0 ]; then echo "Ce script doit être lancé avec sudo."; exit 1
 
 log "Installation des paquets…"
 apt update
-apt install -y software-properties-common curl git unzip nginx
-
-# Ajouter le PPA PHP (Ondřej Surý) si pas déjà présent
-if ! ls /etc/apt/sources.list.d/*ondrej* &>/dev/null && ! ls /etc/apt/sources.list.d/*sury* &>/dev/null; then
-    log "Ajout du dépôt PHP (ondrej/php)…"
-    add-apt-repository -y ppa:ondrej/php 2>/dev/null || {
-        # Debian (pas Ubuntu) : utiliser sury.org
-        curl -sSL https://packages.sury.org/php/README.txt | bash -x
-    }
-    apt update
-fi
+apt install -y curl git unzip nginx
 
 # Détecter la meilleure version PHP disponible (8.4 > 8.3 > 8.2 > 8.1)
 PHP_V=""
