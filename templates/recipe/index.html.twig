@@ -1,0 +1,139 @@
+{% extends 'base.html.twig' %}
+{% block title %}Recettes{% endblock %}
+{% block page_title %}Recettes <span class="ml-2 text-sm font-normal text-gray-400">({{ recipes|length }})</span>{% endblock %}
+{% block page_actions %}
+{% if is_granted('ROLE_EDITOR') %}
+<button onclick="document.getElementById('createModal').classList.remove('hidden');document.getElementById('createModal').classList.add('flex')" class="inline-flex items-center gap-2 rounded-lg bg-blue-500 hover:bg-blue-600 px-4 py-2.5 text-sm font-medium text-white transition-colors"><i class="fas fa-plus text-[11px]"></i> Nouvelle recette</button>
+{% endif %}
+{% endblock %}
+
+{% block body %}
+{# KPI #}
+{% set totalRecipes = recipes|length %}
+{% set avgMargin = 0 %}{% set countWithCache = 0 %}
+{% for r in recipes %}{% if r.costCache %}{% set avgMargin = avgMargin + r.costCache.marginPercent %}{% set countWithCache = countWithCache + 1 %}{% endif %}{% endfor %}
+
+<div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+    <div class="rounded-2xl border border-gray-200 bg-white px-5 py-4">
+        <p class="text-[11px] font-semibold uppercase tracking-wider text-gray-400">Recettes</p>
+        <p class="text-2xl font-bold text-[#1c2434] mt-1">{{ totalRecipes }}</p>
+    </div>
+    <div class="rounded-2xl border border-gray-200 bg-white px-5 py-4">
+        <p class="text-[11px] font-semibold uppercase tracking-wider text-gray-400">Familles</p>
+        <p class="text-2xl font-bold text-[#1c2434] mt-1">{{ families|length }}</p>
+    </div>
+    <div class="rounded-2xl border border-gray-200 bg-white px-5 py-4">
+        <p class="text-[11px] font-semibold uppercase tracking-wider text-gray-400">Avec coût calculé</p>
+        <p class="text-2xl font-bold text-blue-600 mt-1">{{ countWithCache }}</p>
+    </div>
+    <div class="rounded-2xl border border-gray-200 bg-white px-5 py-4">
+        <p class="text-[11px] font-semibold uppercase tracking-wider text-gray-400">Marge moyenne</p>
+        <p class="text-2xl font-bold text-emerald-600 mt-1">{{ countWithCache > 0 ? (avgMargin / countWithCache)|number_format(1) : '—' }} %</p>
+    </div>
+</div>
+
+{# Table #}
+<div class="rounded-2xl border border-gray-200 bg-white">
+    <div class="px-5 py-4 border-b border-gray-100 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+        <div class="flex items-center gap-3">
+            <label class="text-sm text-gray-500">Afficher</label>
+            <select id="perPage" class="rounded-lg border border-gray-200 px-3 py-1.5 text-sm bg-white outline-none focus:border-blue-400">
+                <option value="10" selected>10</option><option value="25">25</option><option value="50">50</option>
+            </select>
+        </div>
+        <div class="relative">
+            <input type="text" id="searchInput" placeholder="Rechercher…" class="w-60 pl-9 pr-3 py-2 rounded-lg border border-gray-200 text-sm outline-none focus:border-blue-400 bg-gray-50 placeholder-gray-400">
+            <i class="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-xs"></i>
+        </div>
+    </div>
+
+    <div class="overflow-x-auto">
+        <table class="w-full text-sm">
+            <thead><tr class="border-b border-gray-100">
+                <th class="py-3 px-5 text-left text-xs font-medium uppercase tracking-wider text-gray-400">Nom</th>
+                <th class="py-3 px-3 text-left text-xs font-medium uppercase tracking-wider text-gray-400">Famille</th>
+                <th class="py-3 px-3 text-center text-xs font-medium uppercase tracking-wider text-gray-400">Sortie</th>
+                <th class="py-3 px-3 text-right text-xs font-medium uppercase tracking-wider text-gray-400">Coût/u HT</th>
+                <th class="py-3 px-3 text-right text-xs font-medium uppercase tracking-wider text-gray-400">PV TTC</th>
+                <th class="py-3 px-3 text-right text-xs font-medium uppercase tracking-wider text-gray-400">Marge</th>
+                <th class="py-3 px-5 text-center text-xs font-medium uppercase tracking-wider text-gray-400" style="min-width:80px">Actions</th>
+            </tr></thead>
+            <tbody class="divide-y divide-gray-50">
+                {% for r in recipes %}
+                <tr class="dt-row hover:bg-gray-50/50 transition-colors" data-search="{{ r.name|lower }} {{ r.family|lower }}">
+                    <td class="py-3 px-5">
+                        <a href="{{ path('app_recipe_show', {id: r.id}) }}" class="font-medium text-blue-600 hover:text-blue-800">{{ r.name }}</a>
+                    </td>
+                    <td class="py-3 px-3"><span class="inline-flex items-center rounded-full bg-gray-100 px-2.5 py-0.5 text-[11px] font-medium text-gray-600">{{ r.family }}</span></td>
+                    <td class="py-3 px-3 text-center text-gray-600">{{ r.outputValue }} {{ r.outputUnitLabel }}</td>
+                    <td class="py-3 px-3 text-right font-semibold text-gray-700">{{ r.costCache ? r.costCache.costPerOutputHt|number_format(2, ',', ' ') ~ ' €' : '—' }}</td>
+                    <td class="py-3 px-3 text-right font-semibold text-blue-600">{{ r.costCache ? r.costCache.advisedSellTtc|number_format(2, ',', ' ') ~ ' €' : '—' }}</td>
+                    <td class="py-3 px-3 text-right">
+                        {% if r.costCache %}
+                            <span class="font-semibold {{ r.costCache.marginPercent >= 30 ? 'text-emerald-600' : (r.costCache.marginPercent >= 15 ? 'text-amber-600' : 'text-red-600') }}">{{ r.costCache.marginPercent|number_format(1) }}%</span>
+                        {% else %}—{% endif %}
+                    </td>
+                    <td class="py-3 px-5 text-center">
+                        <a href="{{ path('app_recipe_show', {id: r.id}) }}" class="w-8 h-8 inline-flex items-center justify-center rounded-lg text-gray-400 hover:text-blue-500 hover:bg-blue-50 transition-colors" title="Ouvrir"><i class="fas fa-eye text-xs"></i></a>
+                    </td>
+                </tr>
+                {% else %}
+                <tr><td colspan="7" class="py-16 text-center text-gray-400 text-sm">Aucune recette.</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <div class="px-5 py-4 border-t border-gray-100 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+        <p class="text-sm text-gray-500" id="paginationInfo">—</p>
+        <nav class="flex items-center gap-1" id="paginationNav"></nav>
+    </div>
+</div>
+
+{# Create Modal #}
+<div id="createModal" class="fixed inset-0 z-[9999] hidden items-center justify-center bg-black/50" onclick="if(event.target===this){this.classList.add('hidden');this.classList.remove('flex')}">
+<form method="post" action="{{ path('app_recipe_create') }}" class="bg-white rounded-2xl shadow-xl w-full max-w-lg mx-4 max-h-[90vh] overflow-y-auto">
+    <div class="px-6 py-4 border-b border-gray-100"><h3 class="font-semibold text-[#1c2434]"><i class="fas fa-plus text-blue-500 mr-2 text-sm"></i>Nouvelle recette</h3></div>
+    <div class="p-6 space-y-4">
+        <div><label class="block text-sm font-medium text-gray-600 mb-1.5">Nom *</label><input type="text" name="name" required class="w-full rounded-lg border border-gray-200 px-4 py-2.5 text-sm outline-none focus:border-blue-400 focus:ring-2 focus:ring-blue-500/20"></div>
+        <div><label class="block text-sm font-medium text-gray-600 mb-1.5">Famille *</label>
+            <select name="family" required class="w-full rounded-lg border border-gray-200 px-4 py-2.5 text-sm outline-none focus:border-blue-400 bg-white">
+                {% for f in families %}<option value="{{ f.name }}">{{ f.name }}</option>{% endfor %}
+            </select>
+        </div>
+        <div class="grid grid-cols-2 gap-4">
+            <div><label class="block text-sm font-medium text-gray-600 mb-1.5">Type sortie</label><select name="output_type" class="w-full rounded-lg border border-gray-200 px-4 py-2.5 text-sm outline-none focus:border-blue-400 bg-white"><option value="weight">Poids (kg)</option><option value="portion">Portions</option></select></div>
+            <div><label class="block text-sm font-medium text-gray-600 mb-1.5">Quantité sortie *</label><input type="number" name="output_value" step="0.001" value="5" required class="w-full rounded-lg border border-gray-200 px-4 py-2.5 text-sm outline-none focus:border-blue-400"></div>
+        </div>
+        <div class="grid grid-cols-2 gap-4">
+            <div><label class="block text-sm font-medium text-gray-600 mb-1.5">Mode prix</label><select name="pricing_mode" class="w-full rounded-lg border border-gray-200 px-4 py-2.5 text-sm outline-none focus:border-blue-400 bg-white"><option value="margin">Marge %</option><option value="coef">Coefficient</option></select></div>
+            <div><label class="block text-sm font-medium text-gray-600 mb-1.5">Objectif</label><input type="number" name="pricing_value" step="0.01" value="30" class="w-full rounded-lg border border-gray-200 px-4 py-2.5 text-sm outline-none focus:border-blue-400"></div>
+        </div>
+        <div class="grid grid-cols-2 gap-4">
+            <div><label class="block text-sm font-medium text-gray-600 mb-1.5">TVA produit %</label><input type="number" name="product_vat_rate" step="0.01" value="5.5" class="w-full rounded-lg border border-gray-200 px-4 py-2.5 text-sm outline-none focus:border-blue-400"></div>
+            <div></div>
+        </div>
+        <div class="grid grid-cols-2 gap-4">
+            <div><label class="block text-sm font-medium text-gray-600 mb-1.5">Main d'œuvre HT</label><input type="number" name="labor_cost_ht" step="0.01" value="0" class="w-full rounded-lg border border-gray-200 px-4 py-2.5 text-sm outline-none focus:border-blue-400"></div>
+            <div><label class="block text-sm font-medium text-gray-600 mb-1.5">Emballage HT</label><input type="number" name="packaging_cost_ht" step="0.01" value="0" class="w-full rounded-lg border border-gray-200 px-4 py-2.5 text-sm outline-none focus:border-blue-400"></div>
+        </div>
+        <input type="hidden" name="loss_percent" value="0">
+        <input type="hidden" name="yield_percent" value="100">
+    </div>
+    <div class="px-6 py-4 border-t border-gray-100 flex justify-end gap-3">
+        <button type="button" onclick="this.closest('.fixed').classList.add('hidden');this.closest('.fixed').classList.remove('flex')" class="rounded-lg border border-gray-200 px-4 py-2 text-sm text-gray-600 hover:bg-gray-50">Annuler</button>
+        <button type="submit" class="rounded-lg bg-blue-500 hover:bg-blue-600 px-5 py-2 text-sm font-medium text-white">Créer</button>
+    </div>
+</form></div>
+{% endblock %}
+
+{% block javascripts %}
+<script>
+const allRows=[...document.querySelectorAll('.dt-row')];let filtered=[...allRows],currentPage=1,perPage=parseInt(document.getElementById('perPage').value);
+function applyPagination(){allRows.forEach(r=>r.style.display='none');const s=(currentPage-1)*perPage,e=Math.min(s+perPage,filtered.length);filtered.slice(s,e).forEach(r=>r.style.display='');document.getElementById('paginationInfo').textContent=filtered.length===0?'Aucun résultat':`Affichage de ${s+1} à ${e} sur ${filtered.length}`;renderNav();}
+function renderNav(){const nav=document.getElementById('paginationNav'),tp=Math.max(1,Math.ceil(filtered.length/perPage));nav.innerHTML='';const bc='w-9 h-9 flex items-center justify-center rounded-lg text-sm transition-colors',ac='bg-blue-500 text-white font-medium',nc='border border-gray-200 text-gray-600 hover:bg-gray-50',dc='border border-gray-100 text-gray-300 cursor-not-allowed';const prev=Object.assign(document.createElement('button'),{type:'button',className:`${bc} ${currentPage===1?dc:nc}`,innerHTML:'<i class="fas fa-chevron-left text-[10px]"></i>',disabled:currentPage===1});prev.onclick=()=>{if(currentPage>1){currentPage--;applyPagination();}};nav.appendChild(prev);const mx=5;let sp=Math.max(1,currentPage-Math.floor(mx/2)),ep=Math.min(tp,sp+mx-1);if(ep-sp<mx-1)sp=Math.max(1,ep-mx+1);if(sp>1){nav.appendChild(mkB(1));if(sp>2)nav.appendChild(mkD());}for(let i=sp;i<=ep;i++)nav.appendChild(mkB(i));if(ep<tp){if(ep<tp-1)nav.appendChild(mkD());nav.appendChild(mkB(tp));}const next=Object.assign(document.createElement('button'),{type:'button',className:`${bc} ${currentPage===tp?dc:nc}`,innerHTML:'<i class="fas fa-chevron-right text-[10px]"></i>',disabled:currentPage===tp});next.onclick=()=>{if(currentPage<tp){currentPage++;applyPagination();}};nav.appendChild(next);function mkB(p){const b=Object.assign(document.createElement('button'),{type:'button',className:`${bc} ${p===currentPage?ac:nc}`,textContent:p});b.onclick=()=>{currentPage=p;applyPagination();};return b;}function mkD(){const s=document.createElement('span');s.className='w-9 h-9 flex items-center justify-center text-gray-400 text-xs';s.textContent='…';return s;}}
+document.getElementById('searchInput').addEventListener('input',function(){const q=this.value.toLowerCase().trim();filtered=q===''?[...allRows]:allRows.filter(r=>r.dataset.search.includes(q));currentPage=1;applyPagination();});
+document.getElementById('perPage').addEventListener('change',function(){perPage=parseInt(this.value);currentPage=1;applyPagination();});
+applyPagination();
+</script>
+{% endblock %}

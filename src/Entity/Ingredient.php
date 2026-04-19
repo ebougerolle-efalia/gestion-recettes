@@ -1,0 +1,79 @@
+<?php
+namespace App\Entity;
+
+use Doctrine\ORM\Mapping as ORM;
+use Doctrine\Common\Collections\ArrayCollection;
+use Doctrine\Common\Collections\Collection;
+use App\Repository\IngredientRepository;
+
+#[ORM\Entity(repositoryClass: IngredientRepository::class)]
+#[ORM\Table(name: 'ingredients')]
+class Ingredient
+{
+    #[ORM\Id, ORM\GeneratedValue, ORM\Column]
+    private ?int $id = null;
+
+    #[ORM\Column(length: 200)]
+    private string $name = '';
+
+    #[ORM\ManyToOne(targetEntity: IngredientCategory::class, inversedBy: 'ingredients')]
+    #[ORM\JoinColumn(name: 'category_id', nullable: false)]
+    private ?IngredientCategory $category = null;
+
+    #[ORM\Column(name: 'base_unit', length: 20)]
+    private string $baseUnit = 'kg'; // kg, g, piece, litre
+
+    #[ORM\Column(name: 'vat_rate', type: 'decimal', precision: 5, scale: 2)]
+    private string $vatRate = '5.50';
+
+    #[ORM\Column(name: 'default_supplier', length: 200, nullable: true)]
+    private ?string $defaultSupplier = null;
+
+    #[ORM\OneToMany(targetEntity: IngredientPrice::class, mappedBy: 'ingredient', cascade: ['persist', 'remove'], orphanRemoval: true)]
+    #[ORM\OrderBy(['effectiveDate' => 'DESC', 'id' => 'DESC'])]
+    private Collection $prices;
+
+    #[ORM\Column(name: 'created_at')]
+    private ?\DateTimeImmutable $createdAt = null;
+
+    public function __construct()
+    {
+        $this->prices = new ArrayCollection();
+        $this->createdAt = new \DateTimeImmutable();
+    }
+
+    public function getId(): ?int { return $this->id; }
+    public function getName(): string { return $this->name; }
+    public function setName(string $v): static { $this->name = $v; return $this; }
+    public function getCategory(): ?IngredientCategory { return $this->category; }
+    public function setCategory(?IngredientCategory $v): static { $this->category = $v; return $this; }
+    public function getBaseUnit(): string { return $this->baseUnit; }
+    public function setBaseUnit(string $v): static { $this->baseUnit = $v; return $this; }
+    public function getVatRate(): float { return (float) $this->vatRate; }
+    public function setVatRate(float $v): static { $this->vatRate = number_format($v, 2, '.', ''); return $this; }
+    public function getDefaultSupplier(): ?string { return $this->defaultSupplier; }
+    public function setDefaultSupplier(?string $v): static { $this->defaultSupplier = $v; return $this; }
+    public function getPrices(): Collection { return $this->prices; }
+    public function getCreatedAt(): ?\DateTimeImmutable { return $this->createdAt; }
+
+    public function addPrice(IngredientPrice $p): static
+    {
+        if (!$this->prices->contains($p)) {
+            $this->prices->add($p);
+            $p->setIngredient($this);
+        }
+        return $this;
+    }
+
+    /** Get latest price entry */
+    public function getLatestPrice(): ?IngredientPrice
+    {
+        return $this->prices->first() ?: null;
+    }
+
+    public function getLatestPriceHt(): ?float
+    {
+        $p = $this->getLatestPrice();
+        return $p ? $p->getPriceHt() : null;
+    }
+}

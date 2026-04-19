@@ -1,0 +1,20 @@
+{% extends 'base.html.twig' %}
+{% block title %}Administration{% endblock %}
+{% block page_title %}Administration{% endblock %}
+{% block page_subtitle %}Tableau de bord{% endblock %}
+{% block body %}
+<div class="grid grid-cols-2 lg:grid-cols-5 gap-4 mb-6">
+    {% for label, count in {Utilisateurs: stats.users, Ingrédients: stats.ingredients, Recettes: stats.recipes, Catégories: stats.categories, Familles: stats.families} %}
+    <div class="rounded-2xl border border-gray-200 bg-white px-5 py-4">
+        <p class="text-[11px] font-semibold uppercase tracking-wider text-gray-400">{{ label }}</p>
+        <p class="text-2xl font-bold text-[#1c2434] mt-1">{{ count }}</p>
+    </div>
+    {% endfor %}
+</div>
+<div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+    <a href="{{ path('app_admin_categories') }}" class="rounded-2xl border border-gray-200 bg-white p-6 hover:border-blue-300 hover:shadow-md transition-all"><i class="fas fa-tags text-2xl text-blue-500 mb-3"></i><h3 class="font-semibold text-[#1c2434]">Catégories</h3><p class="text-sm text-gray-500 mt-1">Gérer les catégories d'ingrédients</p></a>
+    <a href="{{ path('app_admin_families') }}" class="rounded-2xl border border-gray-200 bg-white p-6 hover:border-blue-300 hover:shadow-md transition-all"><i class="fas fa-layer-group text-2xl text-purple-500 mb-3"></i><h3 class="font-semibold text-[#1c2434]">Familles</h3><p class="text-sm text-gray-500 mt-1">Gérer les familles de recettes</p></a>
+    <a href="{{ path('app_admin_users') }}" class="rounded-2xl border border-gray-200 bg-white p-6 hover:border-blue-300 hover:shadow-md transition-all"><i class="fas fa-users text-2xl text-emerald-500 mb-3"></i><h3 class="font-semibold text-[#1c2434]">Utilisateurs</h3><p class="text-sm text-gray-500 mt-1">Créer, modifier, désactiver des comptes</p></a>
+</div>
+<form method="post" action="{{ path('app_admin_seed') }}" class="mt-6"><button class="inline-flex items-center gap-2 rounded-lg border border-gray-200 px-4 py-2.5 text-sm text-gray-600 hover:bg-gray-50"><i class="fas fa-database text-[11px]"></i> Initialiser les données par défaut</button></form>
+{% endblock %}

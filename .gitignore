@@ -1,0 +1,16 @@
+/.env.local
+/.env.local.php
+/.env.*.local
+/config/secrets/prod/prod.decrypt.private.php
+/public/bundles/
+/var/
+/vendor/
+
+# SQLite database
+/var/data/*.db
+
+# IDE
+/.idea/
+/.vscode/
+*.swp
+*.swo

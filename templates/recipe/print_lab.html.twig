@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <title>Fiche labo — {{ recipe.name }}</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Helvetica Neue', Arial, sans-serif; font-size: 10pt; color: #333; line-height: 1.4; }
+
+        .header { border-bottom: 2px solid #1c2434; padding-bottom: 12px; margin-bottom: 20px; }
+        .header h1 { font-size: 20pt; font-weight: 700; color: #1c2434; margin-bottom: 2px; }
+        .header .subtitle { font-size: 11pt; color: #666; }
+        .header .company { font-size: 9pt; color: #999; text-align: right; float: right; margin-top: -30px; }
+
+        .meta { display: flex; gap: 30px; margin-bottom: 20px; padding: 10px 14px; background: #f8fafc; border-radius: 6px; border: 1px solid #e2e8f0; }
+        .meta div { font-size: 9pt; }
+        .meta strong { color: #1c2434; }
+
+        h2 { font-size: 12pt; font-weight: 700; color: #1c2434; margin-bottom: 10px; padding-bottom: 4px; border-bottom: 1px solid #e2e8f0; }
+
+        table { width: 100%; border-collapse: collapse; }
+        th { font-size: 8pt; text-transform: uppercase; letter-spacing: 0.5px; color: #64748b; font-weight: 600; padding: 8px 10px; border-bottom: 2px solid #1c2434; text-align: left; }
+        td { padding: 7px 10px; border-bottom: 1px solid #e2e8f0; font-size: 9.5pt; }
+        .tc { text-align: center; }
+        tr:last-child td { border-bottom: none; }
+        .sub-recipe { color: #2563eb; font-style: italic; }
+        .note { font-size: 8pt; color: #b45309; font-style: italic; }
+
+        .footer { margin-top: 40px; padding-top: 10px; border-top: 1px solid #e2e8f0; font-size: 8pt; color: #94a3b8; text-align: center; }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="company">Pierrick Bougerolle<br>Charcutier-Traiteur</div>
+        <h1>FICHE LABO</h1>
+        <div class="subtitle">{{ recipe.name }} — {{ recipe.family }}</div>
+    </div>
+
+    <div class="meta">
+        <div>Sortie cible : <strong>{{ totals.output_target }} {{ recipe.outputUnitLabel }}</strong></div>
+        <div>Perte : <strong>{{ recipe.lossPercent|number_format(1) }}%</strong></div>
+        <div>Rendement : <strong>{{ recipe.yieldPercent|number_format(1) }}%</strong></div>
+        <div>Sortie effective : <strong>{{ totals.output_effective }} {{ recipe.outputUnitLabel }}</strong></div>
+    </div>
+
+    <h2>Composition</h2>
+    <table>
+        <thead>
+            <tr>
+                <th>Élément</th>
+                <th class="tc">Qté brute</th>
+                <th class="tc">Unité</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for l in lines %}
+            <tr>
+                <td>
+                    {% if l.type == 'sub_recipe' %}
+                        <span class="sub-recipe">[SR] {{ l.sub_recipe.name }}</span>
+                    {% else %}
+                        {{ l.ingredient.name }}
+                    {% endif %}
+                    {% if l.note %}<br><span class="note">→ {{ l.note }}</span>{% endif %}
+                </td>
+                <td class="tc">{{ l.qty_brute }}</td>
+                <td class="tc">{{ l.unit }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    <div class="footer">
+        Fiche labo générée le {{ 'now'|date('d/m/Y à H:i') }} — Pierrick Bougerolle, Charcutier-Traiteur
+    </div>
+</body>
+</html>

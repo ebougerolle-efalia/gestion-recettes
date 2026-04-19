@@ -1,0 +1,2 @@
+sensiolabs_gotenberg:
+    http_client: 'gotenberg.client'
