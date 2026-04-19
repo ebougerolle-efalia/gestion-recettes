@@ -42,6 +42,7 @@ fi
 
 # Composer
 log "Composer install…"
+$COMPOSER_BIN config allow-plugins.symfony/runtime true --no-interaction 2>/dev/null
 $COMPOSER_BIN install --no-dev --optimize-autoloader --no-interaction
 
 # Database
