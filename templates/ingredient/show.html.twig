@@ -6,10 +6,6 @@
 {% block body %}
     {% set canEdit = is_granted('ROLE_EDITOR') %}
 
-    {# Prix actuel (le plus récent) #}
-    {% set latestPrice = ingredient.prices|first %}
-
-    {# Préparer les données prix pour Chart.js (trié du plus ancien au plus récent) #}
     {% set prices_json = [] %}
     {% for p in ingredient.prices|reverse %}
         {% set prices_json = prices_json|merge([{
@@ -26,7 +22,8 @@
         </a>
     </div>
 
-    {# KPI prix #}
+    {# KPI #}
+    {% set latestPrice = ingredient.prices|first %}
     <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
         <div class="rounded-2xl border border-gray-200 bg-white px-5 py-4">
             <p class="text-[11px] font-semibold uppercase tracking-wider text-gray-400">Prix actuel</p>
@@ -49,7 +46,7 @@
 
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
 
-        {# Fiche édition #}
+        {# Fiche #}
         <div>
             <div class="rounded-2xl border border-gray-200 bg-white">
                 <div class="px-6 py-4 border-b border-gray-100">
@@ -77,7 +74,7 @@
             {% endif %}
         </div>
 
-        {# Historique des prix #}
+        {# Historique prix #}
         <div class="lg:col-span-2">
             <div class="rounded-2xl border border-gray-200 bg-white">
                 <div class="px-6 py-4 border-b border-gray-100 flex items-center justify-between">
@@ -89,23 +86,27 @@
                     {% endif %}
                 </div>
 
-                {# Graphique évolution des prix #}
+                {# Graphique — données embarquées dans data-prices pour éviter les problèmes de portée Twig #}
                 {% if ingredient.prices|length >= 2 %}
                     <div class="px-6 pt-5 pb-2">
                         <div class="flex items-center justify-between mb-3">
                             <span class="text-xs font-semibold text-gray-500 uppercase tracking-wider">Évolution du prix (€ / {{ ingredient.baseUnit }})</span>
-                            {% if ingredient.prices|length >= 2 %}
-                                {% set firstP = prices_json|first %}
-                                {% set lastP  = prices_json|last %}
-                                {% set diff   = lastP.price - firstP.price %}
-                                {% set pct    = firstP.price > 0 ? (diff / firstP.price * 100)|round(1) : 0 %}
+                            {% set firstP = prices_json|first %}
+                            {% set lastP  = prices_json|last %}
+                            {% if firstP and lastP %}
+                                {% set diff = lastP.price - firstP.price %}
+                                {% set pct  = firstP.price > 0 ? (diff / firstP.price * 100)|round(1) : 0 %}
                                 <span class="text-xs font-semibold px-2 py-0.5 rounded-full {{ diff > 0 ? 'bg-red-50 text-red-600' : (diff < 0 ? 'bg-emerald-50 text-emerald-600' : 'bg-gray-100 text-gray-500') }}">
                         {{ diff > 0 ? '+' : '' }}{{ pct }} % sur la période
                     </span>
                             {% endif %}
                         </div>
                         <div style="height:180px; position:relative;">
-                            <canvas id="priceChart"></canvas>
+                            {# Les données sont embarquées dans data-prices — accessibles dans le bloc JS #}
+                            <canvas id="priceChart"
+                                    data-prices="{{ prices_json|json_encode }}"
+                                    data-unit="{{ ingredient.baseUnit }}">
+                            </canvas>
                         </div>
                     </div>
                     <div class="border-t border-gray-50"></div>
@@ -116,7 +117,6 @@
                     <div class="border-t border-gray-50"></div>
                 {% endif %}
 
-                {# Tableau des prix #}
                 {% if ingredient.prices|length > 0 %}
                     <table class="w-full text-sm">
                         <thead><tr class="border-b border-gray-100">
@@ -163,18 +163,19 @@
 {% block javascripts %}
     <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
     <script>
-        {% if ingredient.prices|length >= 2 %}
-        const priceHistory = {{ prices_json|json_encode|raw }};
-        priceHistory.sort((a, b) => a.dateSort < b.dateSort ? -1 : 1);
+        // Graphique évolution des prix
+        // Les données sont lues depuis data-prices pour éviter les problèmes de portée Twig inter-blocs
+        const priceCanvas = document.getElementById('priceChart');
+        if (priceCanvas && priceCanvas.dataset.prices) {
+            const priceHistory = JSON.parse(priceCanvas.dataset.prices);
+            priceHistory.sort((a, b) => a.dateSort < b.dateSort ? -1 : 1);
 
-        const ctx = document.getElementById('priceChart');
-        if (ctx) {
             const prices = priceHistory.map(p => parseFloat(p.price));
-            const minP = Math.min(...prices);
-            const maxP = Math.max(...prices);
-            const pad  = (maxP - minP) * 0.15 || 0.05;
+            const minP   = Math.min(...prices);
+            const maxP   = Math.max(...prices);
+            const pad    = (maxP - minP) * 0.15 || 0.05;
 
-            new Chart(ctx, {
+            new Chart(priceCanvas, {
                 type: 'line',
                 data: {
                     labels: priceHistory.map(p => p.dateLabel),
@@ -221,6 +222,5 @@
                 }
             });
         }
-        {% endif %}
     </script>
 {% endblock %}

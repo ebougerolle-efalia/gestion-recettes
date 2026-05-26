@@ -148,7 +148,9 @@
         </div>
     </div>
 
-    {# ===== ANALYSE DES COÛTS ===== #}
+    {# ===== ANALYSE DES COÛTS =====
+   Les données sont embarquées en data-* sur le canvas pour éviter
+   les problèmes de portée Twig entre block body et block javascripts #}
     {% if t.total_cost_ht > 0 %}
         <div class="mt-6 rounded-2xl border border-gray-200 bg-white">
             <div class="px-6 py-4 border-b border-gray-100 flex items-center gap-2">
@@ -159,7 +161,11 @@
             <div class="p-6 grid grid-cols-1 md:grid-cols-2 gap-8 items-center">
                 <div class="flex justify-center">
                     <div style="position:relative; width:220px; height:220px;">
-                        <canvas id="costChart"></canvas>
+                        <canvas id="costChart"
+                                data-mat="{{ t.material_cost_ht }}"
+                                data-labor="{{ t.labor_cost_ht }}"
+                                data-pack="{{ t.packaging_cost_ht }}">
+                        </canvas>
                         <div style="position:absolute; top:50%; left:50%; transform:translate(-50%,-50%); text-align:center; pointer-events:none;">
                             <div class="text-xl font-bold text-[#1c2434]">{{ t.total_cost_ht|number_format(2,',',' ') }} €</div>
                             <div class="text-xs text-gray-400">coût total HT</div>
@@ -210,7 +216,7 @@
         </div>
     {% endif %}
 
-    {# Modals #}
+    {# Modal ajouter ligne #}
     <div id="addLineModal" class="fixed inset-0 z-[9999] hidden items-center justify-center bg-black/50" onclick="if(event.target===this){this.classList.add('hidden');this.classList.remove('flex')}">
         <form method="post" action="{{ path('app_recipe_add_line', {id: recipe.id}) }}" class="bg-white rounded-2xl shadow-xl w-full max-w-lg mx-4">
             <div class="px-6 py-4 border-b border-gray-100"><h3 class="font-semibold text-[#1c2434]"><i class="fas fa-plus text-blue-500 mr-2 text-sm"></i>Ajouter une ligne</h3></div>
@@ -220,7 +226,7 @@
                 <div id="subRecipeField" style="display:none"><label class="block text-sm font-medium text-gray-600 mb-1.5">Sous-recette</label><select name="sub_recipe_id" class="w-full rounded-lg border border-gray-200 px-4 py-2.5 text-sm outline-none focus:border-blue-400 bg-white"><option value="">Choisir…</option>{% for r in availableSubs %}<option value="{{ r.id }}">{{ r.name }} ({{ r.family }})</option>{% endfor %}</select></div>
                 <div class="grid grid-cols-2 gap-4">
                     <div><label class="block text-sm font-medium text-gray-600 mb-1.5">Quantité brute</label><input type="number" name="qty_brute" step="0.001" required placeholder="0.000" class="w-full rounded-lg border border-gray-200 px-4 py-2.5 text-sm outline-none focus:border-blue-400"></div>
-                    <div><label class="block text-sm font-medium text-gray-600 mb-1.5">Unité</label><select name="unit" class="w-full rounded-lg border border-gray-200 px-4 py-2.5 text-sm outline-none focus:border-blue-400 bg-white"><option value="kg">kg</option><option value="g">g</option><option value="piece">pièce</option><option value="litre">litre</option></select></div>
+                    <div><label class="block text-sm font-medium text-gray-200 mb-1.5">Unité</label><select name="unit" class="w-full rounded-lg border border-gray-200 px-4 py-2.5 text-sm outline-none focus:border-blue-400 bg-white"><option value="kg">kg</option><option value="g">g</option><option value="piece">pièce</option><option value="litre">litre</option></select></div>
                 </div>
                 <div class="grid grid-cols-2 gap-4">
                     <div><label class="block text-sm font-medium text-gray-600 mb-1.5">% perte</label><input type="number" name="loss_percent" step="0.01" value="0" class="w-full rounded-lg border border-gray-200 px-4 py-2.5 text-sm outline-none focus:border-blue-400"></div>
@@ -254,36 +260,38 @@
         }
         document.querySelectorAll('input[name="labor_minutes"]').forEach(majCoutMO);
 
-        {% if t.total_cost_ht > 0 %}
-        const costCtx = document.getElementById('costChart');
-        if (costCtx) {
-            const mat     = {{ t.material_cost_ht }};
-            const labor   = {{ t.labor_cost_ht }};
-            const packing = {{ t.packaging_cost_ht }};
-            new Chart(costCtx, {
-                type: 'doughnut',
-                data: {
-                    labels: ['Matières', "Main d'œuvre", 'Emballage'],
-                    datasets: [{
-                        data: [mat, labor, packing],
-                        backgroundColor: ['#3b82f6', '#10b981', '#f59e0b'],
-                        borderWidth: 0,
-                        hoverOffset: 6
-                    }]
-                },
-                options: {
-                    cutout: '68%',
-                    plugins: {
-                        legend: { display: false },
-                        tooltip: {
-                            callbacks: {
-                                label: ctx => ' ' + parseFloat(ctx.raw).toFixed(2).replace('.', ',') + ' €'
+        // Doughnut décomposition des coûts
+        // Données lues depuis data-* sur le canvas — pas de dépendance au scope Twig
+        const costCanvas = document.getElementById('costChart');
+        if (costCanvas) {
+            const mat     = parseFloat(costCanvas.dataset.mat)   || 0;
+            const labor   = parseFloat(costCanvas.dataset.labor) || 0;
+            const packing = parseFloat(costCanvas.dataset.pack)  || 0;
+            if (mat + labor + packing > 0) {
+                new Chart(costCanvas, {
+                    type: 'doughnut',
+                    data: {
+                        labels: ['Matières', "Main d'œuvre", 'Emballage'],
+                        datasets: [{
+                            data: [mat, labor, packing],
+                            backgroundColor: ['#3b82f6', '#10b981', '#f59e0b'],
+                            borderWidth: 0,
+                            hoverOffset: 6
+                        }]
+                    },
+                    options: {
+                        cutout: '68%',
+                        plugins: {
+                            legend: { display: false },
+                            tooltip: {
+                                callbacks: {
+                                    label: ctx => ' ' + parseFloat(ctx.raw).toFixed(2).replace('.', ',') + ' €'
+                                }
                             }
                         }
                     }
-                }
-            });
+                });
+            }
         }
-        {% endif %}
     </script>
 {% endblock %}
