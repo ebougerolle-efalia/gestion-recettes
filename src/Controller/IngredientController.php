@@ -62,7 +62,7 @@ class IngredientController extends AbstractController
             $price = new IngredientPrice();
             $price->setIngredient($ing);
             $price->setPriceHt((float) $priceHt);
-            $price->setSupplier($request->request->get('initial_supplier'));
+            $price->setSupplier($request->request->get('default_supplier'));
             $em->persist($price);
         }
 

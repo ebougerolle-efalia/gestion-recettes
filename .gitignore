@@ -1,3 +1,4 @@
+# === Symfony ===
 /.env.local
 /.env.local.php
 /.env.*.local
@@ -6,10 +7,16 @@
 /var/
 /vendor/
 
-# SQLite database
+# === Base de données SQLite ===
 /var/data/*.db
 
-# IDE
+# === Configuration de déploiement (peut contenir des secrets) ===
+/setup.conf
+
+# === Uploads clients (logos, etc. — régénérés au déploiement) ===
+/public/uploads/
+
+# === IDE / éditeurs ===
 /.idea/
 /.vscode/
 *.swp

@@ -63,10 +63,10 @@
             <div><label class="block text-sm font-medium text-gray-600 mb-1.5">Fournisseur</label><input type="text" name="default_supplier" class="w-full rounded-lg border border-gray-200 px-4 py-2.5 text-sm outline-none focus:border-blue-400"></div>
         </div>
         <hr class="border-gray-100">
-        <p class="text-xs text-gray-400">Prix initial (optionnel)</p>
-        <div class="grid grid-cols-2 gap-4">
-            <div><label class="block text-sm font-medium text-gray-600 mb-1.5">Prix HT / unité</label><input type="number" name="initial_price_ht" step="0.0001" class="w-full rounded-lg border border-gray-200 px-4 py-2.5 text-sm outline-none focus:border-blue-400" placeholder="0.0000"></div>
-            <div><label class="block text-sm font-medium text-gray-600 mb-1.5">Fournisseur</label><input type="text" name="initial_supplier" class="w-full rounded-lg border border-gray-200 px-4 py-2.5 text-sm outline-none focus:border-blue-400"></div>
+        <p class="text-xs text-gray-400">Prix initial (optionnel) — le fournisseur par défaut ci-dessus sera utilisé.</p>
+        <div>
+            <label class="block text-sm font-medium text-gray-600 mb-1.5">Prix HT / unité</label>
+            <input type="number" name="initial_price_ht" step="0.0001" class="w-full rounded-lg border border-gray-200 px-4 py-2.5 text-sm outline-none focus:border-blue-400" placeholder="0.0000">
         </div>
     </div>
     <div class="px-6 py-4 border-t border-gray-100 flex justify-end gap-3"><button type="button" onclick="this.closest('.fixed').classList.add('hidden');this.closest('.fixed').classList.remove('flex')" class="rounded-lg border border-gray-200 px-4 py-2 text-sm text-gray-600 hover:bg-gray-50">Annuler</button><button type="submit" class="rounded-lg bg-blue-500 hover:bg-blue-600 px-5 py-2 text-sm font-medium text-white">Ajouter</button></div>
