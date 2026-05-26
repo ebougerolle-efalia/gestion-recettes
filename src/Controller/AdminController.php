@@ -2,10 +2,11 @@
 namespace App\Controller;
 
 use App\Entity\{IngredientCategory, RecipeFamily, User};
-use App\Repository\{IngredientCategoryRepository, RecipeFamilyRepository, UserRepository, RecipeRepository, IngredientRepository};
+use App\Repository\{IngredientCategoryRepository, RecipeFamilyRepository, UserRepository, RecipeRepository, IngredientRepository, ConfigBoutiqueRepository};
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\{Request, Response};
+use Symfony\Component\HttpFoundation\File\Exception\FileException;
 use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
@@ -200,6 +201,76 @@ class AdminController extends AbstractController
             $this->addFlash('success', 'Utilisateur supprimé.');
         }
         return $this->redirectToRoute('app_admin_users');
+    }
+
+    // ==================== PARAMÈTRES ====================
+
+    #[Route('/parametres', name: 'app_admin_parametres', methods: ['GET'])]
+    public function parametres(ConfigBoutiqueRepository $repo): Response
+    {
+        return $this->render('admin/parametres.html.twig', [
+            'config' => $repo->getConfig(),
+        ]);
+    }
+
+    #[Route('/parametres', name: 'app_admin_parametres_save', methods: ['POST'])]
+    public function parametresSave(Request $request, ConfigBoutiqueRepository $repo, EntityManagerInterface $em): Response
+    {
+        $config = $repo->getConfig();
+
+        $config->setNomEtablissement($request->request->get('nom_etablissement', $config->getNomEtablissement()));
+        $config->setSousTitre($request->request->get('sous_titre') ?: null);
+        $config->setAdresse($request->request->get('adresse') ?: null);
+        $config->setCodePostal($request->request->get('code_postal') ?: null);
+        $config->setVille($request->request->get('ville') ?: null);
+        $config->setTelephone($request->request->get('telephone') ?: null);
+        $config->setEmail($request->request->get('email') ?: null);
+        $config->setSiret($request->request->get('siret') ?: null);
+        $config->setMentionPied($request->request->get('mention_pied') ?: null);
+        $config->setTvaDefaut((float) $request->request->get('tva_defaut', $config->getTvaDefaut()));
+        $config->setCoefDefaut((float) $request->request->get('coef_defaut', $config->getCoefDefaut()));
+
+        // --- Logo : suppression demandée ---
+        $uploadDir = $this->getParameter('kernel.project_dir') . '/public/uploads/boutique';
+        if ($request->request->get('supprimer_logo') && $config->getLogoPath()) {
+            @unlink($this->getParameter('kernel.project_dir') . '/public/' . $config->getLogoPath());
+            $config->setLogoPath(null);
+        }
+
+        // --- Logo : nouvel upload ---
+        /** @var \Symfony\Component\HttpFoundation\File\UploadedFile|null $file */
+        $file = $request->files->get('logo');
+        if ($file) {
+            $allowed = ['image/png' => 'png', 'image/jpeg' => 'jpg', 'image/webp' => 'webp'];
+            $mime = $file->getMimeType();
+
+            if (!isset($allowed[$mime])) {
+                $this->addFlash('danger', 'Format de logo non supporté (PNG, JPG ou WebP uniquement).');
+                return $this->redirectToRoute('app_admin_parametres');
+            }
+            if ($file->getSize() > 2 * 1024 * 1024) {
+                $this->addFlash('danger', 'Logo trop volumineux (2 Mo maximum).');
+                return $this->redirectToRoute('app_admin_parametres');
+            }
+
+            // Supprime l'ancien logo le cas échéant
+            if ($config->getLogoPath()) {
+                @unlink($this->getParameter('kernel.project_dir') . '/public/' . $config->getLogoPath());
+            }
+
+            $filename = 'logo-' . bin2hex(random_bytes(6)) . '.' . $allowed[$mime];
+            try {
+                $file->move($uploadDir, $filename);
+                $config->setLogoPath('uploads/boutique/' . $filename);
+            } catch (FileException $e) {
+                $this->addFlash('danger', "Échec de l'enregistrement du logo : " . $e->getMessage());
+                return $this->redirectToRoute('app_admin_parametres');
+            }
+        }
+
+        $em->flush();
+        $this->addFlash('success', 'Paramètres enregistrés.');
+        return $this->redirectToRoute('app_admin_parametres');
     }
 
     // ==================== SEED ====================

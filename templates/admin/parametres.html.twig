@@ -1,0 +1,124 @@
+{% extends 'base.html.twig' %}
+{% block title %}Paramètres{% endblock %}
+{% block page_title %}Paramètres de l'établissement{% endblock %}
+{% block page_subtitle %}Identité, coordonnées et valeurs par défaut{% endblock %}
+{% block body %}
+
+    <form method="post" action="{{ path('app_admin_parametres_save') }}" enctype="multipart/form-data" class="space-y-6 max-w-3xl">
+
+        {# ===== Identité ===== #}
+        <div class="rounded-2xl border border-gray-200 bg-white">
+            <div class="px-6 py-4 border-b border-gray-100">
+                <h3 class="font-semibold text-[#1c2434]"><i class="fas fa-store text-blue-500 mr-2"></i> Identité</h3>
+            </div>
+            <div class="p-6 grid grid-cols-1 md:grid-cols-2 gap-5">
+                <div class="md:col-span-2">
+                    <label class="block text-sm font-medium text-gray-600 mb-1.5">Nom de l'établissement *</label>
+                    <input type="text" name="nom_etablissement" required value="{{ config.nomEtablissement }}"
+                           class="w-full rounded-lg border border-gray-200 px-4 py-2.5 text-sm outline-none focus:border-blue-400">
+                </div>
+                <div class="md:col-span-2">
+                    <label class="block text-sm font-medium text-gray-600 mb-1.5">Sous-titre</label>
+                    <input type="text" name="sous_titre" value="{{ config.sousTitre }}" placeholder="Charcutier-Traiteur"
+                           class="w-full rounded-lg border border-gray-200 px-4 py-2.5 text-sm outline-none focus:border-blue-400">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-600 mb-1.5">SIRET</label>
+                    <input type="text" name="siret" value="{{ config.siret }}"
+                           class="w-full rounded-lg border border-gray-200 px-4 py-2.5 text-sm outline-none focus:border-blue-400">
+                </div>
+            </div>
+        </div>
+
+        {# ===== Coordonnées ===== #}
+        <div class="rounded-2xl border border-gray-200 bg-white">
+            <div class="px-6 py-4 border-b border-gray-100">
+                <h3 class="font-semibold text-[#1c2434]"><i class="fas fa-location-dot text-emerald-500 mr-2"></i> Coordonnées</h3>
+            </div>
+            <div class="p-6 grid grid-cols-1 md:grid-cols-2 gap-5">
+                <div class="md:col-span-2">
+                    <label class="block text-sm font-medium text-gray-600 mb-1.5">Adresse</label>
+                    <input type="text" name="adresse" value="{{ config.adresse }}"
+                           class="w-full rounded-lg border border-gray-200 px-4 py-2.5 text-sm outline-none focus:border-blue-400">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-600 mb-1.5">Code postal</label>
+                    <input type="text" name="code_postal" value="{{ config.codePostal }}"
+                           class="w-full rounded-lg border border-gray-200 px-4 py-2.5 text-sm outline-none focus:border-blue-400">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-600 mb-1.5">Ville</label>
+                    <input type="text" name="ville" value="{{ config.ville }}"
+                           class="w-full rounded-lg border border-gray-200 px-4 py-2.5 text-sm outline-none focus:border-blue-400">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-600 mb-1.5">Téléphone</label>
+                    <input type="text" name="telephone" value="{{ config.telephone }}"
+                           class="w-full rounded-lg border border-gray-200 px-4 py-2.5 text-sm outline-none focus:border-blue-400">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-600 mb-1.5">Email</label>
+                    <input type="email" name="email" value="{{ config.email }}"
+                           class="w-full rounded-lg border border-gray-200 px-4 py-2.5 text-sm outline-none focus:border-blue-400">
+                </div>
+            </div>
+        </div>
+
+        {# ===== Logo ===== #}
+        <div class="rounded-2xl border border-gray-200 bg-white">
+            <div class="px-6 py-4 border-b border-gray-100">
+                <h3 class="font-semibold text-[#1c2434]"><i class="fas fa-image text-purple-500 mr-2"></i> Logo</h3>
+            </div>
+            <div class="p-6 flex items-center gap-6">
+                <div class="w-24 h-24 rounded-xl border border-gray-200 bg-gray-50 flex items-center justify-center overflow-hidden flex-shrink-0">
+                    {% if config.logoPath %}
+                        <img src="{{ asset(config.logoPath) }}" alt="Logo" class="max-w-full max-h-full object-contain">
+                    {% else %}
+                        <i class="fas fa-image text-2xl text-gray-300"></i>
+                    {% endif %}
+                </div>
+                <div class="flex-1">
+                    <input type="file" name="logo" accept="image/png,image/jpeg,image/webp"
+                           class="block w-full text-sm text-gray-500 file:mr-4 file:rounded-lg file:border-0 file:bg-blue-50 file:px-4 file:py-2 file:text-sm file:font-medium file:text-blue-600 hover:file:bg-blue-100">
+                    <p class="text-xs text-gray-400 mt-2">PNG, JPG ou WebP — 2 Mo max. Apparaît sur les fiches PDF.</p>
+                    {% if config.logoPath %}
+                        <label class="inline-flex items-center gap-2 mt-3 text-xs text-red-500">
+                            <input type="checkbox" name="supprimer_logo" value="1" class="rounded border-gray-300"> Supprimer le logo actuel
+                        </label>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        {# ===== Valeurs par défaut ===== #}
+        <div class="rounded-2xl border border-gray-200 bg-white">
+            <div class="px-6 py-4 border-b border-gray-100">
+                <h3 class="font-semibold text-[#1c2434]"><i class="fas fa-sliders text-amber-500 mr-2"></i> Valeurs par défaut</h3>
+            </div>
+            <div class="p-6 grid grid-cols-1 md:grid-cols-2 gap-5">
+                <div>
+                    <label class="block text-sm font-medium text-gray-600 mb-1.5">TVA produit par défaut (%)</label>
+                    <input type="number" step="0.01" name="tva_defaut" value="{{ config.tvaDefaut }}"
+                           class="w-full rounded-lg border border-gray-200 px-4 py-2.5 text-sm outline-none focus:border-blue-400">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-600 mb-1.5">Coefficient par défaut</label>
+                    <input type="number" step="0.001" name="coef_defaut" value="{{ config.coefDefaut }}"
+                           class="w-full rounded-lg border border-gray-200 px-4 py-2.5 text-sm outline-none focus:border-blue-400">
+                </div>
+                <div class="md:col-span-2">
+                    <label class="block text-sm font-medium text-gray-600 mb-1.5">Mention de pied de page (fiches PDF)</label>
+                    <textarea name="mention_pied" rows="2"
+                              class="w-full rounded-lg border border-gray-200 px-4 py-2.5 text-sm outline-none focus:border-blue-400">{{ config.mentionPied }}</textarea>
+                </div>
+            </div>
+        </div>
+
+        <div class="flex justify-end">
+            <button type="submit" class="inline-flex items-center gap-2 rounded-lg bg-blue-500 hover:bg-blue-600 px-6 py-2.5 text-sm font-medium text-white">
+                <i class="fas fa-floppy-disk text-[11px]"></i> Enregistrer
+            </button>
+        </div>
+
+    </form>
+{% endblock %}

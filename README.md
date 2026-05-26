@@ -1,197 +1,139 @@
-# Gestion des Recettes — Pierrick Bougerolle
+# Gestion des Recettes
 
-Application de gestion des recettes et calcul de coûts pour **Pierrick Bougerolle, Charcutier-Traiteur**.
+Application SaaS de **calcul de coût de revient et de prix de vente** pour les
+métiers de bouche (charcutiers, traiteurs, boulangers, restaurateurs).
 
-- **Dépôt** : https://github.com/ebougerolle-efalia/gestion-recettes
-- **Branche** : `master`
-- **Production** : https://gestion-recettes.bougerolle.ovh
+Chaque client dispose de sa propre instance isolée, accessible via un
+sous-domaine : `client.<BASE_DOMAIN>`.
 
 ## Technologies
 
-- **Backend** : PHP 8.1+ / Symfony 7 / Doctrine ORM
-- **Base de données** : SQLite
-- **Frontend** : Twig + Tailwind CSS v4 (CDN) + JavaScript vanilla
+- **Backend** : PHP 8.2+ / Symfony 7 / Doctrine ORM 3
+- **Base de données** : SQLite (une base isolée par client)
+- **Frontend** : Twig + Tailwind CSS (CDN) + JavaScript vanilla
 - **Design** : style TailAdmin — sidebar sombre, cards arrondies, DataTables
 - **Auth** : Symfony Security — form login, rôles (reader/editor/admin), bcrypt
-- **PDF** : GotenbergBundle (SensioLabs) — génération PDF via Chromium headless
+- **PDF** : GotenbergBundle — génération via Chromium headless (Docker)
 - **Pas de npm, pas de jQuery** — tout en CDN
 
-## Prérequis
+## Fonctionnalités principales
 
-- PHP 8.1+ avec extensions sqlite3, xml, intl, mbstring, curl
-- Composer
-- **Docker** (pour Gotenberg — génération PDF)
+- **Moteur de calcul de coûts** récursif : coût matière, conversion d'unités,
+  perte et rendement, main d'œuvre, emballage, TVA, prix conseillé par
+  coefficient ou marge cible, cache des résultats
+- **Sous-recettes** : une recette peut inclure une autre recette (récursif,
+  avec détection de cycles)
+- **Historique de prix daté** des ingrédients (suivi de l'inflation)
+- **Fiches techniques PDF** (composition, coûts, marge)
+- **Paramètres de l'établissement** : nom, coordonnées, logo, valeurs par défaut
+  — l'application est entièrement dépersonnalisée et se configure par client
 
-## Installation locale
+---
+
+## Installation locale (développement)
+
+Pré-requis : PHP 8.2+ (extensions `sqlite3`, `xml`, `intl`, `mbstring`, `curl`)
+et Composer. Docker uniquement si tu veux tester la génération PDF.
 
 ```bash
-git clone https://github.com/ebougerolle-efalia/gestion-recettes.git
+git clone <REPO_URL> gestion-recettes
 cd gestion-recettes
 composer install
 
-# Lancer Gotenberg (génération PDF)
+# (optionnel) Gotenberg pour les PDF
 docker run -d --name gotenberg --restart unless-stopped -p 3000:3000 gotenberg/gotenberg:8
 
-# Créer le dossier data et le schéma
-mkdir -p var/data
+# Base + schéma + données initiales
+mkdir -p var/data public/uploads/boutique
 php bin/console doctrine:schema:create
-php bin/console app:seed                  # Crée admin/admin123 + catégories + familles
-php -S localhost:8080 -t public/
+php bin/console app:seed          # crée admin/admin123 + catégories + familles
+
+# Serveur de dev
+symfony serve
+#   ou : php -S localhost:8080 -t public/
 ```
 
-Se connecter avec **admin** / **admin123**.
+Connexion : **admin** / **admin123** → puis **Administration → Paramètres**
+pour renseigner le nom de l'établissement.
 
-## Fonctionnalités
+---
 
-### Recettes
+## Déploiement d'un client en production
 
-- CRUD complet avec liste DataTable (pagination, recherche, per-page)
-- **Moteur de calcul de coûts** récursif :
-  - Coût matière = somme des lignes (ingrédient × prix unitaire × quantité convertie)
-  - Conversion d'unités automatique (kg ↔ g)
-  - Perte et rendement par ligne ET global sur la recette
-  - Main d'œuvre + emballage ajoutés au coût total
-  - Prix de vente conseillé via coefficient OU marge cible
-  - TVA configurable, calcul HT et TTC
-  - Cache des résultats dans `recipe_cost_cache`
-- **Sous-recettes** : une recette peut inclure une autre recette comme ingrédient (récursif, avec détection de cycles)
-- **Duplication** complète (paramètres + toutes les lignes)
-- **PDF** (via Gotenberg) :
-  - **Fiche technique complète** : composition, coûts, prix de vente, marge — PDF A4 propre avec KPI visuels
-  - **Fiche labo** : composition seule, sans infos financières — pour affichage en atelier
-  - Rendu Chromium identique au navigateur, téléchargement direct en PDF
-- KPI : coût matière, coût total, coût/unité, PV HT/TTC, marge € et %
+Toute la configuration vit dans **`setup.conf`** (le seul fichier à personnaliser).
 
-### Ingrédients
-
-- CRUD avec liste DataTable, catégorisation
-- **Historique de prix** : chaque ajout de prix est daté, le dernier en vigueur est utilisé pour les calculs
-- Ajout d'un nouveau prix → recalcul automatique de toutes les recettes utilisant cet ingrédient
-- Unités de base : kg, g, pièce, litre
-- TVA et fournisseur par défaut
-
-### Administration (rôle admin)
-
-- **Catégories d'ingrédients** : Viande, Épices, Emballage, Autres (CRUD)
-- **Familles de recettes** : Terrine, Pâté, Saucisse, etc. (CRUD)
-- **Utilisateurs** : créer, modifier rôle/statut, supprimer
-- **Tableau de bord** : compteurs (users, ingrédients, recettes, catégories, familles)
-- **Seed** : bouton pour initialiser les données par défaut
-
-### Rôles
-
-| Rôle | Voir | Créer/Modifier | Admin |
-|------|------|----------------|-------|
-| reader | ✓ | — | — |
-| editor | ✓ | ✓ | — |
-| admin | ✓ | ✓ | ✓ |
-
-## Structure du projet
-
-```
-gestion-recettes/
-├── bin/console
-├── deploy.sh                    # Déploiement (install + update)
-├── setup-server.sh              # Config serveur Debian/Ubuntu + HTTPS
-├── .env.local.example
-├── config/
-│   └── packages/
-│       ├── doctrine.yaml        # SQLite
-│       ├── framework.yaml
-│       ├── security.yaml        # Form login + rôles
-│       └── twig.yaml
-├── public/
-│   ├── index.php
-│   └── webhook.php              # Webhook GitHub
-├── src/
-│   ├── Command/
-│   │   └── SeedCommand.php      # php bin/console app:seed
-│   ├── Controller/
-│   │   ├── SecurityController   # Login/logout
-│   │   ├── RecipeController     # CRUD recettes + lignes + dupliquer + PDF Gotenberg
-│   │   ├── IngredientController # CRUD ingrédients + historique prix
-│   │   └── AdminController      # Catégories, familles, users, stats
-│   ├── Entity/
-│   │   ├── User                 # UserInterface, rôles Symfony
-│   │   ├── IngredientCategory
-│   │   ├── RecipeFamily
-│   │   ├── Ingredient           # + relation prices
-│   │   ├── IngredientPrice      # Historique prix datés
-│   │   ├── Recipe               # Tous les champs coût/pricing
-│   │   ├── RecipeLine           # Ingrédient OU sous-recette
-│   │   └── RecipeCostCache      # Cache calculs
-│   ├── Repository/ (7 repos)
-│   └── Service/
-│       └── CostCalculator.php   # Moteur de calcul récursif
-└── templates/
-    ├── base.html.twig           # Layout TailAdmin
-    ├── security/login.html.twig
-    ├── recipe/
-    │   ├── index.html.twig      # Liste DataTable
-    │   ├── show.html.twig       # Détail + KPI + params + lignes
-    │   ├── print.html.twig      # Template PDF fiche technique (Gotenberg)
-    │   └── print_lab.html.twig  # Template PDF fiche labo (Gotenberg)
-    ├── ingredient/
-    │   ├── index.html.twig      # Liste DataTable
-    │   └── show.html.twig       # Détail + historique prix
-    └── admin/
-        ├── index.html.twig      # Dashboard
-        ├── categories.html.twig
-        ├── families.html.twig
-        └── users.html.twig
-```
-
-## API internes (AJAX)
-
-| Route | Méthode | Description |
-|-------|---------|-------------|
-| `/api/recettes/recalculer` | POST | Recalculer le cache de coûts (tout ou par ingrédient/recette) |
-
-## Déploiement
-
-### Premier déploiement
+### 1. Renseigner `setup.conf`
 
 ```bash
-ssh user@serveur
-sudo git clone https://github.com/ebougerolle-efalia/gestion-recettes.git /var/www/gestion-recettes
-cd /var/www/gestion-recettes
-sudo ./setup-server.sh
+BASE_DOMAIN="<BASE_DOMAIN>"            # ex: tarify.app
+ADMIN_EMAIL="contact@<BASE_DOMAIN>"    # pour Let's Encrypt
+REPO_URL="<REPO_URL>"
+GIT_BRANCH="master"
+APP_NAME="gestion-recettes"
+INSTALL_ROOT="/var/www/clients"
+GOTENBERG_PORT="3000"
 ```
 
-Le script installe tout (PHP, Nginx, Composer, HTTPS), crée le schéma, seed les données initiales.
-Application accessible sur **https://gestion-recettes.bougerolle.ovh**.
+### 2. Pointer le DNS
 
-### Mise à jour
+Crée un enregistrement `A` (ou un wildcard `*.<BASE_DOMAIN>`) pointant vers l'IP
+du serveur. Pour un client précis : `dupont.<BASE_DOMAIN>` → IP du VPS.
+
+> ⚠️ Le TLD `.app` impose le **HTTPS** sur tous les sous-domaines (liste HSTS
+> preload). Certbot s'en charge automatiquement à l'étape suivante.
+
+### 3. Lancer le déploiement
 
 ```bash
-cd /var/www/gestion-recettes && ./deploy.sh
+sudo ./setup-server.sh dupont
 ```
 
-### Déploiement automatique (webhook GitHub)
+Ce qui se passe :
 
-Sur GitHub → Settings → Webhooks :
-- Payload URL : `https://gestion-recettes.bougerolle.ovh/webhook.php`
-- Content type : `application/json`
-- Secret : celui de `WEBHOOK_SECRET` dans `.env.local`
-- Events : push uniquement
+- **Au premier lancement seulement** : installation de nginx, PHP, Docker +
+  Gotenberg, Composer et Certbot (mémorisé via `/etc/gestion-recettes-bootstrap.done`)
+- Clonage de l'instance dans `/var/www/clients/dupont`
+- Génération d'un `.env.local` avec une base SQLite **isolée** et des secrets uniques
+- Création du vhost nginx pour `dupont.<BASE_DOMAIN>`
+- Obtention du certificat HTTPS (Let's Encrypt)
+- Configuration du webhook de déploiement automatique
 
-### Workflow
+Résultat : l'instance est en ligne sur **https://dupont.<BASE_DOMAIN>**
+(admin / admin123 — **à changer immédiatement**).
+
+### 4. Ajouter d'autres clients
 
 ```bash
-git add . && git commit -m "Ajout recette" && git push origin master
-# → Déploiement automatique
+sudo ./setup-server.sh martin
+sudo ./setup-server.sh boulangerie-durand
 ```
 
-## Notes techniques
+L'étape système est ignorée, seule la nouvelle instance est créée. Chaque client
+est totalement isolé (dossier, base, certificat, secrets).
 
-- **Moteur de calcul** : le `CostCalculator` résout récursivement les sous-recettes avec détection de cycles (protection contre les boucles infinies)
-- **Historique de prix** : le prix utilisé pour le calcul est toujours le dernier en date (`effective_date DESC`)
-- **Gotenberg** : conteneur Docker (`gotenberg/gotenberg:8`) sur le port 3000, utilisé via `sensiolabs/gotenberg-bundle` pour convertir les templates Twig en PDF via Chromium headless. Si Gotenberg ne tourne pas, les routes `/pdf` et `/pdf-labo` retourneront une erreur
-- **Cache** : vider avec `php bin/console cache:clear` ou supprimer `var/cache/`
-- **SQLite** : fichier unique `var/data/recettes.db`
-- **Seed** : `php bin/console app:seed` crée l'admin et les données par défaut (idempotent)
-- **Migration PostgreSQL → SQLite** : l'app originale utilisait PostgreSQL sur Railway ; cette version utilise SQLite pour simplifier le déploiement
+---
 
-## Licence
+## Structure d'un déploiement
 
-Privé — Pierrick Bougerolle
+```
+/var/www/clients/
+├── dupont/
+│   ├── .env.local              # secrets + base propres à dupont
+│   ├── public/uploads/boutique # logo de dupont
+│   └── var/data/recettes.db    # base SQLite isolée
+├── martin/
+│   └── ...
+└── boulangerie-durand/
+    └── ...
+```
+
+## Fichiers de référence
+
+- `setup.conf` — configuration centralisée (à personnaliser)
+- `setup-server.sh` — déploiement d'une instance client
+- `deploy.sh` — mise à jour d'une instance (voir **MISE-A-JOUR.md**)
+- `.env` — valeurs par défaut (dev) ; **ne jamais mettre de secret ici**
+- `.env.local` — secrets de production (généré, jamais committé)
+
+> Pense à exclure du dépôt : `var/`, `.env.local`, `public/uploads/`, et
+> `setup.conf` s'il contient des valeurs sensibles.
