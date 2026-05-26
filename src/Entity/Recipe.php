@@ -34,6 +34,11 @@ class Recipe
     #[ORM\Column(name: 'product_vat_rate', type: 'decimal', precision: 5, scale: 2)]
     private string $productVatRate = '5.50';
 
+    /** Durée de main d'œuvre en minutes (saisie utilisateur). */
+    #[ORM\Column(name: 'labor_minutes', type: 'integer')]
+    private int $laborMinutes = 0;
+
+    /** Coût de main d'œuvre en € HT, calculé = laborMinutes / 60 × taux horaire. */
     #[ORM\Column(name: 'labor_cost_ht', type: 'decimal', precision: 10, scale: 2)]
     private string $laborCostHt = '0.00';
 
@@ -84,6 +89,9 @@ class Recipe
 
     public function getProductVatRate(): float { return (float) $this->productVatRate; }
     public function setProductVatRate(float $v): static { $this->productVatRate = number_format($v, 2, '.', ''); return $this; }
+
+    public function getLaborMinutes(): int { return $this->laborMinutes; }
+    public function setLaborMinutes(int $v): static { $this->laborMinutes = max(0, $v); return $this; }
 
     public function getLaborCostHt(): float { return (float) $this->laborCostHt; }
     public function setLaborCostHt(float $v): static { $this->laborCostHt = number_format($v, 2, '.', ''); return $this; }

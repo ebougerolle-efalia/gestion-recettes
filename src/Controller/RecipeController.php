@@ -6,6 +6,7 @@ use App\Entity\RecipeLine;
 use App\Repository\RecipeRepository;
 use App\Repository\IngredientRepository;
 use App\Repository\RecipeFamilyRepository;
+use App\Repository\ConfigBoutiqueRepository;
 use App\Service\CostCalculator;
 use Sensiolabs\GotenbergBundle\GotenbergPdfInterface;
 use Doctrine\ORM\EntityManagerInterface;
@@ -74,10 +75,10 @@ class RecipeController extends AbstractController
     /** Create recipe */
     #[Route('/recettes/creer', name: 'app_recipe_create', methods: ['POST'])]
     #[IsGranted('ROLE_EDITOR')]
-    public function create(Request $request, EntityManagerInterface $em, CostCalculator $calc): Response
+    public function create(Request $request, EntityManagerInterface $em, CostCalculator $calc, ConfigBoutiqueRepository $configRepo): Response
     {
         $recipe = new Recipe();
-        $this->hydrateRecipe($recipe, $request);
+        $this->hydrateRecipe($recipe, $request, $configRepo->getConfig()->getTauxHoraireMo());
         $em->persist($recipe);
         $em->flush();
 
@@ -90,12 +91,12 @@ class RecipeController extends AbstractController
     /** Update recipe params */
     #[Route('/recettes/{id}/modifier', name: 'app_recipe_update', methods: ['POST'])]
     #[IsGranted('ROLE_EDITOR')]
-    public function update(int $id, Request $request, RecipeRepository $repo, EntityManagerInterface $em, CostCalculator $calc): Response
+    public function update(int $id, Request $request, RecipeRepository $repo, EntityManagerInterface $em, CostCalculator $calc, ConfigBoutiqueRepository $configRepo): Response
     {
         $recipe = $repo->find($id);
         if (!$recipe) throw $this->createNotFoundException();
 
-        $this->hydrateRecipe($recipe, $request);
+        $this->hydrateRecipe($recipe, $request, $configRepo->getConfig()->getTauxHoraireMo());
         $em->flush();
 
         $calc->updateCache($id);
@@ -201,6 +202,7 @@ class RecipeController extends AbstractController
         $copy->setLossPercent($src->getLossPercent());
         $copy->setYieldPercent($src->getYieldPercent());
         $copy->setProductVatRate($src->getProductVatRate());
+        $copy->setLaborMinutes($src->getLaborMinutes());
         $copy->setLaborCostHt($src->getLaborCostHt());
         $copy->setPackagingCostHt($src->getPackagingCostHt());
         $copy->setPricingMode($src->getPricingMode());
@@ -292,7 +294,7 @@ class RecipeController extends AbstractController
             ->stream();
     }
 
-    private function hydrateRecipe(Recipe $recipe, Request $request): void
+    private function hydrateRecipe(Recipe $recipe, Request $request, float $tauxMo): void
     {
         $recipe->setName($request->request->get('name', $recipe->getName()));
         $recipe->setFamily($request->request->get('family', $recipe->getFamily()));
@@ -301,7 +303,12 @@ class RecipeController extends AbstractController
         $recipe->setLossPercent((float) $request->request->get('loss_percent', $recipe->getLossPercent()));
         $recipe->setYieldPercent((float) $request->request->get('yield_percent', $recipe->getYieldPercent()));
         $recipe->setProductVatRate((float) $request->request->get('product_vat_rate', $recipe->getProductVatRate()));
-        $recipe->setLaborCostHt((float) $request->request->get('labor_cost_ht', $recipe->getLaborCostHt()));
+
+        // Main d'œuvre : saisie en minutes, convertie en euros via le taux horaire.
+        $minutes = (int) $request->request->get('labor_minutes', $recipe->getLaborMinutes());
+        $recipe->setLaborMinutes($minutes);
+        $recipe->setLaborCostHt(round($minutes / 60 * $tauxMo, 2));
+
         $recipe->setPackagingCostHt((float) $request->request->get('packaging_cost_ht', $recipe->getPackagingCostHt()));
         $recipe->setPricingMode($request->request->get('pricing_mode', $recipe->getPricingMode()));
         $recipe->setPricingValue((float) $request->request->get('pricing_value', $recipe->getPricingValue()));

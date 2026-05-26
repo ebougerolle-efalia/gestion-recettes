@@ -3,183 +3,201 @@
 {% block page_title %}{{ recipe.name }}{% endblock %}
 {% block page_subtitle %}<span class="inline-flex items-center rounded-full bg-gray-100 px-2 py-0.5 text-[11px] font-medium text-gray-600">{{ recipe.family }}</span> · {{ recipe.outputValue }} {{ recipe.outputUnitLabel }}{% endblock %}
 {% block page_actions %}
-<div class="flex items-center gap-2">
-    <a href="{{ path('app_recipe_pdf_lab', {id: recipe.id}) }}" target="_blank" class="inline-flex items-center gap-1.5 rounded-lg border border-gray-200 px-3 py-2 text-xs text-gray-600 hover:bg-gray-50 transition-colors"><i class="fas fa-flask text-[10px]"></i> Fiche labo</a>
-    <a href="{{ path('app_recipe_pdf', {id: recipe.id}) }}" target="_blank" class="inline-flex items-center gap-1.5 rounded-lg border border-gray-200 px-3 py-2 text-xs text-gray-600 hover:bg-gray-50 transition-colors"><i class="fas fa-file-pdf text-[10px]"></i> PDF complet</a>
-    {% if is_granted('ROLE_EDITOR') %}
-    <button onclick="document.getElementById('dupeModal').classList.remove('hidden');document.getElementById('dupeModal').classList.add('flex')" class="inline-flex items-center gap-1.5 rounded-lg border border-gray-200 px-3 py-2 text-xs text-gray-600 hover:bg-gray-50 transition-colors"><i class="fas fa-copy text-[10px]"></i> Dupliquer</button>
-    {% endif %}
-</div>
+    <div class="flex items-center gap-2">
+        <a href="{{ path('app_recipe_pdf_lab', {id: recipe.id}) }}" target="_blank" class="inline-flex items-center gap-1.5 rounded-lg border border-gray-200 px-3 py-2 text-xs text-gray-600 hover:bg-gray-50 transition-colors"><i class="fas fa-flask text-[10px]"></i> Fiche labo</a>
+        <a href="{{ path('app_recipe_pdf', {id: recipe.id}) }}" target="_blank" class="inline-flex items-center gap-1.5 rounded-lg border border-gray-200 px-3 py-2 text-xs text-gray-600 hover:bg-gray-50 transition-colors"><i class="fas fa-file-pdf text-[10px]"></i> PDF complet</a>
+        {% if is_granted('ROLE_EDITOR') %}
+            <button onclick="document.getElementById('dupeModal').classList.remove('hidden');document.getElementById('dupeModal').classList.add('flex')" class="inline-flex items-center gap-1.5 rounded-lg border border-gray-200 px-3 py-2 text-xs text-gray-600 hover:bg-gray-50 transition-colors"><i class="fas fa-copy text-[10px]"></i> Dupliquer</button>
+        {% endif %}
+    </div>
 {% endblock %}
 
 {% block body %}
-{% set t = totals %}
-{% set unitLabel = recipe.outputUnitLabel %}
-{% set canEdit = is_granted('ROLE_EDITOR') %}
+    {% set t = totals %}
+    {% set unitLabel = recipe.outputUnitLabel %}
+    {% set canEdit = is_granted('ROLE_EDITOR') %}
 
-{# Breadcrumb #}
-<div class="mb-4">
-    <a href="{{ path('app_recipe_index') }}" class="inline-flex items-center gap-1.5 text-sm text-gray-500 hover:text-blue-500 transition-colors"><i class="fas fa-arrow-left text-[10px]"></i> Retour aux recettes</a>
-</div>
+    {# Breadcrumb #}
+    <div class="mb-4">
+        <a href="{{ path('app_recipe_index') }}" class="inline-flex items-center gap-1.5 text-sm text-gray-500 hover:text-blue-500 transition-colors"><i class="fas fa-arrow-left text-[10px]"></i> Retour aux recettes</a>
+    </div>
 
-{# KPI Cards #}
-<div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 mb-6">
-    <div class="rounded-2xl border border-gray-200 bg-white px-4 py-3">
-        <p class="text-[10px] font-semibold uppercase tracking-wider text-gray-400">Coût matière</p>
-        <p class="text-lg font-bold text-[#1c2434] mt-0.5">{{ t.material_cost_ht|number_format(2, ',', ' ') }} €</p>
-    </div>
-    <div class="rounded-2xl border border-gray-200 bg-white px-4 py-3">
-        <p class="text-[10px] font-semibold uppercase tracking-wider text-gray-400">Coût total HT</p>
-        <p class="text-lg font-bold text-[#1c2434] mt-0.5">{{ t.total_cost_ht|number_format(2, ',', ' ') }} €</p>
-    </div>
-    <div class="rounded-2xl border border-gray-200 bg-white px-4 py-3">
-        <p class="text-[10px] font-semibold uppercase tracking-wider text-gray-400">Coût / {{ unitLabel }} HT</p>
-        <p class="text-lg font-bold text-blue-600 mt-0.5">{{ t.cost_per_output_ht|number_format(2, ',', ' ') }} €</p>
-    </div>
-    <div class="rounded-2xl border border-gray-200 bg-white px-4 py-3">
-        <p class="text-[10px] font-semibold uppercase tracking-wider text-gray-400">PV / {{ unitLabel }} HT</p>
-        <p class="text-lg font-bold text-[#1c2434] mt-0.5">{{ t.advised_sell_ht|number_format(2, ',', ' ') }} €</p>
-    </div>
-    <div class="rounded-2xl border border-gray-200 bg-white px-4 py-3">
-        <p class="text-[10px] font-semibold uppercase tracking-wider text-gray-400">PV / {{ unitLabel }} TTC</p>
-        <p class="text-lg font-bold text-blue-600 mt-0.5">{{ t.advised_sell_ttc|number_format(2, ',', ' ') }} €</p>
-    </div>
-    <div class="rounded-2xl border border-gray-200 bg-white px-4 py-3">
-        <p class="text-[10px] font-semibold uppercase tracking-wider text-gray-400">Marge</p>
-        <p class="text-lg font-bold text-emerald-600 mt-0.5">{{ t.margin_ht|number_format(2, ',', ' ') }} € <span class="text-sm">({{ t.margin_percent|number_format(1) }}%)</span></p>
-    </div>
-</div>
-
-<div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-    {# LEFT: Parameters form #}
-    <div>
-        <div class="rounded-2xl border border-gray-200 bg-white">
-            <div class="px-6 py-4 border-b border-gray-100 flex items-center gap-2">
-                <div class="w-2 h-2 rounded-full bg-purple-500"></div>
-                <h3 class="font-semibold text-[15px] text-[#1c2434]">Paramètres</h3>
-            </div>
-            <form method="post" action="{{ path('app_recipe_update', {id: recipe.id}) }}" class="p-6 space-y-4">
-                <div><label class="block text-sm font-medium text-gray-600 mb-1.5">Nom</label><input type="text" name="name" value="{{ recipe.name }}" {{ canEdit ? '' : 'disabled' }} class="w-full rounded-lg border border-gray-200 px-4 py-2.5 text-sm outline-none focus:border-blue-400 disabled:bg-gray-50 disabled:text-gray-400"></div>
-                <div><label class="block text-sm font-medium text-gray-600 mb-1.5">Famille</label><input type="text" name="family" value="{{ recipe.family }}" {{ canEdit ? '' : 'disabled' }} class="w-full rounded-lg border border-gray-200 px-4 py-2.5 text-sm outline-none focus:border-blue-400 disabled:bg-gray-50"></div>
-                <div class="grid grid-cols-2 gap-3">
-                    <div><label class="block text-sm font-medium text-gray-600 mb-1.5">Type sortie</label><select name="output_type" {{ canEdit ? '' : 'disabled' }} class="w-full rounded-lg border border-gray-200 px-4 py-2.5 text-sm outline-none focus:border-blue-400 bg-white disabled:bg-gray-50"><option value="weight" {{ recipe.outputType == 'weight' ? 'selected' }}>Poids (kg)</option><option value="portion" {{ recipe.outputType == 'portion' ? 'selected' }}>Portions</option></select></div>
-                    <div><label class="block text-sm font-medium text-gray-600 mb-1.5">Sortie</label><input type="number" name="output_value" step="0.001" value="{{ recipe.outputValue }}" {{ canEdit ? '' : 'disabled' }} class="w-full rounded-lg border border-gray-200 px-4 py-2.5 text-sm outline-none focus:border-blue-400 disabled:bg-gray-50"></div>
-                </div>
-                <div class="grid grid-cols-2 gap-3">
-                    <div><label class="block text-sm font-medium text-gray-600 mb-1.5">% perte</label><input type="number" name="loss_percent" step="0.01" value="{{ recipe.lossPercent }}" {{ canEdit ? '' : 'disabled' }} class="w-full rounded-lg border border-gray-200 px-4 py-2.5 text-sm outline-none focus:border-blue-400 disabled:bg-gray-50"></div>
-                    <div><label class="block text-sm font-medium text-gray-600 mb-1.5">% rendement</label><input type="number" name="yield_percent" step="0.01" value="{{ recipe.yieldPercent }}" {{ canEdit ? '' : 'disabled' }} class="w-full rounded-lg border border-gray-200 px-4 py-2.5 text-sm outline-none focus:border-blue-400 disabled:bg-gray-50"></div>
-                </div>
-                <hr class="border-gray-100">
-                <div><label class="block text-sm font-medium text-gray-600 mb-1.5">TVA produit %</label><input type="number" name="product_vat_rate" step="0.01" value="{{ recipe.productVatRate }}" {{ canEdit ? '' : 'disabled' }} class="w-full rounded-lg border border-gray-200 px-4 py-2.5 text-sm outline-none focus:border-blue-400 disabled:bg-gray-50"></div>
-                <div class="grid grid-cols-2 gap-3">
-                    <div><label class="block text-sm font-medium text-gray-600 mb-1.5">Main d'œuvre</label><input type="number" name="labor_cost_ht" step="0.01" value="{{ recipe.laborCostHt }}" {{ canEdit ? '' : 'disabled' }} class="w-full rounded-lg border border-gray-200 px-4 py-2.5 text-sm outline-none focus:border-blue-400 disabled:bg-gray-50"></div>
-                    <div><label class="block text-sm font-medium text-gray-600 mb-1.5">Emballage</label><input type="number" name="packaging_cost_ht" step="0.01" value="{{ recipe.packagingCostHt }}" {{ canEdit ? '' : 'disabled' }} class="w-full rounded-lg border border-gray-200 px-4 py-2.5 text-sm outline-none focus:border-blue-400 disabled:bg-gray-50"></div>
-                </div>
-                <div class="grid grid-cols-2 gap-3">
-                    <div><label class="block text-sm font-medium text-gray-600 mb-1.5">Mode prix</label><select name="pricing_mode" {{ canEdit ? '' : 'disabled' }} class="w-full rounded-lg border border-gray-200 px-4 py-2.5 text-sm outline-none focus:border-blue-400 bg-white disabled:bg-gray-50"><option value="coef" {{ recipe.pricingMode == 'coef' ? 'selected' }}>Coefficient</option><option value="margin" {{ recipe.pricingMode == 'margin' ? 'selected' }}>Marge %</option></select></div>
-                    <div><label class="block text-sm font-medium text-gray-600 mb-1.5">Objectif</label><input type="number" name="pricing_value" step="0.01" value="{{ recipe.pricingValue }}" {{ canEdit ? '' : 'disabled' }} class="w-full rounded-lg border border-gray-200 px-4 py-2.5 text-sm outline-none focus:border-blue-400 disabled:bg-gray-50"></div>
-                </div>
-                {% if canEdit %}<button type="submit" class="w-full rounded-lg bg-blue-500 hover:bg-blue-600 px-5 py-2.5 text-sm font-medium text-white transition-colors"><i class="fas fa-check text-[11px] mr-1"></i> Enregistrer</button>{% endif %}
-            </form>
+    {# KPI Cards #}
+    <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 mb-6">
+        <div class="rounded-2xl border border-gray-200 bg-white px-4 py-3">
+            <p class="text-[10px] font-semibold uppercase tracking-wider text-gray-400">Coût matière</p>
+            <p class="text-lg font-bold text-[#1c2434] mt-0.5">{{ t.material_cost_ht|number_format(2, ',', ' ') }} €</p>
         </div>
-
-        {% if canEdit %}
-        <form method="post" action="{{ path('app_recipe_delete', {id: recipe.id}) }}" onsubmit="return confirm('Supprimer définitivement cette recette ?')" class="mt-4">
-            <button type="submit" class="w-full rounded-lg border border-red-200 px-5 py-2.5 text-sm font-medium text-red-500 hover:bg-red-50 transition-colors"><i class="fas fa-trash text-[11px] mr-1"></i> Supprimer la recette</button>
-        </form>
-        {% endif %}
+        <div class="rounded-2xl border border-gray-200 bg-white px-4 py-3">
+            <p class="text-[10px] font-semibold uppercase tracking-wider text-gray-400">Coût total HT</p>
+            <p class="text-lg font-bold text-[#1c2434] mt-0.5">{{ t.total_cost_ht|number_format(2, ',', ' ') }} €</p>
+        </div>
+        <div class="rounded-2xl border border-gray-200 bg-white px-4 py-3">
+            <p class="text-[10px] font-semibold uppercase tracking-wider text-gray-400">Coût / {{ unitLabel }} HT</p>
+            <p class="text-lg font-bold text-blue-600 mt-0.5">{{ t.cost_per_output_ht|number_format(2, ',', ' ') }} €</p>
+        </div>
+        <div class="rounded-2xl border border-gray-200 bg-white px-4 py-3">
+            <p class="text-[10px] font-semibold uppercase tracking-wider text-gray-400">PV / {{ unitLabel }} HT</p>
+            <p class="text-lg font-bold text-[#1c2434] mt-0.5">{{ t.advised_sell_ht|number_format(2, ',', ' ') }} €</p>
+        </div>
+        <div class="rounded-2xl border border-gray-200 bg-white px-4 py-3">
+            <p class="text-[10px] font-semibold uppercase tracking-wider text-gray-400">PV / {{ unitLabel }} TTC</p>
+            <p class="text-lg font-bold text-blue-600 mt-0.5">{{ t.advised_sell_ttc|number_format(2, ',', ' ') }} €</p>
+        </div>
+        <div class="rounded-2xl border border-gray-200 bg-white px-4 py-3">
+            <p class="text-[10px] font-semibold uppercase tracking-wider text-gray-400">Marge</p>
+            <p class="text-lg font-bold text-emerald-600 mt-0.5">{{ t.margin_ht|number_format(2, ',', ' ') }} € <span class="text-sm">({{ t.margin_percent|number_format(1) }}%)</span></p>
+        </div>
     </div>
 
-    {# RIGHT: Ingredients list #}
-    <div class="lg:col-span-2">
-        <div class="rounded-2xl border border-gray-200 bg-white">
-            <div class="px-6 py-4 border-b border-gray-100 flex items-center justify-between">
-                <div class="flex items-center gap-2">
-                    <div class="w-2 h-2 rounded-full bg-blue-500"></div>
-                    <h3 class="font-semibold text-[15px] text-[#1c2434]">Composition</h3>
-                    <span class="text-xs text-gray-400 ml-1">({{ lines|length }} ligne{{ lines|length > 1 ? 's' }})</span>
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        {# LEFT: Parameters form #}
+        <div>
+            <div class="rounded-2xl border border-gray-200 bg-white">
+                <div class="px-6 py-4 border-b border-gray-100 flex items-center gap-2">
+                    <div class="w-2 h-2 rounded-full bg-purple-500"></div>
+                    <h3 class="font-semibold text-[15px] text-[#1c2434]">Paramètres</h3>
                 </div>
-                {% if canEdit %}
-                <button onclick="document.getElementById('addLineModal').classList.remove('hidden');document.getElementById('addLineModal').classList.add('flex')" class="inline-flex items-center gap-1.5 rounded-lg bg-blue-500 hover:bg-blue-600 px-3 py-2 text-xs font-medium text-white transition-colors"><i class="fas fa-plus text-[10px]"></i> Ajouter</button>
-                {% endif %}
-            </div>
-
-            {% if lines|length == 0 %}
-            <div class="py-16 text-center text-gray-400"><i class="fas fa-leaf text-3xl mb-3 block text-gray-200"></i><p class="text-sm">Aucun ingrédient</p></div>
-            {% else %}
-            <div class="divide-y divide-gray-50">
-                {% for l in lines %}
-                <div class="px-6 py-4 flex items-center justify-between gap-4 hover:bg-gray-50/50 transition-colors">
-                    <div class="flex-1 min-w-0">
-                        <div class="font-medium text-gray-900">
-                            {% if l.type == 'ingredient' %}{{ l.ingredient.name }}{% else %}{{ l.sub_recipe.name }} <span class="ml-1 inline-flex items-center rounded-full bg-blue-50 px-2 py-px text-[10px] font-medium text-blue-600">sous-recette</span>{% endif %}
+                <form method="post" action="{{ path('app_recipe_update', {id: recipe.id}) }}" class="p-6 space-y-4">
+                    <div><label class="block text-sm font-medium text-gray-600 mb-1.5">Nom</label><input type="text" name="name" value="{{ recipe.name }}" {{ canEdit ? '' : 'disabled' }} class="w-full rounded-lg border border-gray-200 px-4 py-2.5 text-sm outline-none focus:border-blue-400 disabled:bg-gray-50 disabled:text-gray-400"></div>
+                    <div><label class="block text-sm font-medium text-gray-600 mb-1.5">Famille</label><input type="text" name="family" value="{{ recipe.family }}" {{ canEdit ? '' : 'disabled' }} class="w-full rounded-lg border border-gray-200 px-4 py-2.5 text-sm outline-none focus:border-blue-400 disabled:bg-gray-50"></div>
+                    <div class="grid grid-cols-2 gap-3">
+                        <div><label class="block text-sm font-medium text-gray-600 mb-1.5">Type sortie</label><select name="output_type" {{ canEdit ? '' : 'disabled' }} class="w-full rounded-lg border border-gray-200 px-4 py-2.5 text-sm outline-none focus:border-blue-400 bg-white disabled:bg-gray-50"><option value="weight" {{ recipe.outputType == 'weight' ? 'selected' }}>Poids (kg)</option><option value="portion" {{ recipe.outputType == 'portion' ? 'selected' }}>Portions</option></select></div>
+                        <div><label class="block text-sm font-medium text-gray-600 mb-1.5">Sortie</label><input type="number" name="output_value" step="0.001" value="{{ recipe.outputValue }}" {{ canEdit ? '' : 'disabled' }} class="w-full rounded-lg border border-gray-200 px-4 py-2.5 text-sm outline-none focus:border-blue-400 disabled:bg-gray-50"></div>
+                    </div>
+                    <div class="grid grid-cols-2 gap-3">
+                        <div><label class="block text-sm font-medium text-gray-600 mb-1.5">% perte</label><input type="number" name="loss_percent" step="0.01" value="{{ recipe.lossPercent }}" {{ canEdit ? '' : 'disabled' }} class="w-full rounded-lg border border-gray-200 px-4 py-2.5 text-sm outline-none focus:border-blue-400 disabled:bg-gray-50"></div>
+                        <div><label class="block text-sm font-medium text-gray-600 mb-1.5">% rendement</label><input type="number" name="yield_percent" step="0.01" value="{{ recipe.yieldPercent }}" {{ canEdit ? '' : 'disabled' }} class="w-full rounded-lg border border-gray-200 px-4 py-2.5 text-sm outline-none focus:border-blue-400 disabled:bg-gray-50"></div>
+                    </div>
+                    <hr class="border-gray-100">
+                    <div><label class="block text-sm font-medium text-gray-600 mb-1.5">TVA produit %</label><input type="number" name="product_vat_rate" step="0.01" value="{{ recipe.productVatRate }}" {{ canEdit ? '' : 'disabled' }} class="w-full rounded-lg border border-gray-200 px-4 py-2.5 text-sm outline-none focus:border-blue-400 disabled:bg-gray-50"></div>
+                    <div class="grid grid-cols-2 gap-3">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-600 mb-1.5">Main d'œuvre (minutes)</label>
+                            <input type="number" name="labor_minutes" min="0" step="1" value="{{ recipe.laborMinutes }}"
+                                   data-taux="{{ boutique().tauxHoraireMo }}" oninput="majCoutMO(this)" {{ canEdit ? '' : 'disabled' }}
+                                   class="w-full rounded-lg border border-gray-200 px-4 py-2.5 text-sm outline-none focus:border-blue-400 disabled:bg-gray-50">
+                            <p class="text-xs text-gray-400 mt-1">≈ <span class="cout-mo">0,00</span> € HT (taux : {{ boutique().tauxHoraireMo }} €/h)</p>
                         </div>
-                        <div class="text-sm text-gray-500 mt-0.5">
-                            {{ l.qty_brute }} {{ l.unit }}
-                            <span class="text-gray-300 mx-1">·</span>
-                            perte {{ l.loss_percent|number_format(1) }}%
-                            <span class="text-gray-300 mx-1">·</span>
-                            rendement {{ l.yield_percent|number_format(1) }}%
-                            {% if l.note %}<span class="text-gray-300 mx-1">·</span><span class="text-amber-600 italic">{{ l.note }}</span>{% endif %}
+                        <div>
+                            <label class="block text-sm font-medium text-gray-600 mb-1.5">Emballage (€ HT)</label>
+                            <input type="number" name="packaging_cost_ht" step="0.01" value="{{ recipe.packagingCostHt }}" {{ canEdit ? '' : 'disabled' }} class="w-full rounded-lg border border-gray-200 px-4 py-2.5 text-sm outline-none focus:border-blue-400 disabled:bg-gray-50">
                         </div>
                     </div>
-                    <div class="text-right shrink-0">
-                        <div class="font-semibold text-gray-900">{{ l.line_cost_ht|number_format(2, ',', ' ') }} €</div>
-                        <div class="text-sm text-gray-500">{{ l.price_ht_per_base_unit|number_format(2, ',', ' ') }} € / {% if l.type == 'ingredient' %}{{ l.ingredient.base_unit }}{% else %}{{ unitLabel }}{% endif %}</div>
+                    <div class="grid grid-cols-2 gap-3">
+                        <div><label class="block text-sm font-medium text-gray-600 mb-1.5">Mode prix</label><select name="pricing_mode" {{ canEdit ? '' : 'disabled' }} class="w-full rounded-lg border border-gray-200 px-4 py-2.5 text-sm outline-none focus:border-blue-400 bg-white disabled:bg-gray-50"><option value="coef" {{ recipe.pricingMode == 'coef' ? 'selected' }}>Coefficient</option><option value="margin" {{ recipe.pricingMode == 'margin' ? 'selected' }}>Marge %</option></select></div>
+                        <div><label class="block text-sm font-medium text-gray-600 mb-1.5">Objectif</label><input type="number" name="pricing_value" step="0.01" value="{{ recipe.pricingValue }}" {{ canEdit ? '' : 'disabled' }} class="w-full rounded-lg border border-gray-200 px-4 py-2.5 text-sm outline-none focus:border-blue-400 disabled:bg-gray-50"></div>
                     </div>
-                    {% if canEdit %}
-                    <form method="post" action="{{ path('app_recipe_remove_line', {id: recipe.id, lineId: l.line_id}) }}" onsubmit="return confirm('Supprimer ?')" class="shrink-0">
-                        <button class="w-8 h-8 inline-flex items-center justify-center rounded-lg text-gray-400 hover:text-red-500 hover:bg-red-50 transition-colors"><i class="fas fa-trash text-xs"></i></button>
-                    </form>
-                    {% endif %}
-                </div>
-                {% endfor %}
+                    {% if canEdit %}<button type="submit" class="w-full rounded-lg bg-blue-500 hover:bg-blue-600 px-5 py-2.5 text-sm font-medium text-white transition-colors"><i class="fas fa-check text-[11px] mr-1"></i> Enregistrer</button>{% endif %}
+                </form>
             </div>
 
-            {# Total footer #}
-            <div class="px-6 py-3 border-t border-gray-200 bg-gray-50/50 flex justify-between items-center rounded-b-2xl">
-                <span class="text-sm font-semibold text-gray-600">Total matière HT</span>
-                <span class="text-base font-bold text-[#1c2434]">{{ t.material_cost_ht|number_format(2, ',', ' ') }} €</span>
-            </div>
+            {% if canEdit %}
+                <form method="post" action="{{ path('app_recipe_delete', {id: recipe.id}) }}" onsubmit="return confirm('Supprimer définitivement cette recette ?')" class="mt-4">
+                    <button type="submit" class="w-full rounded-lg border border-red-200 px-5 py-2.5 text-sm font-medium text-red-500 hover:bg-red-50 transition-colors"><i class="fas fa-trash text-[11px] mr-1"></i> Supprimer la recette</button>
+                </form>
             {% endif %}
         </div>
-    </div>
-</div>
 
-{# Add Line Modal #}
-<div id="addLineModal" class="fixed inset-0 z-[9999] hidden items-center justify-center bg-black/50" onclick="if(event.target===this){this.classList.add('hidden');this.classList.remove('flex')}">
-<form method="post" action="{{ path('app_recipe_add_line', {id: recipe.id}) }}" class="bg-white rounded-2xl shadow-xl w-full max-w-lg mx-4">
-    <div class="px-6 py-4 border-b border-gray-100"><h3 class="font-semibold text-[#1c2434]"><i class="fas fa-plus text-blue-500 mr-2 text-sm"></i>Ajouter une ligne</h3></div>
-    <div class="p-6 space-y-4">
-        <div><label class="block text-sm font-medium text-gray-600 mb-1.5">Type</label><select name="type" id="lineTypeSelect" class="w-full rounded-lg border border-gray-200 px-4 py-2.5 text-sm outline-none focus:border-blue-400 bg-white" onchange="toggleLineType()"><option value="ingredient">Ingrédient</option><option value="sub_recipe">Sous-recette</option></select></div>
-        <div id="ingredientField"><label class="block text-sm font-medium text-gray-600 mb-1.5">Ingrédient</label><select name="ingredient_id" class="w-full rounded-lg border border-gray-200 px-4 py-2.5 text-sm outline-none focus:border-blue-400 bg-white"><option value="">Choisir…</option>{% for i in ingredients %}<option value="{{ i.id }}">{{ i.name }} ({{ i.baseUnit }})</option>{% endfor %}</select></div>
-        <div id="subRecipeField" style="display:none"><label class="block text-sm font-medium text-gray-600 mb-1.5">Sous-recette</label><select name="sub_recipe_id" class="w-full rounded-lg border border-gray-200 px-4 py-2.5 text-sm outline-none focus:border-blue-400 bg-white"><option value="">Choisir…</option>{% for r in availableSubs %}<option value="{{ r.id }}">{{ r.name }} ({{ r.family }})</option>{% endfor %}</select></div>
-        <div class="grid grid-cols-2 gap-4">
-            <div><label class="block text-sm font-medium text-gray-600 mb-1.5">Quantité brute</label><input type="number" name="qty_brute" step="0.001" required placeholder="0.000" class="w-full rounded-lg border border-gray-200 px-4 py-2.5 text-sm outline-none focus:border-blue-400"></div>
-            <div><label class="block text-sm font-medium text-gray-600 mb-1.5">Unité</label><select name="unit" class="w-full rounded-lg border border-gray-200 px-4 py-2.5 text-sm outline-none focus:border-blue-400 bg-white"><option value="kg">kg</option><option value="g">g</option><option value="piece">pièce</option><option value="litre">litre</option></select></div>
-        </div>
-        <div class="grid grid-cols-2 gap-4">
-            <div><label class="block text-sm font-medium text-gray-600 mb-1.5">% perte</label><input type="number" name="loss_percent" step="0.01" value="0" class="w-full rounded-lg border border-gray-200 px-4 py-2.5 text-sm outline-none focus:border-blue-400"></div>
-            <div><label class="block text-sm font-medium text-gray-600 mb-1.5">% rendement</label><input type="number" name="yield_percent" step="0.01" value="100" class="w-full rounded-lg border border-gray-200 px-4 py-2.5 text-sm outline-none focus:border-blue-400"></div>
-        </div>
-    </div>
-    <div class="px-6 py-4 border-t border-gray-100 flex justify-end gap-3">
-        <button type="button" onclick="this.closest('.fixed').classList.add('hidden');this.closest('.fixed').classList.remove('flex')" class="rounded-lg border border-gray-200 px-4 py-2 text-sm text-gray-600 hover:bg-gray-50">Annuler</button>
-        <button type="submit" class="rounded-lg bg-blue-500 hover:bg-blue-600 px-5 py-2 text-sm font-medium text-white"><i class="fas fa-plus text-[10px] mr-1"></i> Ajouter</button>
-    </div>
-</form></div>
+        {# RIGHT: Ingredients list #}
+        <div class="lg:col-span-2">
+            <div class="rounded-2xl border border-gray-200 bg-white">
+                <div class="px-6 py-4 border-b border-gray-100 flex items-center justify-between">
+                    <div class="flex items-center gap-2">
+                        <div class="w-2 h-2 rounded-full bg-blue-500"></div>
+                        <h3 class="font-semibold text-[15px] text-[#1c2434]">Composition</h3>
+                        <span class="text-xs text-gray-400 ml-1">({{ lines|length }} ligne{{ lines|length > 1 ? 's' }})</span>
+                    </div>
+                    {% if canEdit %}
+                        <button onclick="document.getElementById('addLineModal').classList.remove('hidden');document.getElementById('addLineModal').classList.add('flex')" class="inline-flex items-center gap-1.5 rounded-lg bg-blue-500 hover:bg-blue-600 px-3 py-2 text-xs font-medium text-white transition-colors"><i class="fas fa-plus text-[10px]"></i> Ajouter</button>
+                    {% endif %}
+                </div>
 
-{# Duplicate Modal #}
-<div id="dupeModal" class="fixed inset-0 z-[9999] hidden items-center justify-center bg-black/50" onclick="if(event.target===this){this.classList.add('hidden');this.classList.remove('flex')}">
-<form method="post" action="{{ path('app_recipe_duplicate', {id: recipe.id}) }}" class="bg-white rounded-2xl shadow-xl w-full max-w-sm mx-4">
-    <div class="px-6 py-4 border-b border-gray-100"><h3 class="font-semibold text-[#1c2434]">Dupliquer</h3></div>
-    <div class="p-6"><p class="text-xs text-gray-400 mb-3">Copie la recette avec tous ses ingrédients.</p><label class="block text-sm font-medium text-gray-600 mb-1.5">Nom de la copie</label><input type="text" name="new_name" value="{{ recipe.name }} (copie)" required class="w-full rounded-lg border border-gray-200 px-4 py-2.5 text-sm outline-none focus:border-blue-400"></div>
-    <div class="px-6 py-4 border-t border-gray-100 flex justify-end gap-3"><button type="button" onclick="this.closest('.fixed').classList.add('hidden');this.closest('.fixed').classList.remove('flex')" class="rounded-lg border border-gray-200 px-4 py-2 text-sm text-gray-600 hover:bg-gray-50">Annuler</button><button type="submit" class="rounded-lg bg-green-500 hover:bg-green-600 px-5 py-2 text-sm font-medium text-white">Dupliquer</button></div>
-</form></div>
+                {% if lines|length == 0 %}
+                    <div class="py-16 text-center text-gray-400"><i class="fas fa-leaf text-3xl mb-3 block text-gray-200"></i><p class="text-sm">Aucun ingrédient</p></div>
+                {% else %}
+                    <div class="divide-y divide-gray-50">
+                        {% for l in lines %}
+                            <div class="px-6 py-4 flex items-center justify-between gap-4 hover:bg-gray-50/50 transition-colors">
+                                <div class="flex-1 min-w-0">
+                                    <div class="font-medium text-gray-900">
+                                        {% if l.type == 'ingredient' %}{{ l.ingredient.name }}{% else %}{{ l.sub_recipe.name }} <span class="ml-1 inline-flex items-center rounded-full bg-blue-50 px-2 py-px text-[10px] font-medium text-blue-600">sous-recette</span>{% endif %}
+                                    </div>
+                                    <div class="text-sm text-gray-500 mt-0.5">
+                                        {{ l.qty_brute }} {{ l.unit }}
+                                        <span class="text-gray-300 mx-1">·</span>
+                                        perte {{ l.loss_percent|number_format(1) }}%
+                                        <span class="text-gray-300 mx-1">·</span>
+                                        rendement {{ l.yield_percent|number_format(1) }}%
+                                        {% if l.note %}<span class="text-gray-300 mx-1">·</span><span class="text-amber-600 italic">{{ l.note }}</span>{% endif %}
+                                    </div>
+                                </div>
+                                <div class="text-right shrink-0">
+                                    <div class="font-semibold text-gray-900">{{ l.line_cost_ht|number_format(2, ',', ' ') }} €</div>
+                                    <div class="text-sm text-gray-500">{{ l.price_ht_per_base_unit|number_format(2, ',', ' ') }} € / {% if l.type == 'ingredient' %}{{ l.ingredient.base_unit }}{% else %}{{ unitLabel }}{% endif %}</div>
+                                </div>
+                                {% if canEdit %}
+                                    <form method="post" action="{{ path('app_recipe_remove_line', {id: recipe.id, lineId: l.line_id}) }}" onsubmit="return confirm('Supprimer ?')" class="shrink-0">
+                                        <button class="w-8 h-8 inline-flex items-center justify-center rounded-lg text-gray-400 hover:text-red-500 hover:bg-red-50 transition-colors"><i class="fas fa-trash text-xs"></i></button>
+                                    </form>
+                                {% endif %}
+                            </div>
+                        {% endfor %}
+                    </div>
+
+                    {# Total footer #}
+                    <div class="px-6 py-3 border-t border-gray-200 bg-gray-50/50 flex justify-between items-center rounded-b-2xl">
+                        <span class="text-sm font-semibold text-gray-600">Total matière HT</span>
+                        <span class="text-base font-bold text-[#1c2434]">{{ t.material_cost_ht|number_format(2, ',', ' ') }} €</span>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    {# Add Line Modal #}
+    <div id="addLineModal" class="fixed inset-0 z-[9999] hidden items-center justify-center bg-black/50" onclick="if(event.target===this){this.classList.add('hidden');this.classList.remove('flex')}">
+        <form method="post" action="{{ path('app_recipe_add_line', {id: recipe.id}) }}" class="bg-white rounded-2xl shadow-xl w-full max-w-lg mx-4">
+            <div class="px-6 py-4 border-b border-gray-100"><h3 class="font-semibold text-[#1c2434]"><i class="fas fa-plus text-blue-500 mr-2 text-sm"></i>Ajouter une ligne</h3></div>
+            <div class="p-6 space-y-4">
+                <div><label class="block text-sm font-medium text-gray-600 mb-1.5">Type</label><select name="type" id="lineTypeSelect" class="w-full rounded-lg border border-gray-200 px-4 py-2.5 text-sm outline-none focus:border-blue-400 bg-white" onchange="toggleLineType()"><option value="ingredient">Ingrédient</option><option value="sub_recipe">Sous-recette</option></select></div>
+                <div id="ingredientField"><label class="block text-sm font-medium text-gray-600 mb-1.5">Ingrédient</label><select name="ingredient_id" class="w-full rounded-lg border border-gray-200 px-4 py-2.5 text-sm outline-none focus:border-blue-400 bg-white"><option value="">Choisir…</option>{% for i in ingredients %}<option value="{{ i.id }}">{{ i.name }} ({{ i.baseUnit }})</option>{% endfor %}</select></div>
+                <div id="subRecipeField" style="display:none"><label class="block text-sm font-medium text-gray-600 mb-1.5">Sous-recette</label><select name="sub_recipe_id" class="w-full rounded-lg border border-gray-200 px-4 py-2.5 text-sm outline-none focus:border-blue-400 bg-white"><option value="">Choisir…</option>{% for r in availableSubs %}<option value="{{ r.id }}">{{ r.name }} ({{ r.family }})</option>{% endfor %}</select></div>
+                <div class="grid grid-cols-2 gap-4">
+                    <div><label class="block text-sm font-medium text-gray-600 mb-1.5">Quantité brute</label><input type="number" name="qty_brute" step="0.001" required placeholder="0.000" class="w-full rounded-lg border border-gray-200 px-4 py-2.5 text-sm outline-none focus:border-blue-400"></div>
+                    <div><label class="block text-sm font-medium text-gray-600 mb-1.5">Unité</label><select name="unit" class="w-full rounded-lg border border-gray-200 px-4 py-2.5 text-sm outline-none focus:border-blue-400 bg-white"><option value="kg">kg</option><option value="g">g</option><option value="piece">pièce</option><option value="litre">litre</option></select></div>
+                </div>
+                <div class="grid grid-cols-2 gap-4">
+                    <div><label class="block text-sm font-medium text-gray-600 mb-1.5">% perte</label><input type="number" name="loss_percent" step="0.01" value="0" class="w-full rounded-lg border border-gray-200 px-4 py-2.5 text-sm outline-none focus:border-blue-400"></div>
+                    <div><label class="block text-sm font-medium text-gray-600 mb-1.5">% rendement</label><input type="number" name="yield_percent" step="0.01" value="100" class="w-full rounded-lg border border-gray-200 px-4 py-2.5 text-sm outline-none focus:border-blue-400"></div>
+                </div>
+            </div>
+            <div class="px-6 py-4 border-t border-gray-100 flex justify-end gap-3">
+                <button type="button" onclick="this.closest('.fixed').classList.add('hidden');this.closest('.fixed').classList.remove('flex')" class="rounded-lg border border-gray-200 px-4 py-2 text-sm text-gray-600 hover:bg-gray-50">Annuler</button>
+                <button type="submit" class="rounded-lg bg-blue-500 hover:bg-blue-600 px-5 py-2 text-sm font-medium text-white"><i class="fas fa-plus text-[10px] mr-1"></i> Ajouter</button>
+            </div>
+        </form></div>
+
+    {# Duplicate Modal #}
+    <div id="dupeModal" class="fixed inset-0 z-[9999] hidden items-center justify-center bg-black/50" onclick="if(event.target===this){this.classList.add('hidden');this.classList.remove('flex')}">
+        <form method="post" action="{{ path('app_recipe_duplicate', {id: recipe.id}) }}" class="bg-white rounded-2xl shadow-xl w-full max-w-sm mx-4">
+            <div class="px-6 py-4 border-b border-gray-100"><h3 class="font-semibold text-[#1c2434]">Dupliquer</h3></div>
+            <div class="p-6"><p class="text-xs text-gray-400 mb-3">Copie la recette avec tous ses ingrédients.</p><label class="block text-sm font-medium text-gray-600 mb-1.5">Nom de la copie</label><input type="text" name="new_name" value="{{ recipe.name }} (copie)" required class="w-full rounded-lg border border-gray-200 px-4 py-2.5 text-sm outline-none focus:border-blue-400"></div>
+            <div class="px-6 py-4 border-t border-gray-100 flex justify-end gap-3"><button type="button" onclick="this.closest('.fixed').classList.add('hidden');this.closest('.fixed').classList.remove('flex')" class="rounded-lg border border-gray-200 px-4 py-2 text-sm text-gray-600 hover:bg-gray-50">Annuler</button><button type="submit" class="rounded-lg bg-green-500 hover:bg-green-600 px-5 py-2 text-sm font-medium text-white">Dupliquer</button></div>
+        </form></div>
 {% endblock %}
 
 {% block javascripts %}
-<script>
-function toggleLineType(){const t=document.getElementById('lineTypeSelect').value;document.getElementById('ingredientField').style.display=t==='ingredient'?'':'none';document.getElementById('subRecipeField').style.display=t==='sub_recipe'?'':'none';}
-</script>
+    <script>
+        function toggleLineType(){const t=document.getElementById('lineTypeSelect').value;document.getElementById('ingredientField').style.display=t==='ingredient'?'':'none';document.getElementById('subRecipeField').style.display=t==='sub_recipe'?'':'none';}
+
+        // Aperçu du coût de main d'œuvre (minutes → euros)
+        function majCoutMO(input){
+            const taux = parseFloat(input.dataset.taux) || 0;
+            const min  = parseFloat(input.value) || 0;
+            const span = input.closest('div').querySelector('.cout-mo');
+            if (span) span.textContent = (min / 60 * taux).toFixed(2).replace('.', ',');
+        }
+        document.querySelectorAll('input[name="labor_minutes"]').forEach(majCoutMO);
+    </script>
 {% endblock %}

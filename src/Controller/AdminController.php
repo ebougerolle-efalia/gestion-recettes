@@ -229,6 +229,7 @@ class AdminController extends AbstractController
         $config->setMentionPied($request->request->get('mention_pied') ?: null);
         $config->setTvaDefaut((float) $request->request->get('tva_defaut', $config->getTvaDefaut()));
         $config->setCoefDefaut((float) $request->request->get('coef_defaut', $config->getCoefDefaut()));
+        $config->setTauxHoraireMo((float) $request->request->get('taux_horaire_mo', $config->getTauxHoraireMo()));
 
         // --- Logo : suppression demandée ---
         $uploadDir = $this->getParameter('kernel.project_dir') . '/public/uploads/boutique';
@@ -253,7 +254,6 @@ class AdminController extends AbstractController
                 return $this->redirectToRoute('app_admin_parametres');
             }
 
-            // Supprime l'ancien logo le cas échéant
             if ($config->getLogoPath()) {
                 @unlink($this->getParameter('kernel.project_dir') . '/public/' . $config->getLogoPath());
             }
@@ -278,7 +278,6 @@ class AdminController extends AbstractController
     #[Route('/seed', name: 'app_admin_seed', methods: ['POST'])]
     public function seed(EntityManagerInterface $em, UserPasswordHasherInterface $hasher, IngredientCategoryRepository $catRepo, RecipeFamilyRepository $famRepo, UserRepository $userRepo): Response
     {
-        // Catégories par défaut
         $defaultCats = ['Viande' => 1, 'Epices' => 2, 'Emballage' => 3, 'Autres' => 99];
         foreach ($defaultCats as $name => $order) {
             if (!$catRepo->findOneBy(['name' => $name])) {
@@ -289,7 +288,6 @@ class AdminController extends AbstractController
             }
         }
 
-        // Familles par défaut
         $defaultFams = ['Terrine' => 1, 'Pâté' => 2, 'Saucisse' => 3, 'Jambon' => 4, 'Cuit' => 5, 'Sec' => 6, 'Autres' => 99];
         foreach ($defaultFams as $name => $order) {
             if (!$famRepo->findOneBy(['name' => $name])) {

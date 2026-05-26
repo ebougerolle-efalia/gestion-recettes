@@ -6,10 +6,6 @@ use App\Repository\ConfigBoutiqueRepository;
 
 /**
  * Configuration de l'établissement (singleton : un seul enregistrement, id = 1).
- *
- * Sert à dépersonnaliser l'application : nom du labo, coordonnées et logo
- * affichés dans l'interface et sur les fiches PDF, plus quelques valeurs
- * métier par défaut pour pré-remplir les nouvelles recettes.
  */
 #[ORM\Entity(repositoryClass: ConfigBoutiqueRepository::class)]
 #[ORM\Table(name: 'config_boutique')]
@@ -60,6 +56,10 @@ class ConfigBoutique
     #[ORM\Column(name: 'coef_defaut', type: 'decimal', precision: 10, scale: 3)]
     private string $coefDefaut = '3.000';
 
+    /** Taux horaire de main d'œuvre en € HT — sert à convertir les minutes en coût. */
+    #[ORM\Column(name: 'taux_horaire_mo', type: 'decimal', precision: 10, scale: 2)]
+    private string $tauxHoraireMo = '25.00';
+
     // --- Getters / setters ----------------------------------------------------
 
     public function getId(): ?int { return $this->id; }
@@ -99,6 +99,9 @@ class ConfigBoutique
 
     public function getCoefDefaut(): float { return (float) $this->coefDefaut; }
     public function setCoefDefaut(float $v): static { $this->coefDefaut = number_format($v, 3, '.', ''); return $this; }
+
+    public function getTauxHoraireMo(): float { return (float) $this->tauxHoraireMo; }
+    public function setTauxHoraireMo(float $v): static { $this->tauxHoraireMo = number_format($v, 2, '.', ''); return $this; }
 
     /** Adresse complète sur une ligne, pratique pour les en-têtes PDF. */
     public function getAdresseComplete(): string
