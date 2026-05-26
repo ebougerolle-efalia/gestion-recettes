@@ -146,8 +146,11 @@
                 <div class="header-subtitle">{{ recipe.name }} — {{ recipe.family }}</div>
             </td>
             <td class="header-company">
-                Pierrick Bougerolle<br>
-                Charcutier-Traiteur
+                {% if logo_base64() %}<img src="{{ logo_base64() }}" alt="" style="max-height:50px; max-width:150px; margin-bottom:6px;"><br>{% endif %}
+                <strong style="color:#1c2434;">{{ boutique().nomEtablissement }}</strong>
+                {% if boutique().sousTitre %}<br>{{ boutique().sousTitre }}{% endif %}
+                {% if boutique().adresseComplete %}<br>{{ boutique().adresseComplete }}{% endif %}
+                {% if boutique().telephone %}<br>{{ boutique().telephone }}{% endif %}
             </td>
         </tr>
     </table>
@@ -248,8 +251,7 @@
 
     <!-- PIED -->
     <div class="footer">
-        Généré le {{ 'now'|date('d/m/Y à H:i') }} — Pierrick Bougerolle, Charcutier-Traiteur
-    </div>
+        Fiche labo générée le {{ 'now'|date('d/m/Y à H:i') }} — {{ boutique().nomEtablissement }}{% if boutique().sousTitre %}, {{ boutique().sousTitre }}{% endif %}    </div>
 
 </body>
 </html>
