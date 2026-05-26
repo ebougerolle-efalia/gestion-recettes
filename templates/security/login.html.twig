@@ -1,51 +1,334 @@
 <!DOCTYPE html>
-<html lang="fr" class="h-full">
+<html lang="fr">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Connexion — {{ boutique().nomEtablissement }}</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <style>body { font-family: 'Inter', sans-serif; }</style>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <style>
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            min-height: 100vh;
+            display: flex;
+        }
+
+        /* ===== PANNEAU GAUCHE ===== */
+        .panel-left {
+            width: 55%;
+            min-height: 100vh;
+            background: #1c2434;
+            position: relative;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            padding: 60px 64px;
+        }
+
+        /* Décorations géométriques */
+        .deco-circle-1 {
+            position: absolute;
+            width: 420px;
+            height: 420px;
+            border-radius: 50%;
+            border: 1px solid rgba(255,255,255,0.06);
+            top: -140px;
+            right: -100px;
+        }
+        .deco-circle-2 {
+            position: absolute;
+            width: 280px;
+            height: 280px;
+            border-radius: 50%;
+            border: 1px solid rgba(255,255,255,0.04);
+            bottom: -80px;
+            left: -80px;
+        }
+        .deco-dot {
+            position: absolute;
+            width: 180px;
+            height: 180px;
+            border-radius: 50%;
+            background: rgba(59,130,246,0.12);
+            bottom: 80px;
+            right: -40px;
+        }
+        .deco-bar {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 4px;
+            height: 100%;
+            background: #3b82f6;
+        }
+
+        /* Contenu */
+        .brand {
+            position: relative;
+            z-index: 1;
+            margin-bottom: 48px;
+        }
+        .brand-logo {
+            max-height: 64px;
+            max-width: 200px;
+            object-fit: contain;
+            margin-bottom: 24px;
+            display: block;
+        }
+        .brand-name {
+            font-size: 32px;
+            font-weight: 700;
+            color: #fff;
+            letter-spacing: -0.5px;
+            line-height: 1.15;
+        }
+        .brand-sub {
+            font-size: 14px;
+            color: rgba(255,255,255,0.45);
+            margin-top: 6px;
+            font-weight: 400;
+        }
+
+        .tagline {
+            position: relative;
+            z-index: 1;
+            margin-bottom: 44px;
+        }
+        .tagline-text {
+            font-size: 22px;
+            font-weight: 600;
+            color: #fff;
+            line-height: 1.4;
+        }
+        .tagline-sub {
+            font-size: 14px;
+            color: rgba(255,255,255,0.5);
+            margin-top: 10px;
+            line-height: 1.6;
+        }
+
+        .features {
+            position: relative;
+            z-index: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+        .feature-item {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+        }
+        .feature-icon {
+            width: 36px;
+            height: 36px;
+            border-radius: 10px;
+            background: rgba(59,130,246,0.18);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+        .feature-icon i {
+            font-size: 14px;
+            color: #60a5fa;
+        }
+        .feature-text {
+            font-size: 14px;
+            color: rgba(255,255,255,0.7);
+            font-weight: 400;
+        }
+
+        /* ===== PANNEAU DROIT ===== */
+        .panel-right {
+            width: 45%;
+            min-height: 100vh;
+            background: #fff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 48px 48px;
+        }
+        .login-box {
+            width: 100%;
+            max-width: 380px;
+        }
+        .login-header {
+            margin-bottom: 32px;
+        }
+        .login-title {
+            font-size: 26px;
+            font-weight: 700;
+            color: #1c2434;
+        }
+        .login-subtitle {
+            font-size: 14px;
+            color: #94a3b8;
+            margin-top: 6px;
+        }
+
+        .form-group {
+            margin-bottom: 18px;
+        }
+        label {
+            display: block;
+            font-size: 13px;
+            font-weight: 500;
+            color: #475569;
+            margin-bottom: 6px;
+        }
+        input[type="text"],
+        input[type="password"] {
+            width: 100%;
+            padding: 11px 14px;
+            border: 1.5px solid #e2e8f0;
+            border-radius: 10px;
+            font-size: 14px;
+            font-family: 'Inter', sans-serif;
+            color: #1c2434;
+            outline: none;
+            transition: border-color 0.15s;
+            background: #fff;
+        }
+        input[type="text"]:focus,
+        input[type="password"]:focus {
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 3px rgba(59,130,246,0.1);
+        }
+
+        .btn-submit {
+            width: 100%;
+            padding: 13px;
+            background: #3b82f6;
+            color: #fff;
+            font-size: 14px;
+            font-weight: 600;
+            font-family: 'Inter', sans-serif;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: background 0.15s, transform 0.1s;
+            margin-top: 8px;
+        }
+        .btn-submit:hover { background: #2563eb; }
+        .btn-submit:active { transform: scale(0.99); }
+
+        .error-box {
+            background: #fef2f2;
+            border: 1px solid #fecaca;
+            color: #dc2626;
+            padding: 11px 14px;
+            border-radius: 10px;
+            font-size: 13px;
+            margin-bottom: 18px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        /* ===== RESPONSIVE ===== */
+        @media (max-width: 768px) {
+            body { flex-direction: column; }
+            .panel-left {
+                width: 100%;
+                min-height: auto;
+                padding: 40px 32px 36px;
+            }
+            .deco-circle-1, .deco-circle-2, .deco-dot { display: none; }
+            .tagline, .features { display: none; }
+            .brand { margin-bottom: 0; }
+            .brand-name { font-size: 24px; }
+            .panel-right {
+                width: 100%;
+                padding: 40px 24px;
+            }
+        }
+    </style>
 </head>
-<body class="h-full flex items-center justify-center bg-[#1c2434]">
-<div class="w-full max-w-sm mx-4">
-    <div class="text-center mb-8">
-        <h1 class="text-3xl font-bold text-white">{{ boutique().nomEtablissement }}</h1>
+<body>
+
+{# ===== PANNEAU GAUCHE : produit ===== #}
+<div class="panel-left">
+    <div class="deco-bar"></div>
+    <div class="deco-circle-1"></div>
+    <div class="deco-circle-2"></div>
+    <div class="deco-dot"></div>
+
+    <div class="brand">
+        {% if logo_base64() %}
+            <img src="{{ logo_base64() }}" alt="{{ boutique().nomEtablissement }}" class="brand-logo">
+        {% endif %}
+        <div class="brand-name">{{ boutique().nomEtablissement }}</div>
         {% if boutique().sousTitre %}
-            <p class="text-gray-400 text-sm mt-2">{{ boutique().sousTitre }}</p>
+            <div class="brand-sub">{{ boutique().sousTitre }}</div>
         {% endif %}
     </div>
 
-    <div class="bg-white rounded-2xl shadow-xl p-8">
-        <h2 class="text-xl font-semibold text-gray-800 mb-6 text-center">Connexion</h2>
+    <div class="tagline">
+        <div class="tagline-text">Calculez vos coûts.<br>Maîtrisez vos marges.</div>
+        <div class="tagline-sub">La gestion des recettes pensée pour<br>les artisans des métiers de bouche.</div>
+    </div>
+
+    <div class="features">
+        <div class="feature-item">
+            <div class="feature-icon"><i class="fas fa-calculator"></i></div>
+            <span class="feature-text">Calcul automatique du coût de revient</span>
+        </div>
+        <div class="feature-item">
+            <div class="feature-icon"><i class="fas fa-chart-line"></i></div>
+            <span class="feature-text">Suivi de l'évolution des prix ingrédients</span>
+        </div>
+        <div class="feature-item">
+            <div class="feature-icon"><i class="fas fa-file-pdf"></i></div>
+            <span class="feature-text">Fiches techniques PDF en un clic</span>
+        </div>
+        <div class="feature-item">
+            <div class="feature-icon"><i class="fas fa-tag"></i></div>
+            <span class="feature-text">Tarification par coefficient ou marge cible</span>
+        </div>
+    </div>
+</div>
+
+{# ===== PANNEAU DROIT : formulaire ===== #}
+<div class="panel-right">
+    <div class="login-box">
+        <div class="login-header">
+            <div class="login-title">Connexion</div>
+            <div class="login-subtitle">Bienvenue, veuillez vous identifier.</div>
+        </div>
 
         {% if error %}
-            <div class="mb-4 bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg text-sm">
+            <div class="error-box">
+                <i class="fas fa-exclamation-circle"></i>
                 {{ error.messageKey|trans(error.messageData, 'security') }}
             </div>
         {% endif %}
 
         <form method="post">
-            <div class="mb-4">
-                <label class="block text-sm font-medium text-gray-600 mb-1.5">Identifiant</label>
-                <input type="text" name="_username" value="{{ last_username }}" required autofocus
-                       class="w-full rounded-lg border border-gray-200 px-4 py-2.5 text-sm outline-none focus:border-blue-400 focus:ring-2 focus:ring-blue-500/20">
+            <div class="form-group">
+                <label for="username">Identifiant</label>
+                <input type="text" id="username" name="_username"
+                       value="{{ last_username }}" required autofocus
+                       autocomplete="username">
             </div>
 
-            <div class="mb-6">
-                <label class="block text-sm font-medium text-gray-600 mb-1.5">Mot de passe</label>
-                <input type="password" name="_password" required
-                       class="w-full rounded-lg border border-gray-200 px-4 py-2.5 text-sm outline-none focus:border-blue-400 focus:ring-2 focus:ring-blue-500/20">
+            <div class="form-group">
+                <label for="password">Mot de passe</label>
+                <input type="password" id="password" name="_password"
+                       required autocomplete="current-password">
             </div>
 
             <input type="hidden" name="_csrf_token" value="{{ csrf_token('authenticate') }}">
 
-            <button type="submit" class="w-full rounded-lg bg-blue-500 hover:bg-blue-600 px-5 py-3 text-sm font-semibold text-white transition-colors">
+            <button type="submit" class="btn-submit">
                 Se connecter
             </button>
         </form>
     </div>
 </div>
+
 </body>
 </html>
