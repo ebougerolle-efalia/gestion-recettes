@@ -3,272 +3,116 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Connexion — {{ boutique().nomEtablissement }}</title>
+    {# =====================================================================
+       NOM DU PRODUIT — à changer ici quand le nom définitif est choisi
+       ===================================================================== #}
+    {% set product_name = "Receto" %}
+
+    <title>{{ product_name }} — Connexion</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <style>
         *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: 'Inter', sans-serif; min-height: 100vh; display: flex; }
 
-        body {
-            font-family: 'Inter', sans-serif;
-            min-height: 100vh;
-            display: flex;
-        }
-
-        /* ===== PANNEAU GAUCHE ===== */
         .panel-left {
-            width: 55%;
-            min-height: 100vh;
-            background: #1c2434;
-            position: relative;
-            overflow: hidden;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
+            width: 52%; min-height: 100vh; background: #eef2fb;
+            position: relative; overflow: hidden;
+            display: flex; flex-direction: column; justify-content: center;
             padding: 60px 64px;
         }
+        .deco-1 { position:absolute; width:500px; height:500px; border-radius:50%; background:rgba(59,130,246,0.07); top:-180px; right:-160px; }
+        .deco-2 { position:absolute; width:300px; height:300px; border-radius:50%; background:rgba(59,130,246,0.06); bottom:-100px; left:-80px; }
+        .deco-3 { position:absolute; width:120px; height:120px; border-radius:50%; background:rgba(59,130,246,0.08); bottom:120px; right:60px; }
 
-        /* Décorations géométriques */
-        .deco-circle-1 {
-            position: absolute;
-            width: 420px;
-            height: 420px;
-            border-radius: 50%;
-            border: 1px solid rgba(255,255,255,0.06);
-            top: -140px;
-            right: -100px;
-        }
-        .deco-circle-2 {
-            position: absolute;
-            width: 280px;
-            height: 280px;
-            border-radius: 50%;
-            border: 1px solid rgba(255,255,255,0.04);
-            bottom: -80px;
-            left: -80px;
-        }
-        .deco-dot {
-            position: absolute;
-            width: 180px;
-            height: 180px;
-            border-radius: 50%;
-            background: rgba(59,130,246,0.12);
-            bottom: 80px;
-            right: -40px;
-        }
-        .deco-bar {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 4px;
-            height: 100%;
-            background: #3b82f6;
-        }
+        .brand { position:relative; z-index:1; display:flex; align-items:center; gap:14px; margin-bottom:52px; }
+        .brand-icon { width:48px; height:48px; background:#3b82f6; border-radius:14px; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+        .brand-icon svg { width:26px; height:26px; }
+        .brand-name { font-size:22px; font-weight:700; color:#1c2434; letter-spacing:-0.3px; }
+        .brand-tagline { font-size:12px; color:#6b7280; margin-top:2px; }
 
-        /* Contenu */
-        .brand {
-            position: relative;
-            z-index: 1;
-            margin-bottom: 48px;
-        }
-        .brand-logo {
-            max-height: 64px;
-            max-width: 200px;
-            object-fit: contain;
-            margin-bottom: 24px;
-            display: block;
-        }
-        .brand-name {
-            font-size: 32px;
-            font-weight: 700;
-            color: #fff;
-            letter-spacing: -0.5px;
-            line-height: 1.15;
-        }
-        .brand-sub {
-            font-size: 14px;
-            color: rgba(255,255,255,0.45);
-            margin-top: 6px;
-            font-weight: 400;
-        }
+        .tagline { position:relative; z-index:1; margin-bottom:40px; }
+        .tagline-main { font-size:28px; font-weight:700; color:#1c2434; line-height:1.3; letter-spacing:-0.5px; }
+        .tagline-sub { font-size:14px; color:#6b7280; margin-top:12px; line-height:1.65; }
 
-        .tagline {
-            position: relative;
-            z-index: 1;
-            margin-bottom: 44px;
-        }
-        .tagline-text {
-            font-size: 22px;
-            font-weight: 600;
-            color: #fff;
-            line-height: 1.4;
-        }
-        .tagline-sub {
-            font-size: 14px;
-            color: rgba(255,255,255,0.5);
-            margin-top: 10px;
-            line-height: 1.6;
-        }
+        .features { position:relative; z-index:1; display:flex; flex-direction:column; gap:14px; }
+        .feature-item { display:flex; align-items:center; gap:14px; }
+        .feature-icon { width:36px; height:36px; border-radius:10px; background:rgba(59,130,246,0.12); display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+        .feature-icon i { font-size:13px; color:#3b82f6; }
+        .feature-text { font-size:14px; color:#374151; }
 
-        .features {
-            position: relative;
-            z-index: 1;
-            display: flex;
-            flex-direction: column;
-            gap: 16px;
-        }
-        .feature-item {
-            display: flex;
-            align-items: center;
-            gap: 14px;
-        }
-        .feature-icon {
-            width: 36px;
-            height: 36px;
-            border-radius: 10px;
-            background: rgba(59,130,246,0.18);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            flex-shrink: 0;
-        }
-        .feature-icon i {
-            font-size: 14px;
-            color: #60a5fa;
-        }
-        .feature-text {
-            font-size: 14px;
-            color: rgba(255,255,255,0.7);
-            font-weight: 400;
-        }
+        .panel-right { width:48%; min-height:100vh; background:#fff; display:flex; align-items:center; justify-content:center; padding:48px; }
+        .login-box { width:100%; max-width:360px; }
 
-        /* ===== PANNEAU DROIT ===== */
-        .panel-right {
-            width: 45%;
-            min-height: 100vh;
-            background: #fff;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            padding: 48px 48px;
-        }
-        .login-box {
-            width: 100%;
-            max-width: 380px;
-        }
-        .login-header {
-            margin-bottom: 32px;
-        }
-        .login-title {
-            font-size: 26px;
-            font-weight: 700;
-            color: #1c2434;
-        }
-        .login-subtitle {
-            font-size: 14px;
-            color: #94a3b8;
-            margin-top: 6px;
-        }
+        .login-header { text-align:center; margin-bottom:36px; }
+        .login-logo { width:52px; height:52px; background:#3b82f6; border-radius:16px; display:flex; align-items:center; justify-content:center; margin:0 auto 16px; }
+        .login-logo svg { width:28px; height:28px; }
+        .login-title { font-size:22px; font-weight:700; color:#1c2434; }
+        .login-subtitle { font-size:14px; color:#9ca3af; margin-top:5px; }
 
-        .form-group {
-            margin-bottom: 18px;
+        .form-group { margin-bottom:16px; }
+        label { display:block; font-size:13px; font-weight:500; color:#4b5563; margin-bottom:7px; }
+        .input-wrap { position:relative; }
+        .input-wrap i { position:absolute; left:14px; top:50%; transform:translateY(-50%); font-size:13px; color:#9ca3af; }
+        input[type="text"], input[type="password"] {
+            width:100%; padding:11px 14px 11px 38px;
+            border:1.5px solid #e5e7eb; border-radius:10px;
+            font-size:14px; font-family:'Inter',sans-serif; color:#1c2434;
+            outline:none; background:#fff; transition:border-color 0.15s, box-shadow 0.15s;
         }
-        label {
-            display: block;
-            font-size: 13px;
-            font-weight: 500;
-            color: #475569;
-            margin-bottom: 6px;
+        input[type="text"]:focus, input[type="password"]:focus {
+            border-color:#3b82f6; box-shadow:0 0 0 3px rgba(59,130,246,0.1);
         }
-        input[type="text"],
-        input[type="password"] {
-            width: 100%;
-            padding: 11px 14px;
-            border: 1.5px solid #e2e8f0;
-            border-radius: 10px;
-            font-size: 14px;
-            font-family: 'Inter', sans-serif;
-            color: #1c2434;
-            outline: none;
-            transition: border-color 0.15s;
-            background: #fff;
-        }
-        input[type="text"]:focus,
-        input[type="password"]:focus {
-            border-color: #3b82f6;
-            box-shadow: 0 0 0 3px rgba(59,130,246,0.1);
-        }
-
         .btn-submit {
-            width: 100%;
-            padding: 13px;
-            background: #3b82f6;
-            color: #fff;
-            font-size: 14px;
-            font-weight: 600;
-            font-family: 'Inter', sans-serif;
-            border: none;
-            border-radius: 10px;
-            cursor: pointer;
-            transition: background 0.15s, transform 0.1s;
-            margin-top: 8px;
+            width:100%; padding:13px; background:#3b82f6; color:#fff;
+            font-size:14px; font-weight:600; font-family:'Inter',sans-serif;
+            border:none; border-radius:10px; cursor:pointer; margin-top:6px; transition:background 0.15s;
         }
-        .btn-submit:hover { background: #2563eb; }
-        .btn-submit:active { transform: scale(0.99); }
-
+        .btn-submit:hover { background:#2563eb; }
         .error-box {
-            background: #fef2f2;
-            border: 1px solid #fecaca;
-            color: #dc2626;
-            padding: 11px 14px;
-            border-radius: 10px;
-            font-size: 13px;
-            margin-bottom: 18px;
-            display: flex;
-            align-items: center;
-            gap: 8px;
+            background:#fef2f2; border:1px solid #fecaca; color:#dc2626;
+            padding:11px 14px; border-radius:10px; font-size:13px;
+            margin-bottom:18px; display:flex; align-items:center; gap:8px;
         }
+        .login-footer { text-align:center; margin-top:28px; font-size:12px; color:#9ca3af; }
+        .login-footer strong { color:#6b7280; }
 
-        /* ===== RESPONSIVE ===== */
-        @media (max-width: 768px) {
-            body { flex-direction: column; }
-            .panel-left {
-                width: 100%;
-                min-height: auto;
-                padding: 40px 32px 36px;
-            }
-            .deco-circle-1, .deco-circle-2, .deco-dot { display: none; }
-            .tagline, .features { display: none; }
-            .brand { margin-bottom: 0; }
-            .brand-name { font-size: 24px; }
-            .panel-right {
-                width: 100%;
-                padding: 40px 24px;
-            }
+        @media (max-width:900px) {
+            body { flex-direction:column; }
+            .panel-left { width:100%; min-height:auto; padding:36px 28px 32px; }
+            .deco-1,.deco-2,.deco-3 { display:none; }
+            .features { display:none; }
+            .tagline-main { font-size:20px; }
+            .tagline { margin-bottom:0; }
+            .panel-right { width:100%; padding:36px 24px; }
         }
     </style>
 </head>
 <body>
 
-{# ===== PANNEAU GAUCHE : produit ===== #}
 <div class="panel-left">
-    <div class="deco-bar"></div>
-    <div class="deco-circle-1"></div>
-    <div class="deco-circle-2"></div>
-    <div class="deco-dot"></div>
+    <div class="deco-1"></div>
+    <div class="deco-2"></div>
+    <div class="deco-3"></div>
 
     <div class="brand">
-        {% if logo_base64() %}
-            <img src="{{ logo_base64() }}" alt="{{ boutique().nomEtablissement }}" class="brand-logo">
-        {% endif %}
-        <div class="brand-name">{{ boutique().nomEtablissement }}</div>
-        {% if boutique().sousTitre %}
-            <div class="brand-sub">{{ boutique().sousTitre }}</div>
-        {% endif %}
+        <div class="brand-icon">
+            <svg viewBox="0 0 26 26" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M5 10 C5 7.5 7.5 6 10 6 L16 6 C18.5 6 21 7.5 21 10 L21 16 C21 18.5 18.5 19 16 19 L10 19 C7.5 19 5 18.5 5 16 Z" stroke="white" stroke-width="1.5" fill="rgba(255,255,255,0.2)"/>
+                <polyline points="9,15 11.5,12 14,13.5 17,10" stroke="white" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                <circle cx="17" cy="10" r="1.5" fill="white"/>
+                <line x1="13" y1="19" x2="13" y2="21.5" stroke="white" stroke-width="1.5" stroke-linecap="round"/>
+                <line x1="9" y1="21.5" x2="17" y2="21.5" stroke="white" stroke-width="1.5" stroke-linecap="round"/>
+            </svg>
+        </div>
+        <div>
+            <div class="brand-name">{{ product_name }}</div>
+            <div class="brand-tagline">Gestion des recettes &amp; coûts</div>
+        </div>
     </div>
 
     <div class="tagline">
-        <div class="tagline-text">Calculez vos coûts.<br>Maîtrisez vos marges.</div>
+        <div class="tagline-main">Calculez vos coûts.<br>Maîtrisez vos marges.</div>
         <div class="tagline-sub">La gestion des recettes pensée pour<br>les artisans des métiers de bouche.</div>
     </div>
 
@@ -292,12 +136,20 @@
     </div>
 </div>
 
-{# ===== PANNEAU DROIT : formulaire ===== #}
 <div class="panel-right">
     <div class="login-box">
         <div class="login-header">
-            <div class="login-title">Connexion</div>
-            <div class="login-subtitle">Bienvenue, veuillez vous identifier.</div>
+            <div class="login-logo">
+                <svg viewBox="0 0 26 26" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M5 10 C5 7.5 7.5 6 10 6 L16 6 C18.5 6 21 7.5 21 10 L21 16 C21 18.5 18.5 19 16 19 L10 19 C7.5 19 5 18.5 5 16 Z" stroke="white" stroke-width="1.5" fill="rgba(255,255,255,0.2)"/>
+                    <polyline points="9,15 11.5,12 14,13.5 17,10" stroke="white" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                    <circle cx="17" cy="10" r="1.5" fill="white"/>
+                    <line x1="13" y1="19" x2="13" y2="21.5" stroke="white" stroke-width="1.5" stroke-linecap="round"/>
+                    <line x1="9" y1="21.5" x2="17" y2="21.5" stroke="white" stroke-width="1.5" stroke-linecap="round"/>
+                </svg>
+            </div>
+            <div class="login-title">Bienvenue</div>
+            <div class="login-subtitle">Connectez-vous à votre espace {{ product_name }}</div>
         </div>
 
         {% if error %}
@@ -310,23 +162,31 @@
         <form method="post">
             <div class="form-group">
                 <label for="username">Identifiant</label>
-                <input type="text" id="username" name="_username"
-                       value="{{ last_username }}" required autofocus
-                       autocomplete="username">
+                <div class="input-wrap">
+                    <i class="fas fa-user"></i>
+                    <input type="text" id="username" name="_username"
+                           value="{{ last_username }}" required autofocus
+                           autocomplete="username" placeholder="Votre identifiant">
+                </div>
             </div>
-
             <div class="form-group">
                 <label for="password">Mot de passe</label>
-                <input type="password" id="password" name="_password"
-                       required autocomplete="current-password">
+                <div class="input-wrap">
+                    <i class="fas fa-lock"></i>
+                    <input type="password" id="password" name="_password"
+                           required autocomplete="current-password"
+                           placeholder="Votre mot de passe">
+                </div>
             </div>
-
             <input type="hidden" name="_csrf_token" value="{{ csrf_token('authenticate') }}">
-
             <button type="submit" class="btn-submit">
-                Se connecter
+                Se connecter &nbsp;<i class="fas fa-arrow-right" style="font-size:11px;"></i>
             </button>
         </form>
+
+        <div class="login-footer">
+            <strong>{{ boutique().nomEtablissement }}</strong>{% if boutique().sousTitre %} · {{ boutique().sousTitre }}{% endif %}
+        </div>
     </div>
 </div>
 
