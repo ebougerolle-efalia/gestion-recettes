@@ -17,7 +17,6 @@
     {% set unitLabel = recipe.outputUnitLabel %}
     {% set canEdit = is_granted('ROLE_EDITOR') %}
 
-    {# Breadcrumb #}
     <div class="mb-4">
         <a href="{{ path('app_recipe_index') }}" class="inline-flex items-center gap-1.5 text-sm text-gray-500 hover:text-blue-500 transition-colors"><i class="fas fa-arrow-left text-[10px]"></i> Retour aux recettes</a>
     </div>
@@ -51,7 +50,7 @@
     </div>
 
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {# LEFT: Parameters form #}
+        {# LEFT: Paramètres #}
         <div>
             <div class="rounded-2xl border border-gray-200 bg-white">
                 <div class="px-6 py-4 border-b border-gray-100 flex items-center gap-2">
@@ -91,7 +90,6 @@
                     {% if canEdit %}<button type="submit" class="w-full rounded-lg bg-blue-500 hover:bg-blue-600 px-5 py-2.5 text-sm font-medium text-white transition-colors"><i class="fas fa-check text-[11px] mr-1"></i> Enregistrer</button>{% endif %}
                 </form>
             </div>
-
             {% if canEdit %}
                 <form method="post" action="{{ path('app_recipe_delete', {id: recipe.id}) }}" onsubmit="return confirm('Supprimer définitivement cette recette ?')" class="mt-4">
                     <button type="submit" class="w-full rounded-lg border border-red-200 px-5 py-2.5 text-sm font-medium text-red-500 hover:bg-red-50 transition-colors"><i class="fas fa-trash text-[11px] mr-1"></i> Supprimer la recette</button>
@@ -99,7 +97,7 @@
             {% endif %}
         </div>
 
-        {# RIGHT: Ingredients list #}
+        {# RIGHT: Composition #}
         <div class="lg:col-span-2">
             <div class="rounded-2xl border border-gray-200 bg-white">
                 <div class="px-6 py-4 border-b border-gray-100 flex items-center justify-between">
@@ -112,7 +110,6 @@
                         <button onclick="document.getElementById('addLineModal').classList.remove('hidden');document.getElementById('addLineModal').classList.add('flex')" class="inline-flex items-center gap-1.5 rounded-lg bg-blue-500 hover:bg-blue-600 px-3 py-2 text-xs font-medium text-white transition-colors"><i class="fas fa-plus text-[10px]"></i> Ajouter</button>
                     {% endif %}
                 </div>
-
                 {% if lines|length == 0 %}
                     <div class="py-16 text-center text-gray-400"><i class="fas fa-leaf text-3xl mb-3 block text-gray-200"></i><p class="text-sm">Aucun ingrédient</p></div>
                 {% else %}
@@ -125,10 +122,8 @@
                                     </div>
                                     <div class="text-sm text-gray-500 mt-0.5">
                                         {{ l.qty_brute }} {{ l.unit }}
-                                        <span class="text-gray-300 mx-1">·</span>
-                                        perte {{ l.loss_percent|number_format(1) }}%
-                                        <span class="text-gray-300 mx-1">·</span>
-                                        rendement {{ l.yield_percent|number_format(1) }}%
+                                        <span class="text-gray-300 mx-1">·</span>perte {{ l.loss_percent|number_format(1) }}%
+                                        <span class="text-gray-300 mx-1">·</span>rendement {{ l.yield_percent|number_format(1) }}%
                                         {% if l.note %}<span class="text-gray-300 mx-1">·</span><span class="text-amber-600 italic">{{ l.note }}</span>{% endif %}
                                     </div>
                                 </div>
@@ -144,8 +139,6 @@
                             </div>
                         {% endfor %}
                     </div>
-
-                    {# Total footer #}
                     <div class="px-6 py-3 border-t border-gray-200 bg-gray-50/50 flex justify-between items-center rounded-b-2xl">
                         <span class="text-sm font-semibold text-gray-600">Total matière HT</span>
                         <span class="text-base font-bold text-[#1c2434]">{{ t.material_cost_ht|number_format(2, ',', ' ') }} €</span>
@@ -155,7 +148,69 @@
         </div>
     </div>
 
-    {# Add Line Modal #}
+    {# ===== ANALYSE DES COÛTS ===== #}
+    {% if t.total_cost_ht > 0 %}
+        <div class="mt-6 rounded-2xl border border-gray-200 bg-white">
+            <div class="px-6 py-4 border-b border-gray-100 flex items-center gap-2">
+                <div class="w-2 h-2 rounded-full bg-amber-500"></div>
+                <h3 class="font-semibold text-[15px] text-[#1c2434]">Analyse des coûts</h3>
+                <span class="text-xs text-gray-400 ml-1">décomposition pour {{ recipe.outputValue }} {{ unitLabel }}</span>
+            </div>
+            <div class="p-6 grid grid-cols-1 md:grid-cols-2 gap-8 items-center">
+                <div class="flex justify-center">
+                    <div style="position:relative; width:220px; height:220px;">
+                        <canvas id="costChart"></canvas>
+                        <div style="position:absolute; top:50%; left:50%; transform:translate(-50%,-50%); text-align:center; pointer-events:none;">
+                            <div class="text-xl font-bold text-[#1c2434]">{{ t.total_cost_ht|number_format(2,',',' ') }} €</div>
+                            <div class="text-xs text-gray-400">coût total HT</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="space-y-4">
+                    {% set pct_mat   = t.total_cost_ht > 0 ? (t.material_cost_ht   / t.total_cost_ht * 100)|round(1) : 0 %}
+                    {% set pct_labor = t.total_cost_ht > 0 ? (t.labor_cost_ht      / t.total_cost_ht * 100)|round(1) : 0 %}
+                    {% set pct_pack  = t.total_cost_ht > 0 ? (t.packaging_cost_ht  / t.total_cost_ht * 100)|round(1) : 0 %}
+                    <div class="flex items-center gap-4">
+                        <div class="w-3 h-3 rounded-full bg-blue-500 flex-shrink-0"></div>
+                        <div class="flex-1">
+                            <div class="flex justify-between text-sm mb-1">
+                                <span class="font-medium text-gray-700">Matières premières</span>
+                                <span class="font-semibold text-[#1c2434]">{{ t.material_cost_ht|number_format(2,',',' ') }} € <span class="text-gray-400 font-normal">({{ pct_mat }}%)</span></span>
+                            </div>
+                            <div class="h-2 rounded-full bg-gray-100"><div class="h-2 rounded-full bg-blue-500" style="width:{{ pct_mat }}%"></div></div>
+                        </div>
+                    </div>
+                    <div class="flex items-center gap-4">
+                        <div class="w-3 h-3 rounded-full bg-emerald-500 flex-shrink-0"></div>
+                        <div class="flex-1">
+                            <div class="flex justify-between text-sm mb-1">
+                                <span class="font-medium text-gray-700">Main d'œuvre</span>
+                                <span class="font-semibold text-[#1c2434]">{{ t.labor_cost_ht|number_format(2,',',' ') }} € <span class="text-gray-400 font-normal">({{ pct_labor }}%)</span></span>
+                            </div>
+                            <div class="h-2 rounded-full bg-gray-100"><div class="h-2 rounded-full bg-emerald-500" style="width:{{ pct_labor }}%"></div></div>
+                        </div>
+                    </div>
+                    <div class="flex items-center gap-4">
+                        <div class="w-3 h-3 rounded-full bg-amber-500 flex-shrink-0"></div>
+                        <div class="flex-1">
+                            <div class="flex justify-between text-sm mb-1">
+                                <span class="font-medium text-gray-700">Emballage</span>
+                                <span class="font-semibold text-[#1c2434]">{{ t.packaging_cost_ht|number_format(2,',',' ') }} € <span class="text-gray-400 font-normal">({{ pct_pack }}%)</span></span>
+                            </div>
+                            <div class="h-2 rounded-full bg-gray-100"><div class="h-2 rounded-full bg-amber-500" style="width:{{ pct_pack }}%"></div></div>
+                        </div>
+                    </div>
+                    <hr class="border-gray-100">
+                    <div class="flex justify-between items-center bg-emerald-50/70 rounded-xl px-4 py-3">
+                        <span class="text-sm font-semibold text-gray-700">Marge brute</span>
+                        <span class="font-bold text-emerald-700">{{ t.margin_ht|number_format(2,',',' ') }} € <span class="font-normal text-emerald-500 text-sm">({{ t.margin_percent|number_format(1) }}%)</span></span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    {% endif %}
+
+    {# Modals #}
     <div id="addLineModal" class="fixed inset-0 z-[9999] hidden items-center justify-center bg-black/50" onclick="if(event.target===this){this.classList.add('hidden');this.classList.remove('flex')}">
         <form method="post" action="{{ path('app_recipe_add_line', {id: recipe.id}) }}" class="bg-white rounded-2xl shadow-xl w-full max-w-lg mx-4">
             <div class="px-6 py-4 border-b border-gray-100"><h3 class="font-semibold text-[#1c2434]"><i class="fas fa-plus text-blue-500 mr-2 text-sm"></i>Ajouter une ligne</h3></div>
@@ -178,7 +233,6 @@
             </div>
         </form></div>
 
-    {# Duplicate Modal #}
     <div id="dupeModal" class="fixed inset-0 z-[9999] hidden items-center justify-center bg-black/50" onclick="if(event.target===this){this.classList.add('hidden');this.classList.remove('flex')}">
         <form method="post" action="{{ path('app_recipe_duplicate', {id: recipe.id}) }}" class="bg-white rounded-2xl shadow-xl w-full max-w-sm mx-4">
             <div class="px-6 py-4 border-b border-gray-100"><h3 class="font-semibold text-[#1c2434]">Dupliquer</h3></div>
@@ -188,16 +242,48 @@
 {% endblock %}
 
 {% block javascripts %}
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
     <script>
         function toggleLineType(){const t=document.getElementById('lineTypeSelect').value;document.getElementById('ingredientField').style.display=t==='ingredient'?'':'none';document.getElementById('subRecipeField').style.display=t==='sub_recipe'?'':'none';}
 
-        // Aperçu du coût de main d'œuvre (minutes → euros)
         function majCoutMO(input){
-            const taux = parseFloat(input.dataset.taux) || 0;
-            const min  = parseFloat(input.value) || 0;
-            const span = input.closest('div').querySelector('.cout-mo');
-            if (span) span.textContent = (min / 60 * taux).toFixed(2).replace('.', ',');
+            const taux=parseFloat(input.dataset.taux)||0;
+            const min=parseFloat(input.value)||0;
+            const span=input.closest('div').querySelector('.cout-mo');
+            if(span) span.textContent=(min/60*taux).toFixed(2).replace('.',',');
         }
         document.querySelectorAll('input[name="labor_minutes"]').forEach(majCoutMO);
+
+        {% if t.total_cost_ht > 0 %}
+        const costCtx = document.getElementById('costChart');
+        if (costCtx) {
+            const mat     = {{ t.material_cost_ht }};
+            const labor   = {{ t.labor_cost_ht }};
+            const packing = {{ t.packaging_cost_ht }};
+            new Chart(costCtx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Matières', "Main d'œuvre", 'Emballage'],
+                    datasets: [{
+                        data: [mat, labor, packing],
+                        backgroundColor: ['#3b82f6', '#10b981', '#f59e0b'],
+                        borderWidth: 0,
+                        hoverOffset: 6
+                    }]
+                },
+                options: {
+                    cutout: '68%',
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            callbacks: {
+                                label: ctx => ' ' + parseFloat(ctx.raw).toFixed(2).replace('.', ',') + ' €'
+                            }
+                        }
+                    }
+                }
+            });
+        }
+        {% endif %}
     </script>
 {% endblock %}
