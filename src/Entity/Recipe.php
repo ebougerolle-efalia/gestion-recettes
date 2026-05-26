@@ -35,7 +35,7 @@ class Recipe
     private string $productVatRate = '5.50';
 
     /** Durée de main d'œuvre en minutes (saisie utilisateur). */
-    #[ORM\Column(name: 'labor_minutes', type: 'integer')]
+    #[ORM\Column(name: 'labor_minutes', type: 'integer', options: ['default' => 0])]
     private int $laborMinutes = 0;
 
     /** Coût de main d'œuvre en € HT, calculé = laborMinutes / 60 × taux horaire. */

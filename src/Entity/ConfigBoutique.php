@@ -57,7 +57,7 @@ class ConfigBoutique
     private string $coefDefaut = '3.000';
 
     /** Taux horaire de main d'œuvre en € HT — sert à convertir les minutes en coût. */
-    #[ORM\Column(name: 'taux_horaire_mo', type: 'decimal', precision: 10, scale: 2)]
+    #[ORM\Column(name: 'taux_horaire_mo', type: 'decimal', precision: 10, scale: 2, options: ['default' => '25.00'])]
     private string $tauxHoraireMo = '25.00';
 
     // --- Getters / setters ----------------------------------------------------
