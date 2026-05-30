@@ -1,0 +1,215 @@
+{% extends 'base.html.twig' %}
+{% block title %}Confirmer les prix — {{ invoice.invoice_id }}{% endblock %}
+{% block page_title %}Confirmer les prix importés{% endblock %}
+{% block page_subtitle %}{{ invoice.seller_name }} &nbsp;·&nbsp; {{ invoice.invoice_id }} &nbsp;·&nbsp; {{ invoice.issue_date }}{% endblock %}
+
+{% block body %}
+
+    {# ── Étapes ── #}
+    <div class="grid grid-cols-3 gap-3 mb-6">
+        {% for step in [
+            {label: 'Facture importée',           icon: 'fa-check',        done: true,  active: false},
+            {label: 'Vérifier les correspondances', icon: 'fa-check-double', done: false, active: true},
+            {label: 'Prix mis à jour',             icon: 'fa-tags',         done: false, active: false},
+        ] %}
+            <div class="rounded-xl border {{ step.active ? 'border-blue-300 bg-blue-50' : (step.done ? 'border-emerald-200 bg-emerald-50' : 'border-gray-200 bg-white') }} px-4 py-3 text-center">
+                <div class="w-7 h-7 rounded-full {{ step.active ? 'bg-blue-500' : (step.done ? 'bg-emerald-500' : 'bg-gray-200') }} flex items-center justify-center mx-auto mb-2">
+                    <i class="fas {{ step.icon }} text-{{ (step.active or step.done) ? 'white' : 'gray-400' }} text-xs"></i>
+                </div>
+                <p class="text-xs font-medium {{ step.active ? 'text-blue-700' : (step.done ? 'text-emerald-700' : 'text-gray-400') }}">{{ step.label }}</p>
+            </div>
+        {% endfor %}
+    </div>
+
+    {# ── KPI #}
+    <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+        <div class="rounded-2xl border border-gray-200 bg-white px-5 py-4">
+            <p class="text-[10px] font-semibold uppercase tracking-wider text-gray-400">Lignes facture</p>
+            <p class="text-2xl font-bold text-[#1c2434] mt-1">{{ stats.total }}</p>
+        </div>
+        <div class="rounded-2xl border border-emerald-200 bg-emerald-50/50 px-5 py-4">
+            <p class="text-[10px] font-semibold uppercase tracking-wider text-emerald-600">Auto-reconnus</p>
+            <p class="text-2xl font-bold text-emerald-700 mt-1">{{ stats.mapped + stats.fuzzy }}</p>
+            <p class="text-[10px] text-emerald-500">{{ stats.mapped }} mémorisés + {{ stats.fuzzy }} fuzzy</p>
+        </div>
+        <div class="rounded-2xl border border-amber-200 bg-amber-50/50 px-5 py-4">
+            <p class="text-[10px] font-semibold uppercase tracking-wider text-amber-600">À associer</p>
+            <p class="text-2xl font-bold text-amber-700 mt-1">{{ stats.unmatched }}</p>
+        </div>
+        <div class="rounded-2xl border border-gray-200 bg-white px-5 py-4">
+            <p class="text-[10px] font-semibold uppercase tracking-wider text-gray-400">Fournisseur</p>
+            <p class="text-sm font-semibold text-[#1c2434] mt-1">{{ invoice.seller_name|slice(0, 25) }}</p>
+        </div>
+    </div>
+
+    {# ── Formulaire de confirmation ── #}
+    <form method="post">
+        <div class="rounded-2xl border border-gray-200 bg-white">
+            <div class="px-6 py-4 border-b border-gray-100 flex items-center justify-between">
+                <div class="flex items-center gap-2">
+                    <div class="w-2 h-2 rounded-full bg-amber-500"></div>
+                    <h3 class="font-semibold text-[15px] text-[#1c2434]">Correspondances à confirmer</h3>
+                </div>
+                <label class="flex items-center gap-2 text-xs text-gray-500 cursor-pointer">
+                    <input type="checkbox" id="check-all" class="rounded" onchange="toggleAll(this)">
+                    Tout sélectionner
+                </label>
+            </div>
+
+            <div class="overflow-x-auto">
+                <table class="w-full text-sm">
+                    <thead>
+                    <tr class="border-b border-gray-100 bg-gray-50/50">
+                        <th class="py-3 px-4 text-left w-8">
+                            <span class="sr-only">Confirmer</span>
+                        </th>
+                        <th class="py-3 px-4 text-left text-xs font-semibold uppercase tracking-wider text-gray-400">
+                            Libellé facture fournisseur
+                        </th>
+                        <th class="py-3 px-4 text-center text-xs font-semibold uppercase tracking-wider text-gray-400 w-6">
+                            →
+                        </th>
+                        <th class="py-3 px-4 text-left text-xs font-semibold uppercase tracking-wider text-gray-400" style="min-width:200px">
+                            Ingrédient catalogue
+                        </th>
+                        <th class="py-3 px-4 text-right text-xs font-semibold uppercase tracking-wider text-gray-400 w-28">
+                            Prix HT / unité
+                        </th>
+                        <th class="py-3 px-4 text-left text-xs font-semibold uppercase tracking-wider text-gray-400 w-32">
+                            Date effective
+                        </th>
+                        <th class="py-3 px-4 text-center text-xs font-semibold uppercase tracking-wider text-gray-400 w-24">
+                            Confiance
+                        </th>
+                    </tr>
+                    </thead>
+                    <tbody class="divide-y divide-gray-50">
+                    {% for i, line in invoice.lines %}
+                        <tr class="hover:bg-gray-50/50 transition-colors {{ line.match_source == 'none' ? 'bg-amber-50/30' : '' }}"
+                            id="row-{{ i }}">
+
+                            {# Checkbox #}
+                            <td class="py-3 px-4">
+                                <input type="checkbox"
+                                       name="lines[{{ i }}][confirmed]"
+                                       value="1"
+                                       class="line-check rounded border-gray-300"
+                                        {{ line.match_source != 'none' ? 'checked' : '' }}
+                                       onchange="toggleRow({{ i }}, this.checked)">
+                            </td>
+
+                            {# Libellé fournisseur #}
+                            <td class="py-3 px-4">
+                                <p class="font-medium text-gray-800">{{ line.name }}</p>
+                                {% if line.supplier_ref %}
+                                    <p class="text-xs text-gray-400 font-mono mt-0.5">{{ line.supplier_ref }}</p>
+                                {% endif %}
+                                <p class="text-xs text-gray-400 mt-0.5">
+                                    {{ line.qty_billed|number_format(3,',',' ') }} {{ line.unit_code }}
+                                    &nbsp;·&nbsp; TVA {{ line.vat_rate }}%
+                                </p>
+                                <input type="hidden" name="lines[{{ i }}][supplier]" value="{{ invoice.seller_name }}">
+                            </td>
+
+                            {# Flèche #}
+                            <td class="py-3 px-4 text-center text-gray-300">
+                                <i class="fas fa-arrow-right text-xs"></i>
+                            </td>
+
+                            {# Dropdown ingrédient #}
+                            <td class="py-3 px-4">
+                                <select name="lines[{{ i }}][ingredient_id]"
+                                        class="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm bg-white outline-none focus:border-blue-400
+                               {{ line.match_source == 'none' ? 'border-amber-300 bg-amber-50' : '' }}"
+                                        onchange="document.getElementById('row-{{ i }}').querySelector('.line-check').checked = true">
+                                    <option value="">-- Ignorer cette ligne --</option>
+                                    {% set currentId = line.matched_ingredient ? line.matched_ingredient.id : 0 %}
+                                    {% for ing in ingredients %}
+                                        <option value="{{ ing.id }}" {{ ing.id == currentId ? 'selected' : '' }}>
+                                            {{ ing.name }} ({{ ing.baseUnit }})
+                                        </option>
+                                    {% endfor %}
+                                </select>
+                            </td>
+
+                            {# Prix HT éditable #}
+                            <td class="py-3 px-4">
+                                <div class="relative">
+                                    <input type="number"
+                                           name="lines[{{ i }}][price_ht]"
+                                           value="{{ line.price_ht }}"
+                                           step="0.0001" min="0"
+                                           class="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm text-right
+                                  outline-none focus:border-blue-400"
+                                           onchange="document.getElementById('row-{{ i }}').querySelector('.line-check').checked = true">
+                                </div>
+                                <p class="text-[10px] text-gray-400 text-right mt-0.5">€ / {{ line.unit }}</p>
+                            </td>
+
+                            {# Date effective #}
+                            <td class="py-3 px-4">
+                                <input type="date"
+                                       name="lines[{{ i }}][effective_date]"
+                                       value="{{ invoice.issue_date }}"
+                                       class="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm
+                              outline-none focus:border-blue-400">
+                            </td>
+
+                            {# Badge confiance #}
+                            <td class="py-3 px-4 text-center">
+                                {% if line.match_source == 'mapping' %}
+                                    <span class="inline-flex items-center rounded-full bg-emerald-50 px-2.5 py-1 text-[10px] font-semibold text-emerald-700">
+                        <i class="fas fa-bookmark text-[8px] mr-1"></i> Mémorisé
+                    </span>
+                                {% elseif line.match_source == 'fuzzy' %}
+                                    <span class="inline-flex items-center rounded-full bg-blue-50 px-2.5 py-1 text-[10px] font-semibold text-blue-700">
+                        <i class="fas fa-wand-magic-sparkles text-[8px] mr-1"></i> {{ line.match_score }}%
+                    </span>
+                                {% else %}
+                                    <span class="inline-flex items-center rounded-full bg-amber-50 px-2.5 py-1 text-[10px] font-semibold text-amber-700">
+                        <i class="fas fa-question text-[8px] mr-1"></i> Manuel
+                    </span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+
+            {# Pied du formulaire #}
+            <div class="px-6 py-4 border-t border-gray-100 bg-gray-50/50 flex items-center justify-between gap-4">
+                <a href="{{ path('app_invoice_cancel') }}"
+                   class="inline-flex items-center gap-1.5 rounded-xl border border-gray-200 px-4 py-2.5
+                  text-sm text-gray-600 hover:bg-white transition-colors">
+                    <i class="fas fa-times text-[10px]"></i> Annuler
+                </a>
+                <div class="flex items-center gap-3">
+                    <p class="text-xs text-gray-400">
+                        Seules les lignes <strong>cochées</strong> seront enregistrées.
+                        Les associations confirmées seront mémorisées pour les prochains imports.
+                    </p>
+                    <button type="submit"
+                            class="inline-flex items-center gap-2 rounded-xl bg-emerald-500 hover:bg-emerald-600
+                           px-6 py-2.5 text-sm font-semibold text-white transition-colors">
+                        <i class="fas fa-check text-[11px]"></i>
+                        Enregistrer les prix
+                    </button>
+                </div>
+            </div>
+        </div>
+    </form>
+
+{% endblock %}
+
+{% block javascripts %}
+    <script>
+        function toggleAll(master) {
+            document.querySelectorAll('.line-check').forEach(cb => cb.checked = master.checked);
+        }
+        function toggleRow(i, checked) {
+            // si l'user décoche, décocher le "tout sélectionner"
+            if (!checked) document.getElementById('check-all').checked = false;
+        }
+    </script>
+{% endblock %}
