@@ -123,10 +123,10 @@
                 {% endif %}
                 {% if l.note %}<br><span class="note">→ {{ l.note }}</span>{% endif %}
             </td>
-            <td class="c">{{ (l.qty_brute|float * f)|number_format(3, ',', ' ') }}</td>
+            <td class="c">{{ (l.qty_brute * f)|number_format(3, ',', ' ') }}</td>
             <td class="c">{{ l.unit }}</td>
             <td class="r">{{ l.price_ht_per_base_unit|number_format(2, ',', ' ') }} €</td>
-            <td class="r bold">{{ (l.line_cost_ht|float * f)|number_format(2, ',', ' ') }} €</td>
+            <td class="r bold">{{ (l.line_cost_ht * f)|number_format(2, ',', ' ') }} €</td>
         </tr>
     {% endfor %}
     </tbody>

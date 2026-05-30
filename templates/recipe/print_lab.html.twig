@@ -106,7 +106,7 @@
                 {% endif %}
                 {% if l.note %}<br><span class="note">→ {{ l.note }}</span>{% endif %}
             </td>
-            <td class="c bold">{{ (l.qty_brute|float * f)|number_format(3, ',', ' ') }}</td>
+            <td class="c bold">{{ (l.qty_brute * f)|number_format(3, ',', ' ') }}</td>
             <td class="c">{{ l.unit }}</td>
         </tr>
     {% endfor %}
