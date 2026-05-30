@@ -81,13 +81,13 @@ class InvoiceImportController extends AbstractController
 
     #[Route('/factures/confirmer', name: 'app_invoice_confirm', methods: ['GET', 'POST'])]
     public function confirm(
-        Request                     $request,
-        SessionInterface            $session,
-        InvoiceLinesMatcher         $matcher,
-        IngredientRepository        $ingRepo,
+        Request                      $request,
+        SessionInterface             $session,
+        InvoiceLinesMatcher          $matcher,
+        IngredientRepository         $ingRepo,
         IngredientCategoryRepository $catRepo,
-        EntityManagerInterface      $em,
-        CostCalculator              $calc,
+        EntityManagerInterface       $em,
+        CostCalculator               $calc,
     ): Response {
         $invoice = $session->get('invoice_import');
         if (!$invoice) {
@@ -96,83 +96,12 @@ class InvoiceImportController extends AbstractController
         }
 
         $ingredients = $ingRepo->findBy([], ['name' => 'ASC']);
-        $categories  = $catRepo->findBy([], ['sortOrder' => 'ASC', 'name' => 'ASC']);
+        $categories  = $catRepo->findBy([], ['name' => 'ASC']);
 
         if ($request->isMethod('POST')) {
-            $formLines      = $request->request->all('lines') ?? [];
-            $pricesCreated  = 0;
-            $ingsCreated    = 0;
-            $affectedIngIds = [];
-
-            foreach ($invoice['lines'] as $i => $line) {
-                $formLine = $formLines[$i] ?? [];
-                if (empty($formLine['confirmed'])) continue;
-
-                $mode = $formLine['mode'] ?? 'existing';
-
-                // ── Créer un nouvel ingrédient si demandé ────────────────────
-                if ($mode === 'create') {
-                    $newName = trim($formLine['new_ingredient_name'] ?? '');
-                    if (empty($newName)) continue;
-
-                    $ingredient = new Ingredient();
-                    $ingredient->setName($newName);
-                    $ingredient->setBaseUnit($formLine['new_ingredient_unit'] ?? $line['unit'] ?? 'kg');
-                    $ingredient->setVatRate((float) ($formLine['new_ingredient_vat'] ?? 5.5));
-                    $ingredient->setDefaultSupplier($invoice['seller_name']);
-
-                    $catId = (int) ($formLine['new_ingredient_category_id'] ?? 0);
-                    if ($catId) {
-                        $cat = $catRepo->find($catId);
-                        if ($cat) $ingredient->setCategory($cat);
-                    }
-
-                    $em->persist($ingredient);
-                    $em->flush(); // besoin de l'ID pour la suite
-                    $ingsCreated++;
-
-                    // Mémoriser l'association pour les prochains imports
-                    $matcher->saveMapping($line['name'], $ingredient);
-
-                } else {
-                    // ── Associer à un ingrédient existant ───────────────────
-                    $ingId = (int) ($formLine['ingredient_id'] ?? 0);
-                    if (!$ingId) continue;
-                    $ingredient = $ingRepo->find($ingId);
-                    if (!$ingredient) continue;
-
-                    $matcher->saveMapping($line['name'], $ingredient);
-                }
-
-                // ── Créer le prix ────────────────────────────────────────────
-                $price = new IngredientPrice();
-                $price->setIngredient($ingredient);
-                $price->setPriceHt((float) ($formLine['price_ht'] ?? $line['price_ht']));
-                $price->setSupplier($formLine['supplier'] ?? $invoice['seller_name']);
-                $price->setEffectiveDate(
-                    new \DateTime($formLine['effective_date'] ?? $invoice['issue_date'])
-                );
-                $em->persist($price);
-
-                $affectedIngIds[] = $ingredient->getId();
-                $pricesCreated++;
-            }
-
-            $em->flush();
-
-            foreach (array_unique($affectedIngIds) as $ingId) {
-                $calc->recalculateAll($ingId);
-            }
-
-            $session->remove('invoice_import');
-
-            $msg = sprintf('%d prix enregistré(s)', $pricesCreated);
-            if ($ingsCreated > 0) {
-                $msg .= sprintf(' dont %d nouvel(aux) ingrédient(s) créé(s)', $ingsCreated);
-            }
-            $msg .= '. Coûts des recettes recalculés.';
-            $this->addFlash('success', $msg);
-
+            $this->processConfirmation(
+                $request, $invoice, $ingRepo, $catRepo, $matcher, $em, $calc, $session
+            );
             return $this->redirectToRoute('app_ingredient_index');
         }
 
@@ -190,6 +119,123 @@ class InvoiceImportController extends AbstractController
             'stats'       => $stats,
         ]);
     }
+
+    // ─── Traitement de la confirmation ───────────────────────────────────────
+
+    /**
+     * Logique en deux passes pour éviter les conflits de flush :
+     *
+     * Passe 1 — résoudre/créer les entités Ingredient (persist uniquement)
+     * Flush 1 — un seul flush pour assigner les IDs aux nouveaux ingrédients
+     * Passe 2 — créer les IngredientPrice + sauvegarder les mappings
+     * Flush 2 — flush final pour les prix et les mappings
+     */
+    private function processConfirmation(
+        Request                      $request,
+        array                        $invoice,
+        IngredientRepository         $ingRepo,
+        IngredientCategoryRepository $catRepo,
+        InvoiceLinesMatcher          $matcher,
+        EntityManagerInterface       $em,
+        CostCalculator               $calc,
+        SessionInterface             $session,
+    ): void {
+        $formLines  = $request->request->all('lines') ?? [];
+        $operations = []; // [{ingredient, line, formLine, isNew}]
+        $ingsCreated = 0;
+
+        // ── PASSE 1 : résoudre les ingrédients ───────────────────────────────
+        foreach ($invoice['lines'] as $i => $line) {
+            $formLine = $formLines[$i] ?? [];
+            if (empty($formLine['confirmed'])) continue;
+
+            $mode = $formLine['mode'] ?? 'existing';
+
+            if ($mode === 'create') {
+                $newName = trim($formLine['new_ingredient_name'] ?? '');
+                if (empty($newName)) continue;
+
+                $ingredient = new Ingredient();
+                $ingredient->setName($newName);
+                $ingredient->setBaseUnit($formLine['new_ingredient_unit'] ?? $line['unit'] ?? 'kg');
+                $ingredient->setVatRate((float) ($formLine['new_ingredient_vat'] ?? 5.5));
+                $ingredient->setDefaultSupplier($invoice['seller_name']);
+
+                $catId = (int) ($formLine['new_ingredient_category_id'] ?? 0);
+                if ($catId && ($cat = $catRepo->find($catId))) {
+                    $ingredient->setCategory($cat);
+                }
+
+                $em->persist($ingredient);
+                $ingsCreated++;
+
+            } elseif ($mode === 'existing') {
+                $ingId = (int) ($formLine['ingredient_id'] ?? 0);
+                if (!$ingId) continue;
+                $ingredient = $ingRepo->find($ingId);
+                if (!$ingredient) continue;
+
+            } else {
+                // mode = 'ignore' ou inconnu
+                continue;
+            }
+
+            $operations[] = [
+                'ingredient' => $ingredient,
+                'line'       => $line,
+                'formLine'   => $formLine,
+                'isNew'      => ($mode === 'create'),
+            ];
+        }
+
+        if (empty($operations)) {
+            $this->addFlash('warning', 'Aucune ligne confirmée.');
+            $session->remove('invoice_import');
+            return;
+        }
+
+        // ── FLUSH 1 : assigner les IDs aux nouveaux ingrédients ─────────────
+        $em->flush();
+
+        // ── PASSE 2 : créer les prix et les mappings ─────────────────────────
+        $pricesCreated  = 0;
+        $affectedIngIds = [];
+
+        foreach ($operations as $op) {
+            $price = new IngredientPrice();
+            $price->setIngredient($op['ingredient']);
+            $price->setPriceHt((float) ($op['formLine']['price_ht'] ?? $op['line']['price_ht']));
+            $price->setSupplier($op['formLine']['supplier'] ?? $invoice['seller_name']);
+            $price->setEffectiveDate(
+                new \DateTime($op['formLine']['effective_date'] ?? $invoice['issue_date'])
+            );
+            $em->persist($price);
+
+            $matcher->saveMapping($op['line']['name'], $op['ingredient']);
+
+            $affectedIngIds[] = $op['ingredient']->getId();
+            $pricesCreated++;
+        }
+
+        // ── FLUSH 2 : prix + mappings ────────────────────────────────────────
+        $em->flush();
+
+        // ── Recalcul des coûts ───────────────────────────────────────────────
+        foreach (array_unique(array_filter($affectedIngIds)) as $ingId) {
+            $calc->recalculateAll($ingId);
+        }
+
+        $session->remove('invoice_import');
+
+        $msg = sprintf('%d prix enregistré(s)', $pricesCreated);
+        if ($ingsCreated > 0) {
+            $msg .= sprintf(' · %d nouvel(aux) ingrédient(s) créé(s)', $ingsCreated);
+        }
+        $msg .= '. Coûts recalculés.';
+        $this->addFlash('success', $msg);
+    }
+
+    // ─── Annulation ──────────────────────────────────────────────────────────
 
     #[Route('/factures/annuler', name: 'app_invoice_cancel')]
     public function cancel(SessionInterface $session): Response

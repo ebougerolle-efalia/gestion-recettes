@@ -2,11 +2,10 @@
 namespace App\Controller;
 
 use App\Entity\{IngredientCategory, RecipeFamily, User};
-use App\Repository\{IngredientCategoryRepository, RecipeFamilyRepository, UserRepository, RecipeRepository, IngredientRepository, ConfigBoutiqueRepository};
+use App\Repository\{IngredientCategoryRepository, RecipeFamilyRepository, UserRepository, RecipeRepository, IngredientRepository};
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\{Request, Response};
-use Symfony\Component\HttpFoundation\File\Exception\FileException;
 use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
@@ -15,23 +14,137 @@ use Symfony\Component\Security\Http\Attribute\IsGranted;
 #[IsGranted('ROLE_ADMIN')]
 class AdminController extends AbstractController
 {
-    /** Admin dashboard */
+    // ==================== DASHBOARD ====================
+
     #[Route('', name: 'app_admin_index')]
-    public function index(
-        UserRepository $userRepo,
-        IngredientRepository $ingRepo,
-        RecipeRepository $recipeRepo,
-        IngredientCategoryRepository $catRepo,
-        RecipeFamilyRepository $famRepo
-    ): Response {
+    public function index(EntityManagerInterface $em): Response
+    {
+        $conn = $em->getConnection();
+
+        // ── KPIs principaux ──────────────────────────────────────────────────
+        $totalRecipes       = (int) $conn->fetchOne('SELECT COUNT(*) FROM recipes');
+        $recipesWithCost    = (int) $conn->fetchOne('SELECT COUNT(*) FROM recipe_cost_cache');
+        $recipesNoCost      = $totalRecipes - $recipesWithCost;
+        $totalIngredients   = (int) $conn->fetchOne('SELECT COUNT(*) FROM ingredients');
+        $ingsWithPrice      = (int) $conn->fetchOne('SELECT COUNT(DISTINCT ingredient_id) FROM ingredient_prices');
+        $ingsWithoutPrice   = $totalIngredients - $ingsWithPrice;
+        $avgMargin          = (float) ($conn->fetchOne(
+            'SELECT ROUND(AVG(margin_percent), 1) FROM recipe_cost_cache WHERE margin_percent > 0'
+        ) ?: 0);
+
+        // ── Alertes : ingrédients sans aucun prix ────────────────────────────
+        $ingsNoPrice = $conn->fetchAllAssociative('
+            SELECT i.id, i.name, ic.name AS category
+            FROM ingredients i
+            LEFT JOIN ingredient_categories ic ON ic.id = i.category_id
+            LEFT JOIN ingredient_prices ip     ON ip.ingredient_id = i.id
+            WHERE ip.id IS NULL
+            ORDER BY i.name
+        ');
+
+        // ── Alertes : recettes sans lignes (vides) ───────────────────────────
+        $recipesEmpty = $conn->fetchAllAssociative('
+            SELECT r.id, r.name, r.family
+            FROM recipes r
+            LEFT JOIN recipe_lines rl ON rl.recipe_id = r.id
+            WHERE rl.id IS NULL
+            ORDER BY r.name
+        ');
+
+        // ── Alertes : prix anciens (> 90 jours) ──────────────────────────────
+        $oldPrices = $conn->fetchAllAssociative("
+            SELECT i.id, i.name, MAX(ip.effective_date) AS last_date,
+                   CAST(julianday('now') - julianday(MAX(ip.effective_date)) AS INTEGER) AS days_old
+            FROM ingredients i
+            JOIN ingredient_prices ip ON ip.ingredient_id = i.id
+            GROUP BY i.id, i.name
+            HAVING days_old > 90
+            ORDER BY days_old DESC
+            LIMIT 10
+        ");
+
+        // ── Derniers prix importés ────────────────────────────────────────────
+        $lastPrices = $conn->fetchAllAssociative('
+            SELECT ip.id, i.id AS ing_id, i.name AS ingredient,
+                   ip.price_ht, ip.supplier, ip.effective_date, i.base_unit
+            FROM ingredient_prices ip
+            JOIN ingredients i ON i.id = ip.ingredient_id
+            ORDER BY ip.id DESC
+            LIMIT 8
+        ');
+
+        // ── Top 6 ingrédients les plus chers (dernier prix connu) ────────────
+        $topIngredients = $conn->fetchAllAssociative('
+            SELECT i.id, i.name, i.base_unit, ip.price_ht, ip.supplier
+            FROM ingredients i
+            JOIN ingredient_prices ip ON ip.ingredient_id = i.id
+            WHERE ip.id = (
+                SELECT id FROM ingredient_prices
+                WHERE ingredient_id = i.id
+                ORDER BY effective_date DESC, id DESC LIMIT 1
+            )
+            ORDER BY ip.price_ht DESC
+            LIMIT 6
+        ');
+
+        // ── Top 6 recettes les plus coûteuses ────────────────────────────────
+        $topRecipes = $conn->fetchAllAssociative('
+            SELECT r.id, r.name, r.family, r.output_type,
+                   rcc.cost_per_output_ht, rcc.advised_sell_ttc, rcc.margin_percent
+            FROM recipe_cost_cache rcc
+            JOIN recipes r ON r.id = rcc.recipe_id
+            ORDER BY rcc.cost_per_output_ht DESC
+            LIMIT 6
+        ');
+
+        // ── Répartition par famille ───────────────────────────────────────────
+        $byFamily = $conn->fetchAllAssociative("
+            SELECT
+                COALESCE(r.family, 'Sans famille') AS family,
+                COUNT(r.id) AS nb,
+                COUNT(rcc.id) AS nb_cost,
+                ROUND(AVG(CASE WHEN rcc.margin_percent > 0 THEN rcc.margin_percent END), 1) AS avg_margin
+            FROM recipes r
+            LEFT JOIN recipe_cost_cache rcc ON rcc.recipe_id = r.id
+            GROUP BY r.family
+            ORDER BY nb DESC
+        ");
+
+        // ── Infos base SQLite ─────────────────────────────────────────────────
+        $dbPath  = $this->getParameter('kernel.project_dir') . '/var/data/recettes.db';
+        $dbBytes = file_exists($dbPath) ? filesize($dbPath) : 0;
+        $dbSize  = $dbBytes > 1_048_576
+            ? round($dbBytes / 1_048_576, 1) . ' Mo'
+            : round($dbBytes / 1024) . ' Ko';
+
+        // Mappings factures mémorisés (si la table existe)
+        try {
+            $mappingCount = (int) $conn->fetchOne('SELECT COUNT(*) FROM invoice_ingredient_mappings');
+        } catch (\Throwable) {
+            $mappingCount = 0;
+        }
+
         return $this->render('admin/index.html.twig', [
-            'stats' => [
-                'users' => count($userRepo->findAll()),
-                'ingredients' => count($ingRepo->findAll()),
-                'recipes' => count($recipeRepo->findAll()),
-                'categories' => count($catRepo->findAll()),
-                'families' => count($famRepo->findAll()),
+            'kpis' => [
+                'total_recipes'     => $totalRecipes,
+                'recipes_with_cost' => $recipesWithCost,
+                'recipes_no_cost'   => $recipesNoCost,
+                'total_ingredients' => $totalIngredients,
+                'ings_with_price'   => $ingsWithPrice,
+                'ings_no_price'     => $ingsWithoutPrice,
+                'avg_margin'        => $avgMargin,
             ],
+            'alerts' => [
+                'no_price'  => $ingsNoPrice,
+                'empty'     => $recipesEmpty,
+                'old_prices'=> $oldPrices,
+            ],
+            'last_prices'    => $lastPrices,
+            'top_ingredients'=> $topIngredients,
+            'top_recipes'    => $topRecipes,
+            'by_family'      => $byFamily,
+            'db_size'        => $dbSize,
+            'mapping_count'  => $mappingCount,
         ]);
     }
 
@@ -169,10 +282,8 @@ class AdminController extends AbstractController
     {
         $user = $repo->find($id);
         if (!$user) throw $this->createNotFoundException();
-
         $user->setRole($request->request->get('role', $user->getRole()));
         $user->setIsActive($request->request->has('is_active'));
-
         $newPass = $request->request->get('new_password', '');
         if ($newPass !== '') {
             if (strlen($newPass) < 6) {
@@ -181,7 +292,6 @@ class AdminController extends AbstractController
             }
             $user->setPassword($hasher->hashPassword($user, $newPass));
         }
-
         $em->flush();
         $this->addFlash('success', "Utilisateur « {$user->getUsername()} » modifié.");
         return $this->redirectToRoute('app_admin_users');
@@ -203,80 +313,10 @@ class AdminController extends AbstractController
         return $this->redirectToRoute('app_admin_users');
     }
 
-    // ==================== PARAMÈTRES ====================
-
-    #[Route('/parametres', name: 'app_admin_parametres', methods: ['GET'])]
-    public function parametres(ConfigBoutiqueRepository $repo): Response
-    {
-        return $this->render('admin/parametres.html.twig', [
-            'config' => $repo->getConfig(),
-        ]);
-    }
-
-    #[Route('/parametres', name: 'app_admin_parametres_save', methods: ['POST'])]
-    public function parametresSave(Request $request, ConfigBoutiqueRepository $repo, EntityManagerInterface $em): Response
-    {
-        $config = $repo->getConfig();
-
-        $config->setNomEtablissement($request->request->get('nom_etablissement', $config->getNomEtablissement()));
-        $config->setSousTitre($request->request->get('sous_titre') ?: null);
-        $config->setAdresse($request->request->get('adresse') ?: null);
-        $config->setCodePostal($request->request->get('code_postal') ?: null);
-        $config->setVille($request->request->get('ville') ?: null);
-        $config->setTelephone($request->request->get('telephone') ?: null);
-        $config->setEmail($request->request->get('email') ?: null);
-        $config->setSiret($request->request->get('siret') ?: null);
-        $config->setMentionPied($request->request->get('mention_pied') ?: null);
-        $config->setTvaDefaut((float) $request->request->get('tva_defaut', $config->getTvaDefaut()));
-        $config->setCoefDefaut((float) $request->request->get('coef_defaut', $config->getCoefDefaut()));
-        $config->setTauxHoraireMo((float) $request->request->get('taux_horaire_mo', $config->getTauxHoraireMo()));
-
-        // --- Logo : suppression demandée ---
-        $uploadDir = $this->getParameter('kernel.project_dir') . '/public/uploads/boutique';
-        if ($request->request->get('supprimer_logo') && $config->getLogoPath()) {
-            @unlink($this->getParameter('kernel.project_dir') . '/public/' . $config->getLogoPath());
-            $config->setLogoPath(null);
-        }
-
-        // --- Logo : nouvel upload ---
-        /** @var \Symfony\Component\HttpFoundation\File\UploadedFile|null $file */
-        $file = $request->files->get('logo');
-        if ($file) {
-            $allowed = ['image/png' => 'png', 'image/jpeg' => 'jpg', 'image/webp' => 'webp'];
-            $mime = $file->getMimeType();
-
-            if (!isset($allowed[$mime])) {
-                $this->addFlash('danger', 'Format de logo non supporté (PNG, JPG ou WebP uniquement).');
-                return $this->redirectToRoute('app_admin_parametres');
-            }
-            if ($file->getSize() > 2 * 1024 * 1024) {
-                $this->addFlash('danger', 'Logo trop volumineux (2 Mo maximum).');
-                return $this->redirectToRoute('app_admin_parametres');
-            }
-
-            if ($config->getLogoPath()) {
-                @unlink($this->getParameter('kernel.project_dir') . '/public/' . $config->getLogoPath());
-            }
-
-            $filename = 'logo-' . bin2hex(random_bytes(6)) . '.' . $allowed[$mime];
-            try {
-                $file->move($uploadDir, $filename);
-                $config->setLogoPath('uploads/boutique/' . $filename);
-            } catch (FileException $e) {
-                $this->addFlash('danger', "Échec de l'enregistrement du logo : " . $e->getMessage());
-                return $this->redirectToRoute('app_admin_parametres');
-            }
-        }
-
-        $em->flush();
-        $this->addFlash('success', 'Paramètres enregistrés.');
-        return $this->redirectToRoute('app_admin_parametres');
-    }
-
     // ==================== SEED ====================
 
     #[Route('/seed', name: 'app_admin_seed', methods: ['POST'])]
-    public function seed(EntityManagerInterface $em, UserPasswordHasherInterface $hasher, IngredientCategoryRepository $catRepo, RecipeFamilyRepository $famRepo, UserRepository $userRepo): Response
+    public function seed(EntityManagerInterface $em, UserPasswordHasherInterface $hasher, IngredientCategoryRepository $catRepo, RecipeFamilyRepository $famRepo): Response
     {
         $defaultCats = ['Viande' => 1, 'Epices' => 2, 'Emballage' => 3, 'Autres' => 99];
         foreach ($defaultCats as $name => $order) {
@@ -287,7 +327,6 @@ class AdminController extends AbstractController
                 $em->persist($c);
             }
         }
-
         $defaultFams = ['Terrine' => 1, 'Pâté' => 2, 'Saucisse' => 3, 'Jambon' => 4, 'Cuit' => 5, 'Sec' => 6, 'Autres' => 99];
         foreach ($defaultFams as $name => $order) {
             if (!$famRepo->findOneBy(['name' => $name])) {
@@ -297,7 +336,6 @@ class AdminController extends AbstractController
                 $em->persist($f);
             }
         }
-
         $em->flush();
         $this->addFlash('success', 'Données initiales créées.');
         return $this->redirectToRoute('app_admin_index');
