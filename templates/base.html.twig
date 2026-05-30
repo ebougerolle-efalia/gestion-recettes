@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{% block title %}{{ boutique().nomEtablissement }}{% endblock %}</title>
+    <title>{% block title %}Gestion Recettes{% endblock %}</title>
     <script src="https://cdn.tailwindcss.com?plugins=forms"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
@@ -21,14 +21,14 @@
     <aside id="sidebar" class="fixed inset-y-0 left-0 z-50 w-[280px] bg-[#1c2434] text-white flex flex-col transform -translate-x-full lg:translate-x-0 transition-transform duration-300">
         <div class="px-7 py-6 border-b border-white/[.06]">
             <a href="{{ path('app_recipe_index') }}" class="block">
-                <h1 class="text-xl font-bold tracking-tight">{{ boutique().nomEtablissement }}</h1>
-                {% if boutique().sousTitre %}
-                    <p class="text-[11px] text-gray-400 mt-0.5">{{ boutique().sousTitre }}</p>
-                {% endif %}
+                <h1 class="text-xl font-bold tracking-tight">{{ boutique().nomEtablissement ?: 'Gestion Recettes' }}</h1>
+                <p class="text-[11px] text-gray-400 mt-0.5">{{ boutique().sousTitre ?: 'Gestion des recettes & coûts' }}</p>
             </a>
         </div>
 
         <nav class="flex-1 overflow-y-auto px-5 py-5 space-y-1.5">
+
+            {# ── PRODUCTION ── #}
             <p class="text-[11px] font-semibold uppercase tracking-wider text-gray-500 px-3 mb-2">Production</p>
 
             <a href="{{ path('app_recipe_index') }}" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors
@@ -41,6 +41,17 @@
                 <i class="fas fa-carrot w-5 text-center text-[13px]"></i> Ingrédients
             </a>
 
+            {# ── ACHATS ── #}
+            {% if is_granted('ROLE_EDITOR') %}
+                <p class="text-[11px] font-semibold uppercase tracking-wider text-gray-500 px-3 mt-5 mb-2">Achats</p>
+
+                <a href="{{ path('app_invoice_import') }}" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors
+                {{ app.request.attributes.get('_route') starts with 'app_invoice' ? 'bg-white/[.08] text-white' : 'text-gray-400 hover:text-white hover:bg-white/[.04]' }}">
+                    <i class="fas fa-file-import w-5 text-center text-[13px]"></i> Import facture
+                </a>
+            {% endif %}
+
+            {# ── ADMINISTRATION ── #}
             {% if is_granted('ROLE_ADMIN') %}
                 <p class="text-[11px] font-semibold uppercase tracking-wider text-gray-500 px-3 mt-5 mb-2">Administration</p>
 
@@ -56,16 +67,13 @@
                 {{ app.request.attributes.get('_route') == 'app_admin_families' ? 'bg-white/[.08] text-white' : 'text-gray-400 hover:text-white hover:bg-white/[.04]' }}">
                     <i class="fas fa-layer-group w-5 text-center text-[13px]"></i> Familles
                 </a>
-                <a href="{{ path('app_invoice_import') }}">
-                    <i class="fas fa-file-import"></i> Import facture
-                </a>
                 <a href="{{ path('app_admin_users') }}" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors
                 {{ app.request.attributes.get('_route') == 'app_admin_users' ? 'bg-white/[.08] text-white' : 'text-gray-400 hover:text-white hover:bg-white/[.04]' }}">
                     <i class="fas fa-users w-5 text-center text-[13px]"></i> Utilisateurs
                 </a>
                 <a href="{{ path('app_admin_parametres') }}" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors
-                {{ app.request.attributes.get('_route') starts with 'app_admin_parametres' ? 'bg-white/[.08] text-white' : 'text-gray-400 hover:text-white hover:bg-white/[.04]' }}">
-                    <i class="fas fa-gear w-5 text-center text-[13px]"></i> Paramètres
+                {{ app.request.attributes.get('_route') == 'app_admin_parametres' ? 'bg-white/[.08] text-white' : 'text-gray-400 hover:text-white hover:bg-white/[.04]' }}">
+                    <i class="fas fa-store w-5 text-center text-[13px]"></i> Paramètres
                 </a>
             {% endif %}
         </nav>
@@ -83,6 +91,7 @@
 
     {# ===== MAIN ===== #}
     <div class="flex-1 flex flex-col lg:ml-[280px] h-full overflow-hidden">
+
         {# Header #}
         <header class="flex-shrink-0 z-40 bg-white border-b border-gray-200/80 px-4 lg:px-8 min-h-[72px] h-[72px] flex items-center justify-between shadow-sm overflow-hidden">
             <div class="flex items-center gap-4">
@@ -105,10 +114,11 @@
                 {% for message in messages %}
                     <div class="mb-4 flex items-center gap-3 rounded-xl px-5 py-3.5 text-sm border
                     {{ type == 'success' ? 'bg-green-50 border-green-200 text-green-700' : '' }}
-                    {{ type == 'danger' ? 'bg-red-50 border-red-200 text-red-700' : '' }}
+                    {{ type == 'danger'  ? 'bg-red-50 border-red-200 text-red-700'       : '' }}
                     {{ type == 'warning' ? 'bg-amber-50 border-amber-200 text-amber-700' : '' }}
+                    {{ type == 'info'    ? 'bg-blue-50 border-blue-200 text-blue-700'    : '' }}
                     flash-msg" onclick="this.remove()">
-                        <i class="fas fa-{{ type == 'success' ? 'check-circle' : (type == 'danger' ? 'exclamation-circle' : 'exclamation-triangle') }}"></i>
+                        <i class="fas fa-{{ type == 'success' ? 'check-circle' : (type == 'danger' ? 'exclamation-circle' : (type == 'info' ? 'info-circle' : 'exclamation-triangle')) }}"></i>
                         {{ message }}
                     </div>
                 {% endfor %}
@@ -126,8 +136,7 @@
         s.classList.toggle('-translate-x-full');
         o.classList.toggle('hidden');
     }
-    // Auto-dismiss flash messages
-    document.querySelectorAll('.flash-msg').forEach(el => setTimeout(() => el.remove(), 5000));
+    document.querySelectorAll('.flash-msg').forEach(el => setTimeout(() => el.remove(), 6000));
 </script>
 {% block javascripts %}{% endblock %}
 </body>
