@@ -230,7 +230,7 @@ class CostCalculator
             ? array_column($conn->fetchAllAssociative(
                 'SELECT DISTINCT recipe_id FROM recipe_lines WHERE ingredient_id = ?',
                 [$ingredientId]
-            ), 'recipe_id')
+              ), 'recipe_id')
             : array_column($conn->fetchAllAssociative('SELECT id FROM recipes'), 'id');
 
         $count = 0;

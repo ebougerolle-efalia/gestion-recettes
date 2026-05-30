@@ -187,7 +187,7 @@ class FacturXParser
 
         // Helper : retourne la valeur texte du premier nœud correspondant
         $get = fn(\DOMNode $ctx, string $path): string
-        => trim((string) $xpath->evaluate("string($path)", $ctx));
+            => trim((string) $xpath->evaluate("string($path)", $ctx));
 
         // ── Métadonnées ────────────────────────────────────────────────────
         $invoiceId  = $get($dom, '//rsm:ExchangedDocument/ram:ID');

@@ -102,7 +102,7 @@ class AdminController extends AbstractController
             SELECT
                 COALESCE(r.family, 'Sans famille') AS family,
                 COUNT(r.id) AS nb,
-                COUNT(rcc.id) AS nb_cost,
+                COUNT(rcc.recipe_id) AS nb_cost,
                 ROUND(AVG(CASE WHEN rcc.margin_percent > 0 THEN rcc.margin_percent END), 1) AS avg_margin
             FROM recipes r
             LEFT JOIN recipe_cost_cache rcc ON rcc.recipe_id = r.id
