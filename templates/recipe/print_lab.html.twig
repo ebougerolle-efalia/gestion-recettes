@@ -4,142 +4,120 @@
     <meta charset="UTF-8">
     <title>Fiche labo — {{ recipe.name }}</title>
     <style>
-        body {
-            font-family: Arial, Helvetica, sans-serif;
-            font-size: 10pt;
-            color: #333;
-            margin: 0;
-            padding: 0;
-        }
+        body { font-family: Arial, Helvetica, sans-serif; font-size: 10pt; color: #333; margin: 0; padding: 0; }
 
-        .header-table {
-            width: 100%;
-            border-bottom: 3px solid #1c2434;
-            padding-bottom: 10px;
-            margin-bottom: 18px;
-        }
+        .header-table { width: 100%; border-bottom: 3px solid #1c2434; padding-bottom: 10px; margin-bottom: 18px; }
         .header-table td { vertical-align: bottom; padding: 0; }
         .header-title { font-size: 22pt; font-weight: bold; color: #1c2434; letter-spacing: 1px; }
         .header-subtitle { font-size: 11pt; color: #555; margin-top: 4px; }
         .header-company { font-size: 9pt; color: #999; text-align: right; }
 
-        .meta-table {
-            width: 100%;
-            margin-bottom: 18px;
-            background: #f8fafc;
-            border: 1px solid #e2e8f0;
-            border-radius: 4px;
-        }
-        .meta-table td {
-            padding: 8px 14px;
-            font-size: 9pt;
-            color: #555;
-        }
-        .meta-table strong { color: #1c2434; }
-
-        h2 {
+        .qty-badge {
+            display: inline-block;
+            background: #1c2434;
+            color: white;
             font-size: 13pt;
             font-weight: bold;
-            color: #1c2434;
-            margin-bottom: 8px;
-            padding-bottom: 5px;
-            border-bottom: 1px solid #e2e8f0;
+            padding: 6px 18px;
+            border-radius: 4px;
+            margin-bottom: 16px;
+            letter-spacing: 0.5px;
         }
 
-        .comp-table {
-            width: 100%;
-            border-collapse: collapse;
-        }
-        .comp-table th {
-            font-size: 7.5pt;
-            text-transform: uppercase;
-            letter-spacing: 0.8px;
-            color: #64748b;
-            font-weight: bold;
-            padding: 8px 10px;
-            border-bottom: 2px solid #1c2434;
-            text-align: left;
-        }
+        .meta-table { width: 100%; margin-bottom: 18px; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 4px; }
+        .meta-table td { padding: 8px 14px; font-size: 9pt; color: #555; }
+        .meta-table strong { color: #1c2434; }
+
+        h2 { font-size: 13pt; font-weight: bold; color: #1c2434; margin-bottom: 8px; padding-bottom: 5px; border-bottom: 1px solid #e2e8f0; }
+
+        .comp-table { width: 100%; border-collapse: collapse; }
+        .comp-table th { font-size: 7.5pt; text-transform: uppercase; letter-spacing: 0.8px; color: #64748b; font-weight: bold; padding: 8px 10px; border-bottom: 2px solid #1c2434; text-align: left; }
         .comp-table th.c { text-align: center; }
-        .comp-table td {
-            padding: 7px 10px;
-            border-bottom: 1px solid #e9ecef;
-            font-size: 10pt;
-        }
+        .comp-table td { padding: 7px 10px; border-bottom: 1px solid #e9ecef; font-size: 10pt; }
         .comp-table td.c { text-align: center; }
+        .comp-table td.bold { font-weight: bold; color: #1c2434; }
         .sub-recipe { color: #2563eb; font-style: italic; }
         .note { font-size: 8pt; color: #b45309; font-style: italic; }
 
-        .footer {
-            margin-top: 40px;
-            padding-top: 8px;
-            border-top: 1px solid #e2e8f0;
-            font-size: 8pt;
-            color: #94a3b8;
-            text-align: center;
-        }
+        .footer { margin-top: 40px; padding-top: 8px; border-top: 1px solid #e2e8f0; font-size: 8pt; color: #94a3b8; text-align: center; }
     </style>
 </head>
 <body>
 
-    <!-- EN-TÊTE -->
-    <table class="header-table">
+{% set f = factor|default(1) %}
+{% set rqty = requestedQty|default(recipe.outputValue) %}
+
+<!-- EN-TÊTE -->
+<table class="header-table">
+    <tr>
+        <td>
+            <div class="header-title">FICHE LABO</div>
+            <div class="header-subtitle">{{ recipe.name }} — {{ recipe.family }}</div>
+        </td>
+        <td class="header-company">
+            {% if logo_base64() %}<img src="{{ logo_base64() }}" alt="" style="max-height:44px; max-width:130px; margin-bottom:5px; display:block; margin-left:auto;"><br>{% endif %}
+            <strong style="color:#1c2434;">{{ boutique().nomEtablissement }}</strong>
+            {% if boutique().sousTitre %}<br>{{ boutique().sousTitre }}{% endif %}
+            {% if boutique().adresseComplete %}<br>{{ boutique().adresseComplete }}{% endif %}
+        </td>
+    </tr>
+</table>
+
+<!-- BADGE QUANTITÉ (mise en avant sur la fiche labo) -->
+<div style="text-align:center; margin-bottom:20px;">
+    <span class="qty-badge">
+        POUR {{ rqty|number_format(3, ',', ' ')|replace({',000': '', ',00': '', ',0': ''}) }} {{ recipe.outputUnitLabel|upper }}
+    </span>
+    {% if f != 1 %}
+        <div style="font-size:8.5pt; color:#94a3b8; margin-top:4px;">
+            Facteur × {{ f|number_format(3, ',', ' ')|replace({',000': '', ',00': '', ',0': ''}) }} — base recette : {{ recipe.outputValue }} {{ recipe.outputUnitLabel }}
+        </div>
+    {% endif %}
+</div>
+
+<!-- MÉTA -->
+<table class="meta-table">
+    <tr>
+        <td>Sortie cible : <strong>{{ (totals.output_target * f)|number_format(3, ',', ' ') }} {{ recipe.outputUnitLabel }}</strong></td>
+        <td>Perte : <strong>{{ recipe.lossPercent|number_format(1) }}%</strong></td>
+        <td>Rendement : <strong>{{ recipe.yieldPercent|number_format(1) }}%</strong></td>
+        <td>Sortie effective : <strong>{{ (totals.output_effective * f)|number_format(3, ',', ' ') }} {{ recipe.outputUnitLabel }}</strong></td>
+    </tr>
+</table>
+
+<!-- COMPOSITION -->
+<h2>Composition</h2>
+<table class="comp-table">
+    <thead>
+    <tr>
+        <th>Élément</th>
+        <th class="c" style="width: 120px;">Quantité brute</th>
+        <th class="c" style="width: 80px;">Unité</th>
+    </tr>
+    </thead>
+    <tbody>
+    {% for l in lines %}
         <tr>
             <td>
-                <div class="header-title">FICHE LABO</div>
-                <div class="header-subtitle">{{ recipe.name }} — {{ recipe.family }}</div>
+                {% if l.type == 'sub_recipe' %}
+                    <span class="sub-recipe">[SR] {{ l.sub_recipe.name }}</span>
+                {% else %}
+                    {{ l.ingredient.name }}
+                {% endif %}
+                {% if l.note %}<br><span class="note">→ {{ l.note }}</span>{% endif %}
             </td>
-            <td class="header-company">
-                {% if logo_base64() %}<img src="{{ logo_base64() }}" alt="" style="max-height:50px; max-width:150px; margin-bottom:6px;"><br>{% endif %}
-                <strong style="color:#1c2434;">{{ boutique().nomEtablissement }}</strong>
-                {% if boutique().sousTitre %}<br>{{ boutique().sousTitre }}{% endif %}
-                {% if boutique().adresseComplete %}<br>{{ boutique().adresseComplete }}{% endif %}
-                {% if boutique().telephone %}<br>{{ boutique().telephone }}{% endif %}
-            </td>
+            <td class="c bold">{{ (l.qty_brute|float * f)|number_format(3, ',', ' ') }}</td>
+            <td class="c">{{ l.unit }}</td>
         </tr>
-    </table>
+    {% endfor %}
+    </tbody>
+</table>
 
-    <!-- MÉTA -->
-    <table class="meta-table">
-        <tr>
-            <td>Sortie cible : <strong>{{ totals.output_target }} {{ recipe.outputUnitLabel }}</strong></td>
-            <td>Perte : <strong>{{ recipe.lossPercent|number_format(1) }}%</strong></td>
-            <td>Rendement : <strong>{{ recipe.yieldPercent|number_format(1) }}%</strong></td>
-            <td>Sortie effective : <strong>{{ totals.output_effective }} {{ recipe.outputUnitLabel }}</strong></td>
-        </tr>
-    </table>
-
-    <!-- COMPOSITION -->
-    <h2>Composition</h2>
-    <table class="comp-table">
-        <thead>
-            <tr>
-                <th>Élément</th>
-                <th class="c" style="width: 100px;">Qté brute</th>
-                <th class="c" style="width: 80px;">Unité</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for l in lines %}
-            <tr>
-                <td>
-                    {% if l.type == 'sub_recipe' %}
-                        <span class="sub-recipe">[SR] {{ l.sub_recipe.name }}</span>
-                    {% else %}
-                        {{ l.ingredient.name }}
-                    {% endif %}
-                    {% if l.note %}<br><span class="note">→ {{ l.note }}</span>{% endif %}
-                </td>
-                <td class="c">{{ l.qty_brute }}</td>
-                <td class="c">{{ l.unit }}</td>
-            </tr>
-            {% endfor %}
-        </tbody>
-    </table>
-
-    <!-- PIED -->
-    <div class="footer">
-        Fiche labo générée le {{ 'now'|date('d/m/Y à H:i') }} — {{ boutique().nomEtablissement }}{% if boutique().sousTitre %}, {{ boutique().sousTitre }}{% endif %}    </div>
+<!-- PIED -->
+<div class="footer">
+    Fiche labo générée le {{ 'now'|date('d/m/Y à H:i') }} — {{ boutique().nomEtablissement }}{% if boutique().sousTitre %}, {{ boutique().sousTitre }}{% endif %}
+    {% if boutique().mentionPied %}<br>{{ boutique().mentionPied }}{% endif %}
+</div>
 
 </body>
 </html>

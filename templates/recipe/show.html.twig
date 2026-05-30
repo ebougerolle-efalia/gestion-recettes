@@ -4,8 +4,7 @@
 {% block page_subtitle %}<span class="inline-flex items-center rounded-full bg-gray-100 px-2 py-0.5 text-[11px] font-medium text-gray-600">{{ recipe.family }}</span> · {{ recipe.outputValue }} {{ recipe.outputUnitLabel }}{% endblock %}
 {% block page_actions %}
     <div class="flex items-center gap-2">
-        <a href="{{ path('app_recipe_pdf_lab', {id: recipe.id}) }}" target="_blank" class="inline-flex items-center gap-1.5 rounded-lg border border-gray-200 px-3 py-2 text-xs text-gray-600 hover:bg-gray-50 transition-colors"><i class="fas fa-flask text-[10px]"></i> Fiche labo</a>
-        <a href="{{ path('app_recipe_pdf', {id: recipe.id}) }}" target="_blank" class="inline-flex items-center gap-1.5 rounded-lg border border-gray-200 px-3 py-2 text-xs text-gray-600 hover:bg-gray-50 transition-colors"><i class="fas fa-file-pdf text-[10px]"></i> PDF complet</a>
+        <button onclick="openPrintModal()" class="inline-flex items-center gap-1.5 rounded-lg border border-gray-200 px-3 py-2 text-xs text-gray-600 hover:bg-gray-50 transition-colors"><i class="fas fa-print text-[10px]"></i> Imprimer</button>
         {% if is_granted('ROLE_EDITOR') %}
             <button onclick="document.getElementById('dupeModal').classList.remove('hidden');document.getElementById('dupeModal').classList.add('flex')" class="inline-flex items-center gap-1.5 rounded-lg border border-gray-200 px-3 py-2 text-xs text-gray-600 hover:bg-gray-50 transition-colors"><i class="fas fa-copy text-[10px]"></i> Dupliquer</button>
         {% endif %}
@@ -148,9 +147,7 @@
         </div>
     </div>
 
-    {# ===== ANALYSE DES COÛTS =====
-   Les données sont embarquées en data-* sur le canvas pour éviter
-   les problèmes de portée Twig entre block body et block javascripts #}
+    {# Analyse des coûts #}
     {% if t.total_cost_ht > 0 %}
         <div class="mt-6 rounded-2xl border border-gray-200 bg-white">
             <div class="px-6 py-4 border-b border-gray-100 flex items-center gap-2">
@@ -179,30 +176,21 @@
                     <div class="flex items-center gap-4">
                         <div class="w-3 h-3 rounded-full bg-blue-500 flex-shrink-0"></div>
                         <div class="flex-1">
-                            <div class="flex justify-between text-sm mb-1">
-                                <span class="font-medium text-gray-700">Matières premières</span>
-                                <span class="font-semibold text-[#1c2434]">{{ t.material_cost_ht|number_format(2,',',' ') }} € <span class="text-gray-400 font-normal">({{ pct_mat }}%)</span></span>
-                            </div>
+                            <div class="flex justify-between text-sm mb-1"><span class="font-medium text-gray-700">Matières premières</span><span class="font-semibold text-[#1c2434]">{{ t.material_cost_ht|number_format(2,',',' ') }} € <span class="text-gray-400 font-normal">({{ pct_mat }}%)</span></span></div>
                             <div class="h-2 rounded-full bg-gray-100"><div class="h-2 rounded-full bg-blue-500" style="width:{{ pct_mat }}%"></div></div>
                         </div>
                     </div>
                     <div class="flex items-center gap-4">
                         <div class="w-3 h-3 rounded-full bg-emerald-500 flex-shrink-0"></div>
                         <div class="flex-1">
-                            <div class="flex justify-between text-sm mb-1">
-                                <span class="font-medium text-gray-700">Main d'œuvre</span>
-                                <span class="font-semibold text-[#1c2434]">{{ t.labor_cost_ht|number_format(2,',',' ') }} € <span class="text-gray-400 font-normal">({{ pct_labor }}%)</span></span>
-                            </div>
+                            <div class="flex justify-between text-sm mb-1"><span class="font-medium text-gray-700">Main d'œuvre</span><span class="font-semibold text-[#1c2434]">{{ t.labor_cost_ht|number_format(2,',',' ') }} € <span class="text-gray-400 font-normal">({{ pct_labor }}%)</span></span></div>
                             <div class="h-2 rounded-full bg-gray-100"><div class="h-2 rounded-full bg-emerald-500" style="width:{{ pct_labor }}%"></div></div>
                         </div>
                     </div>
                     <div class="flex items-center gap-4">
                         <div class="w-3 h-3 rounded-full bg-amber-500 flex-shrink-0"></div>
                         <div class="flex-1">
-                            <div class="flex justify-between text-sm mb-1">
-                                <span class="font-medium text-gray-700">Emballage</span>
-                                <span class="font-semibold text-[#1c2434]">{{ t.packaging_cost_ht|number_format(2,',',' ') }} € <span class="text-gray-400 font-normal">({{ pct_pack }}%)</span></span>
-                            </div>
+                            <div class="flex justify-between text-sm mb-1"><span class="font-medium text-gray-700">Emballage</span><span class="font-semibold text-[#1c2434]">{{ t.packaging_cost_ht|number_format(2,',',' ') }} € <span class="text-gray-400 font-normal">({{ pct_pack }}%)</span></span></div>
                             <div class="h-2 rounded-full bg-gray-100"><div class="h-2 rounded-full bg-amber-500" style="width:{{ pct_pack }}%"></div></div>
                         </div>
                     </div>
@@ -216,6 +204,53 @@
         </div>
     {% endif %}
 
+    {# ===== MODAL IMPRESSION ===== #}
+    <div id="printQtyModal" class="fixed inset-0 z-[9999] hidden items-center justify-center bg-black/50" onclick="if(event.target===this){this.classList.add('hidden');this.classList.remove('flex')}">
+        <div class="bg-white rounded-2xl shadow-xl w-full max-w-sm mx-4">
+            <div class="px-6 py-4 border-b border-gray-100">
+                <h3 class="font-semibold text-[#1c2434]"><i class="fas fa-print text-blue-500 mr-2 text-sm"></i>Quantité à imprimer</h3>
+                <p class="text-xs text-gray-400 mt-1">Recette de base : <strong>{{ recipe.outputValue }} {{ recipe.outputUnitLabel }}</strong></p>
+            </div>
+            <div class="p-6 space-y-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-600 mb-1.5">Quantité souhaitée ({{ recipe.outputUnitLabel }})</label>
+                    <input type="number" id="printQtyInput" step="0.001" min="0.001"
+                           value="{{ recipe.outputValue }}" oninput="updatePrintPreview()"
+                           class="w-full rounded-lg border border-gray-200 px-4 py-2.5 text-sm outline-none focus:border-blue-400 focus:ring-2 focus:ring-blue-500/20">
+                </div>
+                <div>
+                    <p class="text-xs text-gray-400 mb-2">Raccourcis :</p>
+                    <div class="flex flex-wrap gap-2">
+                        <button type="button" onclick="setPrintQty({{ recipe.outputValue * 0.5 }})" class="rounded-lg border border-gray-200 px-3 py-1.5 text-xs text-gray-600 hover:bg-blue-50 hover:border-blue-300 hover:text-blue-600 transition-colors">× 0.5</button>
+                        <button type="button" onclick="setPrintQty({{ recipe.outputValue }})" class="rounded-lg border border-blue-200 px-3 py-1.5 text-xs text-blue-600 bg-blue-50 font-medium">× 1 (base)</button>
+                        <button type="button" onclick="setPrintQty({{ recipe.outputValue * 2 }})" class="rounded-lg border border-gray-200 px-3 py-1.5 text-xs text-gray-600 hover:bg-blue-50 hover:border-blue-300 hover:text-blue-600 transition-colors">× 2</button>
+                        <button type="button" onclick="setPrintQty({{ recipe.outputValue * 5 }})" class="rounded-lg border border-gray-200 px-3 py-1.5 text-xs text-gray-600 hover:bg-blue-50 hover:border-blue-300 hover:text-blue-600 transition-colors">× 5</button>
+                        <button type="button" onclick="setPrintQty({{ recipe.outputValue * 10 }})" class="rounded-lg border border-gray-200 px-3 py-1.5 text-xs text-gray-600 hover:bg-blue-50 hover:border-blue-300 hover:text-blue-600 transition-colors">× 10</button>
+                    </div>
+                </div>
+                <div class="bg-gray-50 rounded-xl px-4 py-3 flex items-center justify-between">
+                    <span class="text-sm text-gray-500">Facteur multiplicateur</span>
+                    <span id="printFactorDisplay" class="text-base font-bold text-[#1c2434]">× 1,00</span>
+                </div>
+            </div>
+            <div class="px-6 py-4 border-t border-gray-100 flex flex-col gap-2">
+                <button type="button" onclick="generatePrint('lab')"
+                        class="w-full inline-flex items-center justify-center gap-2 rounded-lg bg-[#1c2434] hover:bg-[#253347] px-5 py-2.5 text-sm font-medium text-white transition-colors">
+                    <i class="fas fa-flask text-[11px]"></i> Fiche labo
+                </button>
+                <button type="button" onclick="generatePrint('full')"
+                        class="w-full inline-flex items-center justify-center gap-2 rounded-lg bg-blue-500 hover:bg-blue-600 px-5 py-2.5 text-sm font-medium text-white transition-colors">
+                    <i class="fas fa-file-pdf text-[11px]"></i> Fiche technique complète
+                </button>
+                <button type="button"
+                        onclick="document.getElementById('printQtyModal').classList.add('hidden');document.getElementById('printQtyModal').classList.remove('flex')"
+                        class="w-full rounded-lg border border-gray-200 px-5 py-2 text-sm text-gray-500 hover:bg-gray-50">
+                    Annuler
+                </button>
+            </div>
+        </div>
+    </div>
+
     {# Modal ajouter ligne #}
     <div id="addLineModal" class="fixed inset-0 z-[9999] hidden items-center justify-center bg-black/50" onclick="if(event.target===this){this.classList.add('hidden');this.classList.remove('flex')}">
         <form method="post" action="{{ path('app_recipe_add_line', {id: recipe.id}) }}" class="bg-white rounded-2xl shadow-xl w-full max-w-lg mx-4">
@@ -226,7 +261,7 @@
                 <div id="subRecipeField" style="display:none"><label class="block text-sm font-medium text-gray-600 mb-1.5">Sous-recette</label><select name="sub_recipe_id" class="w-full rounded-lg border border-gray-200 px-4 py-2.5 text-sm outline-none focus:border-blue-400 bg-white"><option value="">Choisir…</option>{% for r in availableSubs %}<option value="{{ r.id }}">{{ r.name }} ({{ r.family }})</option>{% endfor %}</select></div>
                 <div class="grid grid-cols-2 gap-4">
                     <div><label class="block text-sm font-medium text-gray-600 mb-1.5">Quantité brute</label><input type="number" name="qty_brute" step="0.001" required placeholder="0.000" class="w-full rounded-lg border border-gray-200 px-4 py-2.5 text-sm outline-none focus:border-blue-400"></div>
-                    <div><label class="block text-sm font-medium text-gray-200 mb-1.5">Unité</label><select name="unit" class="w-full rounded-lg border border-gray-200 px-4 py-2.5 text-sm outline-none focus:border-blue-400 bg-white"><option value="kg">kg</option><option value="g">g</option><option value="piece">pièce</option><option value="litre">litre</option></select></div>
+                    <div><label class="block text-sm font-medium text-gray-600 mb-1.5">Unité</label><select name="unit" class="w-full rounded-lg border border-gray-200 px-4 py-2.5 text-sm outline-none focus:border-blue-400 bg-white"><option value="kg">kg</option><option value="g">g</option><option value="piece">pièce</option><option value="litre">litre</option></select></div>
                 </div>
                 <div class="grid grid-cols-2 gap-4">
                     <div><label class="block text-sm font-medium text-gray-600 mb-1.5">% perte</label><input type="number" name="loss_percent" step="0.01" value="0" class="w-full rounded-lg border border-gray-200 px-4 py-2.5 text-sm outline-none focus:border-blue-400"></div>
@@ -239,6 +274,7 @@
             </div>
         </form></div>
 
+    {# Modal dupliquer #}
     <div id="dupeModal" class="fixed inset-0 z-[9999] hidden items-center justify-center bg-black/50" onclick="if(event.target===this){this.classList.add('hidden');this.classList.remove('flex')}">
         <form method="post" action="{{ path('app_recipe_duplicate', {id: recipe.id}) }}" class="bg-white rounded-2xl shadow-xl w-full max-w-sm mx-4">
             <div class="px-6 py-4 border-b border-gray-100"><h3 class="font-semibold text-[#1c2434]">Dupliquer</h3></div>
@@ -261,7 +297,6 @@
         document.querySelectorAll('input[name="labor_minutes"]').forEach(majCoutMO);
 
         // Doughnut décomposition des coûts
-        // Données lues depuis data-* sur le canvas — pas de dépendance au scope Twig
         const costCanvas = document.getElementById('costChart');
         if (costCanvas) {
             const mat     = parseFloat(costCanvas.dataset.mat)   || 0;
@@ -272,26 +307,39 @@
                     type: 'doughnut',
                     data: {
                         labels: ['Matières', "Main d'œuvre", 'Emballage'],
-                        datasets: [{
-                            data: [mat, labor, packing],
-                            backgroundColor: ['#3b82f6', '#10b981', '#f59e0b'],
-                            borderWidth: 0,
-                            hoverOffset: 6
-                        }]
+                        datasets: [{ data: [mat, labor, packing], backgroundColor: ['#3b82f6','#10b981','#f59e0b'], borderWidth: 0, hoverOffset: 6 }]
                     },
-                    options: {
-                        cutout: '68%',
-                        plugins: {
-                            legend: { display: false },
-                            tooltip: {
-                                callbacks: {
-                                    label: ctx => ' ' + parseFloat(ctx.raw).toFixed(2).replace('.', ',') + ' €'
-                                }
-                            }
-                        }
-                    }
+                    options: { cutout: '68%', plugins: { legend: { display: false }, tooltip: { callbacks: { label: ctx => ' ' + parseFloat(ctx.raw).toFixed(2).replace('.',',') + ' €' } } } }
                 });
             }
+        }
+
+        // Impression avec choix de quantité
+        const BASE_QTY    = {{ recipe.outputValue }};
+        const URL_PDF     = '{{ path("app_recipe_pdf",     {id: recipe.id}) }}';
+        const URL_PDF_LAB = '{{ path("app_recipe_pdf_lab", {id: recipe.id}) }}';
+
+        function openPrintModal() {
+            document.getElementById('printQtyInput').value = BASE_QTY;
+            updatePrintPreview();
+            document.getElementById('printQtyModal').classList.remove('hidden');
+            document.getElementById('printQtyModal').classList.add('flex');
+        }
+        function setPrintQty(qty) {
+            document.getElementById('printQtyInput').value = qty;
+            updatePrintPreview();
+        }
+        function updatePrintPreview() {
+            const qty    = parseFloat(document.getElementById('printQtyInput').value) || BASE_QTY;
+            const factor = qty / BASE_QTY;
+            document.getElementById('printFactorDisplay').textContent = '× ' + factor.toFixed(2).replace('.', ',');
+        }
+        function generatePrint(type) {
+            const qty = parseFloat(document.getElementById('printQtyInput').value) || BASE_QTY;
+            const url = (type === 'lab' ? URL_PDF_LAB : URL_PDF) + '?qty=' + qty;
+            window.open(url, '_blank');
+            document.getElementById('printQtyModal').classList.add('hidden');
+            document.getElementById('printQtyModal').classList.remove('flex');
         }
     </script>
 {% endblock %}
