@@ -1,17 +1,200 @@
 {% extends 'base.html.twig' %}
 {% block title %}Catégories{% endblock %}
 {% block page_title %}Catégories d'ingrédients{% endblock %}
-{% block page_actions %}<button onclick="document.getElementById('addModal').classList.remove('hidden');document.getElementById('addModal').classList.add('flex')" class="inline-flex items-center gap-2 rounded-lg bg-blue-500 hover:bg-blue-600 px-4 py-2.5 text-sm font-medium text-white"><i class="fas fa-plus text-[11px]"></i> Ajouter</button>{% endblock %}
+{% block page_subtitle %}{{ categories|length }} catégorie{{ categories|length > 1 ? 's' : '' }}{% endblock %}
+
+{% block page_actions %}
+    <button onclick="openAddModal()"
+            class="inline-flex items-center gap-2 rounded-xl bg-blue-500 hover:bg-blue-600 px-4 py-2.5 text-sm font-semibold text-white transition-colors">
+        <i class="fas fa-plus text-[11px]"></i> Ajouter
+    </button>
+{% endblock %}
+
 {% block body %}
-<div class="rounded-2xl border border-gray-200 bg-white">
-    <table class="w-full text-sm"><thead><tr class="border-b border-gray-100"><th class="py-3 px-5 text-left text-xs font-medium uppercase text-gray-400">Nom</th><th class="py-3 px-3 text-center text-xs font-medium uppercase text-gray-400">Ordre</th><th class="py-3 px-3 text-center text-xs font-medium uppercase text-gray-400">Ingrédients</th><th class="py-3 px-5 text-center text-xs font-medium uppercase text-gray-400">Actions</th></tr></thead>
-    <tbody class="divide-y divide-gray-50">{% for c in categories %}<tr class="hover:bg-gray-50/50">
-        <td class="py-3 px-5 font-medium text-gray-700">{{ c.name }}</td>
-        <td class="py-3 px-3 text-center text-gray-500">{{ c.sortOrder }}</td>
-        <td class="py-3 px-3 text-center text-gray-500">{{ c.ingredients|length }}</td>
-        <td class="py-3 px-5 text-center"><form method="post" action="{{ path('app_admin_category_delete', {id: c.id}) }}" onsubmit="return confirm('Supprimer ?')" class="inline"><button class="w-8 h-8 inline-flex items-center justify-center rounded-lg text-gray-400 hover:text-red-500 hover:bg-red-50"><i class="fas fa-trash text-xs"></i></button></form></td>
-    </tr>{% else %}<tr><td colspan="4" class="py-12 text-center text-gray-400">Aucune catégorie</td></tr>{% endfor %}</tbody></table>
-</div>
-<div id="addModal" class="fixed inset-0 z-[9999] hidden items-center justify-center bg-black/50" onclick="if(event.target===this){this.classList.add('hidden');this.classList.remove('flex')}">
-<form method="post" action="{{ path('app_admin_category_create') }}" class="bg-white rounded-2xl shadow-xl w-full max-w-sm mx-4"><div class="px-6 py-4 border-b border-gray-100"><h3 class="font-semibold text-[#1c2434]">Nouvelle catégorie</h3></div><div class="p-6 space-y-4"><div><label class="block text-sm font-medium text-gray-600 mb-1.5">Nom *</label><input type="text" name="name" required class="w-full rounded-lg border border-gray-200 px-4 py-2.5 text-sm outline-none focus:border-blue-400"></div><div><label class="block text-sm font-medium text-gray-600 mb-1.5">Ordre</label><input type="number" name="sort_order" value="0" class="w-full rounded-lg border border-gray-200 px-4 py-2.5 text-sm outline-none focus:border-blue-400"></div></div><div class="px-6 py-4 border-t border-gray-100 flex justify-end gap-3"><button type="button" onclick="this.closest('.fixed').classList.add('hidden');this.closest('.fixed').classList.remove('flex')" class="rounded-lg border border-gray-200 px-4 py-2 text-sm text-gray-600 hover:bg-gray-50">Annuler</button><button type="submit" class="rounded-lg bg-blue-500 hover:bg-blue-600 px-5 py-2 text-sm font-medium text-white">Créer</button></div></form></div>
+    <div class="rounded-2xl border border-gray-200 bg-white">
+        <div class="px-6 py-4 border-b border-gray-100 flex items-center justify-between">
+            <div class="flex items-center gap-2">
+                <div class="w-2 h-2 rounded-full bg-blue-500"></div>
+                <h3 class="font-semibold text-[15px] text-[#1c2434]">Liste des catégories</h3>
+            </div>
+            <p class="text-xs text-gray-400">Cliquez sur <i class="fas fa-pen text-[10px]"></i> pour modifier le nom ou l'ordre</p>
+        </div>
+
+        <table class="w-full text-sm">
+            <thead>
+            <tr class="border-b border-gray-100 bg-gray-50/50">
+                <th class="py-3 px-5 text-left text-xs font-semibold uppercase tracking-wider text-gray-400">Nom</th>
+                <th class="py-3 px-4 text-center text-xs font-semibold uppercase tracking-wider text-gray-400 w-24">Ordre</th>
+                <th class="py-3 px-4 text-center text-xs font-semibold uppercase tracking-wider text-gray-400 w-28">Ingrédients</th>
+                <th class="py-3 px-5 text-center text-xs font-semibold uppercase tracking-wider text-gray-400 w-24">Actions</th>
+            </tr>
+            </thead>
+            <tbody class="divide-y divide-gray-50">
+            {% for c in categories %}
+                <tr class="hover:bg-gray-50/50 transition-colors">
+                    <td class="py-3.5 px-5 font-medium text-gray-800">{{ c.name }}</td>
+                    <td class="py-3.5 px-4 text-center">
+                <span class="inline-flex items-center justify-center w-8 h-8 rounded-lg bg-gray-100 text-gray-600 text-sm font-semibold">
+                    {{ c.sortOrder }}
+                </span>
+                    </td>
+                    <td class="py-3.5 px-4 text-center">
+                        {% set nb = c.ingredients|length %}
+                        {% if nb > 0 %}
+                            <span class="inline-flex items-center justify-center rounded-full bg-blue-50 text-blue-700 text-xs font-semibold px-3 py-1">
+                    {{ nb }} ingrédient{{ nb > 1 ? 's' : '' }}
+                </span>
+                        {% else %}
+                            <span class="text-gray-300 text-xs">vide</span>
+                        {% endif %}
+                    </td>
+                    <td class="py-3.5 px-5">
+                        <div class="flex items-center justify-center gap-1">
+                            {# Bouton modifier #}
+                            <button onclick="openEditModal({{ c.id }}, '{{ c.name|e('js') }}', {{ c.sortOrder }})"
+                                    class="w-8 h-8 inline-flex items-center justify-center rounded-lg text-gray-400 hover:text-blue-500 hover:bg-blue-50 transition-colors"
+                                    title="Modifier">
+                                <i class="fas fa-pen text-xs"></i>
+                            </button>
+                            {# Bouton supprimer — désactivé si des ingrédients l'utilisent #}
+                            {% if c.ingredients|length == 0 %}
+                                <form method="post" action="{{ path('app_admin_category_delete', {id: c.id}) }}"
+                                      onsubmit="return confirm('Supprimer la catégorie « {{ c.name }} » ?')">
+                                    <button class="w-8 h-8 inline-flex items-center justify-center rounded-lg text-gray-400 hover:text-red-500 hover:bg-red-50 transition-colors"
+                                            title="Supprimer">
+                                        <i class="fas fa-trash text-xs"></i>
+                                    </button>
+                                </form>
+                            {% else %}
+                                <span class="w-8 h-8 inline-flex items-center justify-center rounded-lg text-gray-200 cursor-not-allowed"
+                                      title="{{ c.ingredients|length }} ingrédient(s) — suppression impossible">
+                        <i class="fas fa-trash text-xs"></i>
+                    </span>
+                            {% endif %}
+                        </div>
+                    </td>
+                </tr>
+            {% else %}
+                <tr>
+                    <td colspan="4" class="py-12 text-center text-gray-400">
+                        <i class="fas fa-tags text-2xl mb-2 block text-gray-200"></i>
+                        Aucune catégorie — cliquez sur "Ajouter" pour commencer
+                    </td>
+                </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    {# ══ MODAL MODIFIER ══ #}
+    <div id="editModal" class="fixed inset-0 z-[9999] hidden items-center justify-center bg-black/50"
+         onclick="if(event.target===this) closeEditModal()">
+        <form id="editForm" method="post" action=""
+              class="bg-white rounded-2xl shadow-xl w-full max-w-sm mx-4">
+            <div class="px-6 py-4 border-b border-gray-100 flex items-center justify-between">
+                <h3 class="font-semibold text-[#1c2434]">Modifier la catégorie</h3>
+                <button type="button" onclick="closeEditModal()" class="text-gray-400 hover:text-gray-600">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="p-6 space-y-4">
+                <div>
+                    <label class="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5">
+                        Nom <span class="text-red-400">*</span>
+                    </label>
+                    <input type="text" id="editName" name="name" required
+                           class="w-full rounded-xl border border-gray-200 px-4 py-2.5 text-sm outline-none focus:border-blue-400 focus:ring-1 focus:ring-blue-100">
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5">
+                        Ordre d'affichage
+                    </label>
+                    <input type="number" id="editOrder" name="sort_order" min="0"
+                           class="w-full rounded-xl border border-gray-200 px-4 py-2.5 text-sm outline-none focus:border-blue-400 focus:ring-1 focus:ring-blue-100">
+                    <p class="text-xs text-gray-400 mt-1">Les catégories sont triées par ordre croissant</p>
+                </div>
+            </div>
+            <div class="px-6 py-4 border-t border-gray-100 flex justify-end gap-3">
+                <button type="button" onclick="closeEditModal()"
+                        class="rounded-xl border border-gray-200 px-4 py-2 text-sm text-gray-600 hover:bg-gray-50 transition-colors">
+                    Annuler
+                </button>
+                <button type="submit"
+                        class="rounded-xl bg-blue-500 hover:bg-blue-600 px-5 py-2 text-sm font-semibold text-white transition-colors">
+                    <i class="fas fa-save text-[10px] mr-1.5"></i> Enregistrer
+                </button>
+            </div>
+        </form>
+    </div>
+
+    {# ══ MODAL AJOUTER ══ #}
+    <div id="addModal" class="fixed inset-0 z-[9999] hidden items-center justify-center bg-black/50"
+         onclick="if(event.target===this) closeAddModal()">
+        <form method="post" action="{{ path('app_admin_category_create') }}"
+              class="bg-white rounded-2xl shadow-xl w-full max-w-sm mx-4">
+            <div class="px-6 py-4 border-b border-gray-100 flex items-center justify-between">
+                <h3 class="font-semibold text-[#1c2434]">Nouvelle catégorie</h3>
+                <button type="button" onclick="closeAddModal()" class="text-gray-400 hover:text-gray-600">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="p-6 space-y-4">
+                <div>
+                    <label class="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5">
+                        Nom <span class="text-red-400">*</span>
+                    </label>
+                    <input type="text" name="name" required autofocus
+                           class="w-full rounded-xl border border-gray-200 px-4 py-2.5 text-sm outline-none focus:border-blue-400 focus:ring-1 focus:ring-blue-100">
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5">
+                        Ordre d'affichage
+                    </label>
+                    <input type="number" name="sort_order" value="{{ categories|length * 10 }}" min="0"
+                           class="w-full rounded-xl border border-gray-200 px-4 py-2.5 text-sm outline-none focus:border-blue-400 focus:ring-1 focus:ring-blue-100">
+                </div>
+            </div>
+            <div class="px-6 py-4 border-t border-gray-100 flex justify-end gap-3">
+                <button type="button" onclick="closeAddModal()"
+                        class="rounded-xl border border-gray-200 px-4 py-2 text-sm text-gray-600 hover:bg-gray-50 transition-colors">
+                    Annuler
+                </button>
+                <button type="submit"
+                        class="rounded-xl bg-blue-500 hover:bg-blue-600 px-5 py-2 text-sm font-semibold text-white transition-colors">
+                    <i class="fas fa-plus text-[10px] mr-1.5"></i> Créer
+                </button>
+            </div>
+        </form>
+    </div>
+{% endblock %}
+
+{% block javascripts %}
+    <script>
+        const BASE_URL_EDIT = '{{ path('app_admin_category_update', {id: '__ID__'}) }}';
+
+        function openEditModal(id, name, order) {
+            document.getElementById('editName').value  = name;
+            document.getElementById('editOrder').value = order;
+            document.getElementById('editForm').action = BASE_URL_EDIT.replace('__ID__', id);
+            const m = document.getElementById('editModal');
+            m.classList.remove('hidden');
+            m.classList.add('flex');
+            document.getElementById('editName').focus();
+        }
+        function closeEditModal() {
+            const m = document.getElementById('editModal');
+            m.classList.add('hidden');
+            m.classList.remove('flex');
+        }
+        function openAddModal() {
+            const m = document.getElementById('addModal');
+            m.classList.remove('hidden');
+            m.classList.add('flex');
+        }
+        function closeAddModal() {
+            const m = document.getElementById('addModal');
+            m.classList.add('hidden');
+            m.classList.remove('flex');
+        }
+    </script>
 {% endblock %}
