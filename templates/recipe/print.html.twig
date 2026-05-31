@@ -59,6 +59,12 @@
         .totals-table tr.big td { font-size: 13pt; font-weight: bold; padding-top: 8px; border-top: 1px solid #cbd5e1; }
 
         .footer { margin-top: 25px; padding-top: 8px; border-top: 1px solid #e2e8f0; font-size: 8pt; color: #94a3b8; text-align: center; }
+
+        .warn-box { border: 1px solid #f59e0b; background: #fffbeb; border-radius: 4px; padding: 9px 13px; margin-bottom: 16px; font-size: 8.5pt; color: #92400e; }
+        .warn-box .warn-title { font-weight: bold; margin-bottom: 3px; }
+        .warn-box ul { margin: 0; padding-left: 16px; }
+        .price-src { font-size: 7.5pt; color: #94a3b8; }
+        .flag { color: #dc2626; font-weight: bold; font-size: 8pt; }
     </style>
 </head>
 <body>
@@ -100,6 +106,21 @@
     </tr>
 </table>
 
+{# Bandeau d'alerte : coût potentiellement sous-évalué #}
+{% set w = totals.warnings %}
+{% if w.total > 0 %}
+    <div class="warn-box">
+        <div class="warn-title">⚠ Coût potentiellement sous-évalué — à vérifier avant tarification</div>
+        <ul>
+            {% if w.no_price > 0 %}<li>{{ w.no_price }} ligne(s) sans prix d'ingrédient (comptées à 0 €).</li>{% endif %}
+            {% if w.unit_mismatch > 0 %}<li>{{ w.unit_mismatch }} ligne(s) en unité incompatible (comptées à 0 €).</li>{% endif %}
+            {% if w.approx_density > 0 %}<li>{{ w.approx_density }} conversion(s) litre↔kg approximative(s) (densité = 1).</li>{% endif %}
+            {% if w.output_exceeds_input %}<li>Sortie déclarée supérieure à la masse nette des ingrédients ({{ w.net_input_kg }} kg).</li>{% endif %}
+            {% if w.pricing == 'markup_over_100' %}<li>Taux de marque ≥ 100 % : prix de vente non calculable.</li>{% endif %}
+        </ul>
+    </div>
+{% endif %}
+
 <!-- COMPOSITION -->
 <h2>Composition</h2>
 <table class="comp-table">
@@ -120,6 +141,12 @@
                     <span class="sub-recipe">[SR] {{ l.sub_recipe.name }}</span>
                 {% else %}
                     {{ l.ingredient.name }}
+                    {% if 'no_price' in l.warnings %}<span class="flag"> ⚠ sans prix</span>{% endif %}
+                    {% if 'unit_mismatch' in l.warnings %}<span class="flag"> ⚠ unité incompatible</span>{% endif %}
+                    {% if 'approx_density' in l.warnings %}<span class="price-src"> (≈ densité 1)</span>{% endif %}
+                    {% if l.price_meta and l.price_meta.effective_date %}
+                        <br><span class="price-src">prix du {{ l.price_meta.effective_date|date('d/m/Y') }}{% if l.price_meta.supplier %} · {{ l.price_meta.supplier }}{% endif %}</span>
+                    {% endif %}
                 {% endif %}
                 {% if l.note %}<br><span class="note">→ {{ l.note }}</span>{% endif %}
             </td>
@@ -158,12 +185,26 @@
     </tr>
     <tr>
         <td class="kpi-cell">
-            <div class="kpi-label">Marge HT</div>
-            <div class="kpi-value kpi-green">{{ (totals.margin_ht * f)|number_format(2, ',', ' ') }} €</div>
+            <div class="kpi-label">Marge brute / {{ recipe.outputUnitLabel }} HT</div>
+            <div class="kpi-value kpi-green">{{ totals.margin_ht|number_format(2, ',', ' ') }} €</div>
         </td>
         <td class="kpi-cell">
-            <div class="kpi-label">Taux de marge</div>
-            <div class="kpi-value kpi-green">{{ totals.margin_percent|number_format(1) }} %</div>
+            <div class="kpi-label">Taux de marque (sur PV)</div>
+            <div class="kpi-value kpi-green">{{ totals.markup_percent|number_format(1) }} %</div>
+        </td>
+        <td class="kpi-cell">
+            <div class="kpi-label">Taux de marge (sur coût)</div>
+            <div class="kpi-value">{{ totals.margin_on_cost_percent|number_format(1) }} %</div>
+        </td>
+    </tr>
+    <tr>
+        <td class="kpi-cell">
+            <div class="kpi-label">Coefficient</div>
+            <div class="kpi-value">× {{ totals.coefficient|number_format(2, ',', ' ') }}</div>
+        </td>
+        <td class="kpi-cell">
+            <div class="kpi-label">Ratio matière</div>
+            <div class="kpi-value">{{ totals.material_ratio_percent|number_format(1) }} %</div>
         </td>
         <td class="kpi-cell">
             <div class="kpi-label">TVA produit</div>

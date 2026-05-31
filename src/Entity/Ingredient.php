@@ -29,6 +29,14 @@ class Ingredient
     #[ORM\Column(name: 'default_supplier', length: 200, nullable: true)]
     private ?string $defaultSupplier = null;
 
+    /** Allergènes présents (codes parmi les 14 réglementaires — règlement INCO 1169/2011). */
+    #[ORM\Column(type: 'json', nullable: true)]
+    private ?array $allergens = [];
+
+    /** Traces éventuelles (« peut contenir »), juridiquement distinctes des allergènes présents. */
+    #[ORM\Column(type: 'json', nullable: true)]
+    private ?array $traces = [];
+
     #[ORM\OneToMany(targetEntity: IngredientPrice::class, mappedBy: 'ingredient', cascade: ['persist', 'remove'], orphanRemoval: true)]
     #[ORM\OrderBy(['effectiveDate' => 'DESC', 'id' => 'DESC'])]
     private Collection $prices;
@@ -53,6 +61,18 @@ class Ingredient
     public function setVatRate(float $v): static { $this->vatRate = number_format($v, 2, '.', ''); return $this; }
     public function getDefaultSupplier(): ?string { return $this->defaultSupplier; }
     public function setDefaultSupplier(?string $v): static { $this->defaultSupplier = $v; return $this; }
+
+    public function getAllergens(): array { return $this->allergens ?? []; }
+    public function setAllergens(array $v): static { $this->allergens = array_values($v); return $this; }
+
+    public function getTraces(): array { return $this->traces ?? []; }
+    public function setTraces(array $v): static { $this->traces = array_values($v); return $this; }
+
+    /** Vrai si l'allergénicité a déjà été renseignée (présents ou traces). */
+    public function hasAllergenInfo(): bool
+    {
+        return !empty($this->allergens) || !empty($this->traces);
+    }
     public function getPrices(): Collection { return $this->prices; }
     public function getCreatedAt(): ?\DateTimeImmutable { return $this->createdAt; }
 

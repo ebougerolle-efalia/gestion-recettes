@@ -91,8 +91,9 @@
     <thead>
     <tr>
         <th>Élément</th>
-        <th class="c" style="width: 120px;">Quantité brute</th>
-        <th class="c" style="width: 80px;">Unité</th>
+        <th class="c" style="width: 110px;">Qté brute</th>
+        <th class="c" style="width: 110px;">Qté nette</th>
+        <th class="c" style="width: 70px;">Unité</th>
     </tr>
     </thead>
     <tbody>
@@ -107,6 +108,7 @@
                 {% if l.note %}<br><span class="note">→ {{ l.note }}</span>{% endif %}
             </td>
             <td class="c bold">{{ (l.qty_brute * f)|number_format(3, ',', ' ') }}</td>
+            <td class="c">{{ (l.qty_net * f)|number_format(3, ',', ' ') }}</td>
             <td class="c">{{ l.unit }}</td>
         </tr>
     {% endfor %}

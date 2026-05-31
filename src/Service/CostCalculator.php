@@ -19,6 +19,13 @@ class CostCalculator
     private function r2(float $n): float { return round($n, 2); }
     private function clampPct(float $n): float { return max(0.0, min(100.0, $n)); }
 
+    /** Dédoublonne et range une liste de codes allergènes dans l'ordre réglementaire. */
+    private function orderAllergens(array $codes): array
+    {
+        $ref = array_keys(\App\Twig\BoutiqueExtension::ALLERGENES);
+        return array_values(array_intersect($ref, array_unique($codes)));
+    }
+
     /**
      * Statut de conversion entre deux unités :
      *   'ok'     conversion exacte
@@ -101,6 +108,9 @@ class CostCalculator
         $materialCost  = 0.0;
         $computedLines = [];
 
+        $allergens = [];
+        $traces    = [];
+
         // Cumul pour le contrôle de cohérence masse (recettes au poids uniquement)
         $netInputKg        = 0.0;
         $allLinesWeighable = true;
@@ -129,6 +139,9 @@ class CostCalculator
 
                 $status   = $this->conversionStatus($line->getUnit(), $ing->getBaseUnit());
                 $lineCost = $this->convertQty($line->getQtyBrute(), $line->getUnit(), $ing->getBaseUnit()) * $price;
+
+                $allergens = array_merge($allergens, $ing->getAllergens());
+                $traces    = array_merge($traces, $ing->getTraces());
 
                 // Alertes
                 if (!$priceRow)            $lineData['warnings'][] = 'no_price';
@@ -169,6 +182,9 @@ class CostCalculator
 
                 $subCostPerUnit = $subComputed['totals']['cost_per_output_ht'];
                 $subUnit        = $subComputed['recipe']->getOutputType() === 'weight' ? 'kg' : 'portion';
+
+                $allergens = array_merge($allergens, $subComputed['totals']['allergens']);
+                $traces    = array_merge($traces, $subComputed['totals']['traces']);
 
                 $qtyInSubUnit = $line->getQtyBrute();
                 if ($line->getUnit() !== $subUnit && in_array($line->getUnit(), ['kg','g']) && $subUnit === 'kg') {
@@ -275,6 +291,10 @@ class CostCalculator
             'total'                => $wNoPrice + $wUnit + ($pricingWarn ? 1 : 0) + ($outputExceedsInput ? 1 : 0),
         ];
 
+        // Allergènes : union ordonnée ; une trace déjà présente n'est plus listée en trace.
+        $allergens = $this->orderAllergens($allergens);
+        $traces    = $this->orderAllergens(array_diff($traces, $allergens));
+
         return [
             'recipe' => $recipe,
             'lines'  => $computedLines,
@@ -297,6 +317,8 @@ class CostCalculator
                 'material_ratio_percent'  => $materialRatio,  // ratio matière (food cost)
                 'pricing_mode'            => $recipe->getPricingMode(),
                 'warnings'                => $warnings,
+                'allergens'               => $allergens,
+                'traces'                  => $traces,
             ],
         ];
     }
