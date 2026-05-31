@@ -1,0 +1,4 @@
+Données nutritionnelles : table Ciqual de composition nutritionnelle des aliments.
+Source : Anses (Agence nationale de sécurité sanitaire de l'alimentation, de l'environnement et du travail).
+Citation requise : "Anses. Table Ciqual de composition nutritionnelle des aliments."
+Fichier ciqual_2025.csv généré à partir de Table_Ciqual_2025_FR (7 nutriments réglementaires).

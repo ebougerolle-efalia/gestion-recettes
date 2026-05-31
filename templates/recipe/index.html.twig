@@ -27,7 +27,7 @@
             <p class="text-2xl font-bold text-blue-600 mt-1">{{ countWithCache }}</p>
         </div>
         <div class="rounded-2xl border border-gray-200 bg-white px-5 py-4">
-            <p class="text-[11px] font-semibold uppercase tracking-wider text-gray-400">Marge moyenne</p>
+            <p class="text-[11px] font-semibold uppercase tracking-wider text-gray-400">Marque moyenne</p>
             <p class="text-2xl font-bold text-emerald-600 mt-1">{{ countWithCache > 0 ? (avgMargin / countWithCache)|number_format(1) : '—' }} %</p>
         </div>
     </div>
@@ -55,7 +55,7 @@
                     <th class="py-3 px-3 text-center text-xs font-medium uppercase tracking-wider text-gray-400">Sortie</th>
                     <th class="py-3 px-3 text-right text-xs font-medium uppercase tracking-wider text-gray-400">Coût/u HT</th>
                     <th class="py-3 px-3 text-right text-xs font-medium uppercase tracking-wider text-gray-400">PV TTC</th>
-                    <th class="py-3 px-3 text-right text-xs font-medium uppercase tracking-wider text-gray-400">Marge</th>
+                    <th class="py-3 px-3 text-right text-xs font-medium uppercase tracking-wider text-gray-400">Marque</th>
                     <th class="py-3 px-5 text-center text-xs font-medium uppercase tracking-wider text-gray-400" style="min-width:80px">Actions</th>
                 </tr></thead>
                 <tbody class="divide-y divide-gray-50">
@@ -106,11 +106,11 @@
                     <div><label class="block text-sm font-medium text-gray-600 mb-1.5">Quantité sortie *</label><input type="number" name="output_value" step="0.001" value="5" required class="w-full rounded-lg border border-gray-200 px-4 py-2.5 text-sm outline-none focus:border-blue-400"></div>
                 </div>
                 <div class="grid grid-cols-2 gap-4">
-                    <div><label class="block text-sm font-medium text-gray-600 mb-1.5">Mode prix</label><select name="pricing_mode" class="w-full rounded-lg border border-gray-200 px-4 py-2.5 text-sm outline-none focus:border-blue-400 bg-white"><option value="margin">Marge %</option><option value="coef">Coefficient</option></select></div>
-                    <div><label class="block text-sm font-medium text-gray-600 mb-1.5">Objectif</label><input type="number" name="pricing_value" step="0.01" value="30" class="w-full rounded-lg border border-gray-200 px-4 py-2.5 text-sm outline-none focus:border-blue-400"></div>
+                    <div><label class="block text-sm font-medium text-gray-600 mb-1.5">Mode prix</label><select name="pricing_mode" class="w-full rounded-lg border border-gray-200 px-4 py-2.5 text-sm outline-none focus:border-blue-400 bg-white"><option value="coef">Coefficient (× coût HT)</option><option value="margin">Taux de marque (% du PV)</option></select></div>
+                    <div><label class="block text-sm font-medium text-gray-600 mb-1.5">Objectif</label><input type="number" name="pricing_value" step="0.01" value="{{ boutique().coefDefaut }}" class="w-full rounded-lg border border-gray-200 px-4 py-2.5 text-sm outline-none focus:border-blue-400"></div>
                 </div>
                 <div class="grid grid-cols-2 gap-4">
-                    <div><label class="block text-sm font-medium text-gray-600 mb-1.5">TVA produit %</label><input type="number" name="product_vat_rate" step="0.01" value="5.5" class="w-full rounded-lg border border-gray-200 px-4 py-2.5 text-sm outline-none focus:border-blue-400"></div>
+                    <div><label class="block text-sm font-medium text-gray-600 mb-1.5">TVA produit %</label><input type="number" name="product_vat_rate" step="0.01" value="{{ boutique().tvaDefaut }}" class="w-full rounded-lg border border-gray-200 px-4 py-2.5 text-sm outline-none focus:border-blue-400"></div>
                     <div></div>
                 </div>
                 <div class="grid grid-cols-2 gap-4">

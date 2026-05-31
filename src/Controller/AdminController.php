@@ -347,6 +347,7 @@ class AdminController extends AbstractController
     public function parametres(
         Request $request,
         EntityManagerInterface $em,
+        \App\Service\CostCalculator $calc,
     ): Response {
         $repo   = $em->getRepository(\App\Entity\ConfigBoutique::class);
         $config = $repo->find(1);
@@ -357,6 +358,7 @@ class AdminController extends AbstractController
         }
 
         if ($request->isMethod('POST')) {
+            $ancienTaux = $config->getTauxHoraireMo();
             $config->setNomEtablissement($request->request->get('nom_etablissement', $config->getNomEtablissement()));
             $config->setSousTitre($request->request->get('sous_titre'));
             $config->setAdresse($request->request->get('adresse'));
@@ -386,6 +388,14 @@ class AdminController extends AbstractController
             }
 
             $em->flush();
+
+            // Si le taux horaire a changé, on répercute le coût de main d'œuvre
+            // sur toutes les recettes (recalcul des coûts et marges).
+            if (abs($config->getTauxHoraireMo() - $ancienTaux) > 0.001) {
+                $n = $calc->recalculateAll();
+                $this->addFlash('info', "Taux horaire modifié : $n recette(s) recalculée(s).");
+            }
+
             $this->addFlash('success', 'Paramètres enregistrés.');
             return $this->redirectToRoute('app_admin_parametres');
         }

@@ -29,6 +29,10 @@ class Ingredient
     #[ORM\Column(name: 'default_supplier', length: 200, nullable: true)]
     private ?string $defaultSupplier = null;
 
+    /** Code de l'aliment Ciqual associé (pour les valeurs nutritionnelles). */
+    #[ORM\Column(length: 20, nullable: true)]
+    private ?string $ciqualCode = null;
+
     /** Allergènes présents (codes parmi les 14 réglementaires — règlement INCO 1169/2011). */
     #[ORM\Column(type: 'json', nullable: true)]
     private ?array $allergens = [];
@@ -64,6 +68,9 @@ class Ingredient
 
     public function getAllergens(): array { return $this->allergens ?? []; }
     public function setAllergens(array $v): static { $this->allergens = array_values($v); return $this; }
+
+    public function getCiqualCode(): ?string { return $this->ciqualCode; }
+    public function setCiqualCode(?string $v): static { $this->ciqualCode = ($v === '' ? null : $v); return $this; }
 
     public function getTraces(): array { return $this->traces ?? []; }
     public function setTraces(array $v): static { $this->traces = array_values($v); return $this; }

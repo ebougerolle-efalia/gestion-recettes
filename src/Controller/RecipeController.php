@@ -279,20 +279,22 @@ class RecipeController extends AbstractController
 
     private function hydrateRecipe(Recipe $recipe, Request $request, float $tauxMo): void
     {
+        $clamp = fn(float $v) => max(0.0, min(100.0, $v));
+
         $recipe->setName($request->request->get('name', $recipe->getName()));
         $recipe->setFamily($request->request->get('family', $recipe->getFamily()));
         $recipe->setOutputType($request->request->get('output_type', $recipe->getOutputType()));
-        $recipe->setOutputValue((float) $request->request->get('output_value', $recipe->getOutputValue()));
-        $recipe->setLossPercent((float) $request->request->get('loss_percent', $recipe->getLossPercent()));
-        $recipe->setYieldPercent((float) $request->request->get('yield_percent', $recipe->getYieldPercent()));
-        $recipe->setProductVatRate((float) $request->request->get('product_vat_rate', $recipe->getProductVatRate()));
+        $recipe->setOutputValue(max(0.001, (float) $request->request->get('output_value', $recipe->getOutputValue())));
+        $recipe->setLossPercent($clamp((float) $request->request->get('loss_percent', $recipe->getLossPercent())));
+        $recipe->setYieldPercent($clamp((float) $request->request->get('yield_percent', $recipe->getYieldPercent())));
+        $recipe->setProductVatRate(max(0.0, (float) $request->request->get('product_vat_rate', $recipe->getProductVatRate())));
 
-        $minutes = (int) $request->request->get('labor_minutes', $recipe->getLaborMinutes());
+        $minutes = max(0, (int) $request->request->get('labor_minutes', $recipe->getLaborMinutes()));
         $recipe->setLaborMinutes($minutes);
         $recipe->setLaborCostHt(round($minutes / 60 * $tauxMo, 2));
 
-        $recipe->setPackagingCostHt((float) $request->request->get('packaging_cost_ht', $recipe->getPackagingCostHt()));
+        $recipe->setPackagingCostHt(max(0.0, (float) $request->request->get('packaging_cost_ht', $recipe->getPackagingCostHt())));
         $recipe->setPricingMode($request->request->get('pricing_mode', $recipe->getPricingMode()));
-        $recipe->setPricingValue((float) $request->request->get('pricing_value', $recipe->getPricingValue()));
+        $recipe->setPricingValue(max(0.0, (float) $request->request->get('pricing_value', $recipe->getPricingValue())));
     }
 }

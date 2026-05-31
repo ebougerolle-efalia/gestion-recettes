@@ -5,10 +5,11 @@ use App\Entity\Ingredient;
 use App\Entity\IngredientPrice;
 use App\Repository\IngredientRepository;
 use App\Repository\IngredientCategoryRepository;
+use App\Repository\CiqualFoodRepository;
 use App\Service\CostCalculator;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
-use Symfony\Component\HttpFoundation\{Request, Response};
+use Symfony\Component\HttpFoundation\{Request, Response, JsonResponse};
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
 
@@ -26,14 +27,32 @@ class IngredientController extends AbstractController
         ]);
     }
 
+    #[Route('/api/ciqual/search', name: 'app_ciqual_search', methods: ['GET'])]
+    public function ciqualSearch(Request $request, CiqualFoodRepository $repo): JsonResponse
+    {
+        $q = (string) $request->query->get('q', '');
+        $results = array_map(
+            fn($f) => ['code' => $f->getCode(), 'nom' => $f->getNom(), 'groupe' => $f->getGroupe()],
+            $repo->search($q, 20)
+        );
+        return $this->json($results);
+    }
+
     #[Route('/ingredients/{id}', name: 'app_ingredient_show', requirements: ['id' => '\d+'])]
-    public function show(int $id, IngredientRepository $repo): Response
+    public function show(int $id, IngredientRepository $repo, CiqualFoodRepository $ciqualRepo): Response
     {
         $ingredient = $repo->find($id);
         if (!$ingredient) throw $this->createNotFoundException();
 
+        $ciqualName = null;
+        if ($ingredient->getCiqualCode()) {
+            $food = $ciqualRepo->find($ingredient->getCiqualCode());
+            $ciqualName = $food?->getNom();
+        }
+
         return $this->render('ingredient/show.html.twig', [
             'ingredient' => $ingredient,
+            'ciqualName' => $ciqualName,
         ]);
     }
 
@@ -48,6 +67,7 @@ class IngredientController extends AbstractController
         $ing->setDefaultSupplier($request->request->get('default_supplier'));
         $ing->setAllergens($this->cleanAllergens($request->request->all('allergens')));
         $ing->setTraces($this->cleanAllergens($request->request->all('traces')));
+        $ing->setCiqualCode($request->request->get('ciqual_code'));
 
         $catId = (int) $request->request->get('category_id');
         $cat = $catRepo->find($catId);
@@ -86,6 +106,7 @@ class IngredientController extends AbstractController
         $ing->setDefaultSupplier($request->request->get('default_supplier'));
         $ing->setAllergens($this->cleanAllergens($request->request->all('allergens')));
         $ing->setTraces($this->cleanAllergens($request->request->all('traces')));
+        $ing->setCiqualCode($request->request->get('ciqual_code'));
 
         $catId = (int) $request->request->get('category_id');
         $cat = $catRepo->find($catId);

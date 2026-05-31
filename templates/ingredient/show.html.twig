@@ -88,6 +88,22 @@
                         </details>
                     </div>
 
+                    <div class="border-t border-gray-100 pt-4">
+                        <label class="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">Valeur nutritionnelle (Ciqual)</label>
+                        <input type="hidden" name="ciqual_code" id="ciqualCode" value="{{ ingredient.ciqualCode }}">
+                        <div id="ciqualCurrent" class="{{ ingredient.ciqualCode ? '' : 'hidden' }} flex items-center justify-between gap-2 rounded-lg bg-blue-50 border border-blue-100 px-3 py-2 mb-2">
+                            <span class="text-sm text-blue-700"><i class="fas fa-link text-[10px] mr-1.5"></i><span id="ciqualCurrentName">{{ ciqualName }}</span></span>
+                            {% if canEdit %}<button type="button" onclick="clearCiqual()" class="text-blue-400 hover:text-red-500" title="Retirer le lien"><i class="fas fa-times text-xs"></i></button>{% endif %}
+                        </div>
+                        {% if canEdit %}
+                            <div class="relative">
+                                <input type="text" id="ciqualSearch" autocomplete="off" placeholder="Rechercher un aliment Ciqual…" class="w-full rounded-lg border border-gray-200 px-4 py-2.5 text-sm outline-none focus:border-blue-400">
+                                <div id="ciqualResults" class="hidden absolute z-20 mt-1 w-full max-h-60 overflow-y-auto rounded-lg border border-gray-200 bg-white shadow-lg"></div>
+                            </div>
+                            <p class="text-xs text-gray-400 mt-1.5">Associe cet ingrédient à un aliment Ciqual pour calculer les valeurs nutritionnelles des recettes. Source : Anses / Ciqual.</p>
+                        {% endif %}
+                    </div>
+
                     {% if canEdit %}<button type="submit" class="w-full rounded-lg bg-blue-500 hover:bg-blue-600 px-5 py-2.5 text-sm font-medium text-white"><i class="fas fa-check text-[11px] mr-1"></i> Enregistrer</button>{% endif %}
                 </form>
             </div>
@@ -245,6 +261,53 @@
                     }
                 }
             });
+        }
+
+        // ===== Autocomplétion Ciqual (valeur nutritionnelle) =====
+        (function () {
+            const input = document.getElementById('ciqualSearch');
+            const box   = document.getElementById('ciqualResults');
+            if (!input || !box) return;
+            let timer = null;
+
+            input.addEventListener('input', () => {
+                clearTimeout(timer);
+                const q = input.value.trim();
+                if (q.length < 2) { box.classList.add('hidden'); box.innerHTML = ''; return; }
+                timer = setTimeout(async () => {
+                    try {
+                        const res = await fetch('{{ path('app_ciqual_search') }}?q=' + encodeURIComponent(q));
+                        const items = await res.json();
+                        if (!items.length) { box.innerHTML = '<div class="px-3 py-2 text-sm text-gray-400">Aucun résultat</div>'; box.classList.remove('hidden'); return; }
+                        box.innerHTML = items.map(it =>
+                            `<button type="button" class="block w-full text-left px-3 py-2 text-sm hover:bg-blue-50 border-b border-gray-50"
+                                     data-code="${it.code}" data-nom="${it.nom.replace(/"/g, '&quot;')}">
+                                ${it.nom}${it.groupe ? ` <span class="text-gray-400 text-xs">· ${it.groupe}</span>` : ''}
+                             </button>`
+                        ).join('');
+                        box.classList.remove('hidden');
+                    } catch (e) { box.classList.add('hidden'); }
+                }, 250);
+            });
+
+            box.addEventListener('click', e => {
+                const btn = e.target.closest('button[data-code]');
+                if (!btn) return;
+                document.getElementById('ciqualCode').value = btn.dataset.code;
+                document.getElementById('ciqualCurrentName').textContent = btn.dataset.nom;
+                document.getElementById('ciqualCurrent').classList.remove('hidden');
+                box.classList.add('hidden');
+                input.value = '';
+            });
+
+            document.addEventListener('click', e => {
+                if (!box.contains(e.target) && e.target !== input) box.classList.add('hidden');
+            });
+        })();
+
+        function clearCiqual() {
+            document.getElementById('ciqualCode').value = '';
+            document.getElementById('ciqualCurrent').classList.add('hidden');
         }
     </script>
 {% endblock %}

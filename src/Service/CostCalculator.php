@@ -154,7 +154,7 @@ class CostCalculator
                     $allLinesWeighable = false;
                 } else {
                     $netInputKg += $this->convertQty($line->getQtyBrute(), $line->getUnit(), 'kg')
-                        * (1 - $loss / 100) * ($yield / 100);
+                                 * (1 - $loss / 100) * ($yield / 100);
                 }
 
                 $lineData += [
@@ -362,7 +362,7 @@ class CostCalculator
             ? array_column($conn->fetchAllAssociative(
                 'SELECT DISTINCT recipe_id FROM recipe_lines WHERE ingredient_id = ?',
                 [$ingredientId]
-            ), 'recipe_id')
+              ), 'recipe_id')
             : array_column($conn->fetchAllAssociative('SELECT id FROM recipes'), 'id');
 
         $count = 0;
