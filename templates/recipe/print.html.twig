@@ -230,6 +230,20 @@
     </table>
 {% endif %}
 
+{% if totals.nutrition.available %}
+    <table style="width:100%; margin-top:14px; border:1px solid #e2e8f0; border-radius:4px; background:#fff;">
+        <tr><td colspan="2" style="padding:8px 14px 2px; font-size:9pt; color:#1c2434;"><strong>Valeurs nutritionnelles moyennes pour 100 g</strong>{% if not totals.nutrition.complete %} <span style="color:#d97706;">(calcul incomplet — {{ totals.nutrition.missing }} élément(s) sans donnée)</span>{% endif %}</td></tr>
+        <tr><td style="padding:3px 14px; font-size:9pt; color:#555;">Énergie</td><td style="padding:3px 14px; font-size:9pt; text-align:right; color:#1c2434;">{{ totals.nutrition.per_100g.energie_kj|number_format(0, ',', ' ') }} kJ / {{ totals.nutrition.per_100g.energie_kcal|number_format(0, ',', ' ') }} kcal</td></tr>
+        <tr><td style="padding:3px 14px; font-size:9pt; color:#555;">Matières grasses</td><td style="padding:3px 14px; font-size:9pt; text-align:right; color:#1c2434;">{{ totals.nutrition.per_100g.lipides|number_format(1, ',', ' ') }} g</td></tr>
+        <tr><td style="padding:3px 14px 3px 26px; font-size:9pt; color:#94a3b8;">dont acides gras saturés</td><td style="padding:3px 14px; font-size:9pt; text-align:right; color:#94a3b8;">{{ totals.nutrition.per_100g.ag_satures|number_format(1, ',', ' ') }} g</td></tr>
+        <tr><td style="padding:3px 14px; font-size:9pt; color:#555;">Glucides</td><td style="padding:3px 14px; font-size:9pt; text-align:right; color:#1c2434;">{{ totals.nutrition.per_100g.glucides|number_format(1, ',', ' ') }} g</td></tr>
+        <tr><td style="padding:3px 14px 3px 26px; font-size:9pt; color:#94a3b8;">dont sucres</td><td style="padding:3px 14px; font-size:9pt; text-align:right; color:#94a3b8;">{{ totals.nutrition.per_100g.sucres|number_format(1, ',', ' ') }} g</td></tr>
+        <tr><td style="padding:3px 14px; font-size:9pt; color:#555;">Protéines</td><td style="padding:3px 14px; font-size:9pt; text-align:right; color:#1c2434;">{{ totals.nutrition.per_100g.proteines|number_format(1, ',', ' ') }} g</td></tr>
+        <tr><td style="padding:3px 14px 8px; font-size:9pt; color:#555;">Sel</td><td style="padding:3px 14px 8px; font-size:9pt; text-align:right; color:#1c2434;">{{ totals.nutrition.per_100g.sel|number_format(2, ',', ' ') }} g</td></tr>
+        <tr><td colspan="2" style="padding:0 14px 8px; font-size:7.5pt; color:#94a3b8;">Valeurs moyennes calculées — source : Anses, table Ciqual.</td></tr>
+    </table>
+{% endif %}
+
 <!-- PIED -->
 <div class="footer">
     Généré le {{ 'now'|date('d/m/Y à H:i') }} — {{ boutique().nomEtablissement }}{% if boutique().sousTitre %}, {{ boutique().sousTitre }}{% endif %}
