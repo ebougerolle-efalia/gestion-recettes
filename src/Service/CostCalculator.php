@@ -5,15 +5,20 @@ use App\Entity\RecipeCostCache;
 use App\Repository\RecipeRepository;
 use App\Repository\IngredientPriceRepository;
 use App\Repository\ConfigBoutiqueRepository;
+use App\Repository\CiqualFoodRepository;
 use Doctrine\ORM\EntityManagerInterface;
 
 class CostCalculator
 {
+    /** Les 8 valeurs nutritionnelles suivies (7 réglementaires, énergie en 2 unités). */
+    private const NUT_KEYS = ['energie_kj','energie_kcal','proteines','glucides','lipides','sucres','ag_satures','sel'];
+
     public function __construct(
         private EntityManagerInterface $em,
         private RecipeRepository $recipeRepo,
         private IngredientPriceRepository $priceRepo,
         private ConfigBoutiqueRepository $configRepo,
+        private CiqualFoodRepository $ciqualRepo,
     ) {}
 
     private function r2(float $n): float { return round($n, 2); }
@@ -111,6 +116,13 @@ class CostCalculator
         $allergens = [];
         $traces    = [];
 
+        // Cumul nutritionnel : totaux absolus par nutriment (sur la base des grammes nets),
+        // ramenés "pour 100 g" en fin de calcul. Source des valeurs : table Ciqual.
+        $nutNum            = array_fill_keys(self::NUT_KEYS, 0.0);
+        $nutMissing        = 0;      // lignes non prises en compte (pas de Ciqual / non pesable)
+        $nutCovered        = false;  // au moins une ligne a contribué
+        $nutIncompleteSub  = false;  // une sous-recette au calcul incomplet a été utilisée
+
         // Cumul pour le contrôle de cohérence masse (recettes au poids uniquement)
         $netInputKg        = 0.0;
         $allLinesWeighable = true;
@@ -148,13 +160,29 @@ class CostCalculator
                 if ($status === 'none')    $lineData['warnings'][] = 'unit_mismatch';
                 if ($status === 'approx')  $lineData['warnings'][] = 'approx_density';
 
-                // Contrôle de cohérence masse
+                // Contrôle de cohérence masse + base nutritionnelle (grammes nets)
                 $kgStatus = $this->conversionStatus($line->getUnit(), 'kg');
                 if ($kgStatus === 'none') {
                     $allLinesWeighable = false;
+                    $nutMissing++; // non pesable (ex. pièce) → exclu du calcul nutritionnel
                 } else {
-                    $netInputKg += $this->convertQty($line->getQtyBrute(), $line->getUnit(), 'kg')
-                                 * (1 - $loss / 100) * ($yield / 100);
+                    $lineNetKg = $this->convertQty($line->getQtyBrute(), $line->getUnit(), 'kg')
+                        * (1 - $loss / 100) * ($yield / 100);
+                    $netInputKg += $lineNetKg;
+
+                    $food = $ing->getCiqualCode() ? $this->ciqualRepo->find($ing->getCiqualCode()) : null;
+                    if ($food) {
+                        $vals  = $food->toArray();
+                        $netG  = $lineNetKg * 1000;
+                        foreach (self::NUT_KEYS as $k) {
+                            if ($vals[$k] !== null) {
+                                $nutNum[$k] += $vals[$k] * $netG / 100;
+                            }
+                        }
+                        $nutCovered = true;
+                    } else {
+                        $nutMissing++; // masse présente mais pas de correspondance Ciqual → sous-estimation
+                    }
                 }
 
                 $lineData += [
@@ -191,6 +219,22 @@ class CostCalculator
                     $qtyInSubUnit = $this->convertQty($line->getQtyBrute(), $line->getUnit(), 'kg');
                 }
                 $lineCost = $qtyInSubUnit * $subCostPerUnit;
+
+                // Apport nutritionnel de la sous-recette (valorisée au poids uniquement)
+                $subNut = $subComputed['totals']['nutrition'] ?? null;
+                if ($subUnit === 'kg' && $subNut && ($subNut['available'] ?? false)) {
+                    $subNetKg = $qtyInSubUnit * (1 - $loss / 100) * ($yield / 100);
+                    $subNetG  = $subNetKg * 1000;
+                    foreach (self::NUT_KEYS as $k) {
+                        $nutNum[$k] += (float) ($subNut['per_100g'][$k] ?? 0) * $subNetG / 100;
+                    }
+                    $nutCovered = true;
+                    if (!($subNut['complete'] ?? false)) {
+                        $nutIncompleteSub = true;
+                    }
+                } else {
+                    $nutMissing++; // sous-recette en portions ou sans données → exclue
+                }
 
                 // Propage les alertes de la sous-recette
                 if (($subComputed['totals']['warnings']['total'] ?? 0) > 0) {
@@ -295,6 +339,29 @@ class CostCalculator
         $allergens = $this->orderAllergens($allergens);
         $traces    = $this->orderAllergens(array_diff($traces, $allergens));
 
+        // Nutrition « pour 100 g » : totaux absolus / poids fini, recettes au poids uniquement.
+        $isWeight    = $recipe->getOutputType() === 'weight';
+        $finishedG   = $isWeight ? $outputEffective * 1000 : 0.0;
+        $nutAvailable = $isWeight && $finishedG > 0 && $nutCovered;
+        $per100 = [];
+        if ($nutAvailable) {
+            foreach (self::NUT_KEYS as $k) {
+                $v = $nutNum[$k] / $finishedG * 100;
+                // énergie à l'entier ; sel à 0,01 g ; autres macronutriments à 0,1 g
+                $per100[$k] = str_starts_with($k, 'energie')
+                    ? round($v)
+                    : round($v, $k === 'sel' ? 2 : 1);
+            }
+        }
+        $nutrition = [
+            'available'         => $nutAvailable,
+            'complete'          => $nutAvailable && $nutMissing === 0 && !$nutIncompleteSub,
+            'reason'            => !$isWeight ? 'not_weight' : (!$nutCovered ? 'no_data' : null),
+            'missing'           => $nutMissing,
+            'finished_weight_g' => $isWeight ? $this->r2($finishedG) : null,
+            'per_100g'          => $per100,
+        ];
+
         return [
             'recipe' => $recipe,
             'lines'  => $computedLines,
@@ -319,6 +386,7 @@ class CostCalculator
                 'warnings'                => $warnings,
                 'allergens'               => $allergens,
                 'traces'                  => $traces,
+                'nutrition'               => $nutrition,
             ],
         ];
     }
@@ -362,7 +430,7 @@ class CostCalculator
             ? array_column($conn->fetchAllAssociative(
                 'SELECT DISTINCT recipe_id FROM recipe_lines WHERE ingredient_id = ?',
                 [$ingredientId]
-              ), 'recipe_id')
+            ), 'recipe_id')
             : array_column($conn->fetchAllAssociative('SELECT id FROM recipes'), 'id');
 
         $count = 0;

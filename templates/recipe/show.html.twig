@@ -114,6 +114,46 @@
         {% endif %}
     </div>
 
+    {# ══ Valeurs nutritionnelles (calculées depuis Ciqual, pour 100 g) ══ #}
+    {% set n = t.nutrition %}
+    <div class="rounded-2xl border border-gray-200 bg-white px-6 py-4 mb-6">
+        <div class="flex items-center gap-2 mb-3">
+            <div class="w-2 h-2 rounded-full bg-emerald-500"></div>
+            <h3 class="font-semibold text-[15px] text-[#1c2434]">Valeurs nutritionnelles</h3>
+            <span class="text-xs text-gray-400 ml-1">pour 100 g — valeurs moyennes calculées (Ciqual / Anses)</span>
+        </div>
+
+        {% if not n.available %}
+            <p class="text-sm text-gray-400">
+                {% if n.reason == 'not_weight' %}
+                    Disponible uniquement pour les recettes au poids.
+                {% elseif n.reason == 'no_data' %}
+                    Aucun ingrédient n'est encore associé à un aliment Ciqual. Renseigne-les sur les fiches ingrédient.
+                {% else %}
+                    Valeurs indisponibles.
+                {% endif %}
+            </p>
+        {% else %}
+            {% if not n.complete %}
+                <div class="mb-3 rounded-lg bg-amber-50 border border-amber-200 px-3 py-2 text-xs text-amber-700">
+                    <i class="fas fa-triangle-exclamation mr-1"></i>
+                    Calcul incomplet : {{ n.missing }} élément(s) sans correspondance Ciqual (ou non pesables) — valeurs probablement sous-estimées.
+                </div>
+            {% endif %}
+            <table class="w-full text-sm">
+                <tbody class="divide-y divide-gray-100">
+                <tr><td class="py-1.5 text-gray-600">Énergie</td><td class="py-1.5 text-right font-medium text-[#1c2434]">{{ n.per_100g.energie_kj|number_format(0, ',', ' ') }} kJ / {{ n.per_100g.energie_kcal|number_format(0, ',', ' ') }} kcal</td></tr>
+                <tr><td class="py-1.5 text-gray-600">Matières grasses</td><td class="py-1.5 text-right font-medium text-[#1c2434]">{{ n.per_100g.lipides|number_format(1, ',', ' ') }} g</td></tr>
+                <tr><td class="py-1.5 pl-4 text-gray-400">dont acides gras saturés</td><td class="py-1.5 text-right text-gray-500">{{ n.per_100g.ag_satures|number_format(1, ',', ' ') }} g</td></tr>
+                <tr><td class="py-1.5 text-gray-600">Glucides</td><td class="py-1.5 text-right font-medium text-[#1c2434]">{{ n.per_100g.glucides|number_format(1, ',', ' ') }} g</td></tr>
+                <tr><td class="py-1.5 pl-4 text-gray-400">dont sucres</td><td class="py-1.5 text-right text-gray-500">{{ n.per_100g.sucres|number_format(1, ',', ' ') }} g</td></tr>
+                <tr><td class="py-1.5 text-gray-600">Protéines</td><td class="py-1.5 text-right font-medium text-[#1c2434]">{{ n.per_100g.proteines|number_format(1, ',', ' ') }} g</td></tr>
+                <tr><td class="py-1.5 text-gray-600">Sel</td><td class="py-1.5 text-right font-medium text-[#1c2434]">{{ n.per_100g.sel|number_format(2, ',', ' ') }} g</td></tr>
+                </tbody>
+            </table>
+        {% endif %}
+    </div>
+
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {# LEFT: Paramètres #}
         <div>
