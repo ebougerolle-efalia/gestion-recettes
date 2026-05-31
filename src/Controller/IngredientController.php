@@ -46,6 +46,8 @@ class IngredientController extends AbstractController
         $ing->setBaseUnit($request->request->get('base_unit', 'kg'));
         $ing->setVatRate((float) $request->request->get('vat_rate', 5.5));
         $ing->setDefaultSupplier($request->request->get('default_supplier'));
+        $ing->setAllergens($this->cleanAllergens($request->request->all('allergens')));
+        $ing->setTraces($this->cleanAllergens($request->request->all('traces')));
 
         $catId = (int) $request->request->get('category_id');
         $cat = $catRepo->find($catId);
@@ -82,6 +84,8 @@ class IngredientController extends AbstractController
         $ing->setBaseUnit($request->request->get('base_unit', $ing->getBaseUnit()));
         $ing->setVatRate((float) $request->request->get('vat_rate', $ing->getVatRate()));
         $ing->setDefaultSupplier($request->request->get('default_supplier'));
+        $ing->setAllergens($this->cleanAllergens($request->request->all('allergens')));
+        $ing->setTraces($this->cleanAllergens($request->request->all('traces')));
 
         $catId = (int) $request->request->get('category_id');
         $cat = $catRepo->find($catId);
@@ -135,5 +139,12 @@ class IngredientController extends AbstractController
 
         $this->addFlash('success', 'Prix ajouté.');
         return $this->redirectToRoute('app_ingredient_show', ['id' => $id]);
+    }
+
+    /** Ne conserve que les codes allergènes valides (les 14 réglementaires). */
+    private function cleanAllergens(array $codes): array
+    {
+        $valid = array_keys(\App\Twig\BoutiqueExtension::ALLERGENES);
+        return array_values(array_intersect($valid, $codes));
     }
 }

@@ -20,6 +20,27 @@ use Twig\TwigFunction;
  */
 class BoutiqueExtension extends AbstractExtension
 {
+    /**
+     * Les 14 allergènes à déclaration obligatoire (Annexe II du règlement UE
+     * 1169/2011 dit « INCO »). code => libellé affiché.
+     */
+    public const ALLERGENES = [
+        'gluten'         => 'Gluten',
+        'crustaces'      => 'Crustacés',
+        'oeufs'          => 'Œufs',
+        'poissons'       => 'Poissons',
+        'arachides'      => 'Arachides',
+        'soja'           => 'Soja',
+        'lait'           => 'Lait',
+        'fruits_a_coque' => 'Fruits à coque',
+        'celeri'         => 'Céleri',
+        'moutarde'       => 'Moutarde',
+        'sesame'         => 'Sésame',
+        'sulfites'       => 'Sulfites',
+        'lupin'          => 'Lupin',
+        'mollusques'     => 'Mollusques',
+    ];
+
     private ?ConfigBoutique $cache = null;
     private bool $logoResolved = false;
     private ?string $logoData = null;
@@ -34,7 +55,21 @@ class BoutiqueExtension extends AbstractExtension
         return [
             new TwigFunction('boutique', [$this, 'getBoutique']),
             new TwigFunction('logo_base64', [$this, 'getLogoBase64']),
+            new TwigFunction('allergenes', [$this, 'getAllergenes']),
+            new TwigFunction('allergen_label', [$this, 'getAllergenLabel']),
         ];
+    }
+
+    /** Map complète code => libellé des 14 allergènes. */
+    public function getAllergenes(): array
+    {
+        return self::ALLERGENES;
+    }
+
+    /** Libellé d'un code allergène (renvoie le code brut si inconnu). */
+    public function getAllergenLabel(string $code): string
+    {
+        return self::ALLERGENES[$code] ?? $code;
     }
 
     public function getBoutique(): ConfigBoutique
