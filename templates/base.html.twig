@@ -133,6 +133,40 @@
         o.classList.toggle('hidden');
     }
     document.querySelectorAll('.flash-msg').forEach(el => setTimeout(() => el.remove(), 6000));
+
+    /* ===================== Fenêtres modales (comportement unifié) =====================
+       Règle : une modale ne se ferme QUE via le bouton X, le bouton « Annuler »
+       ou la touche Échap. Un clic à côté (sur le fond sombre) NE LA FERME PAS. */
+    function openModal(id) {
+        const m = document.getElementById(id);
+        if (!m) return;
+        m.classList.remove('hidden');
+        m.classList.add('flex');
+        const field = m.querySelector('input:not([type=hidden]):not([readonly]):not([disabled]), select, textarea');
+        if (field) setTimeout(() => field.focus(), 30);
+    }
+    function closeModal(ref) {
+        const m = (typeof ref === 'string') ? document.getElementById(ref) : ref;
+        if (!m) return;
+        m.classList.add('hidden');
+        m.classList.remove('flex');
+    }
+    // La touche Échap ferme la modale ouverte (action volontaire).
+    document.addEventListener('keydown', e => {
+        if (e.key === 'Escape') {
+            document.querySelectorAll('[id$="Modal"].flex').forEach(closeModal);
+        }
+    });
+    // Neutralise tout clic sur le fond : on stoppe la propagation pour qu'aucun
+    // éventuel gestionnaire global « clic à l'extérieur » ne puisse fermer la modale.
+    document.querySelectorAll('[id$="Modal"]').forEach(overlay => {
+        overlay.addEventListener('click', e => {
+            if (e.target === overlay) e.stopPropagation();
+        });
+        overlay.addEventListener('mousedown', e => {
+            if (e.target === overlay) e.stopPropagation();
+        });
+    });
 </script>
 {% block javascripts %}{% endblock %}
 </body>
