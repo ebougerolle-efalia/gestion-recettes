@@ -33,6 +33,11 @@ class Ingredient
     #[ORM\Column(length: 20, nullable: true)]
     private ?string $ciqualCode = null;
 
+    // Poids d'une pièce en grammes (uniquement utile si base_unit = piece) :
+    // permet de convertir pièce ↔ grammes pour le coût ET la nutrition.
+    #[ORM\Column(name: 'unit_weight_g', type: 'float', nullable: true)]
+    private ?float $unitWeightG = null;
+
     /** Allergènes présents (codes parmi les 14 réglementaires — règlement INCO 1169/2011). */
     #[ORM\Column(type: 'json', nullable: true)]
     private ?array $allergens = [];
@@ -71,6 +76,9 @@ class Ingredient
 
     public function getCiqualCode(): ?string { return $this->ciqualCode; }
     public function setCiqualCode(?string $v): static { $this->ciqualCode = ($v === '' ? null : $v); return $this; }
+
+    public function getUnitWeightG(): ?float { return $this->unitWeightG; }
+    public function setUnitWeightG(?float $v): static { $this->unitWeightG = ($v !== null && $v > 0) ? $v : null; return $this; }
 
     public function getTraces(): array { return $this->traces ?? []; }
     public function setTraces(array $v): static { $this->traces = array_values($v); return $this; }

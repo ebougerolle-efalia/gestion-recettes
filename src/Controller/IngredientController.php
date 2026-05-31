@@ -68,6 +68,8 @@ class IngredientController extends AbstractController
         $ing->setAllergens($this->cleanAllergens($request->request->all('allergens')));
         $ing->setTraces($this->cleanAllergens($request->request->all('traces')));
         $ing->setCiqualCode($request->request->get('ciqual_code'));
+        $uw = $request->request->get('unit_weight_g');
+        $ing->setUnitWeightG($uw !== null && $uw !== '' ? (float) str_replace(',', '.', $uw) : null);
 
         $catId = (int) $request->request->get('category_id');
         $cat = $catRepo->find($catId);
@@ -107,6 +109,8 @@ class IngredientController extends AbstractController
         $ing->setAllergens($this->cleanAllergens($request->request->all('allergens')));
         $ing->setTraces($this->cleanAllergens($request->request->all('traces')));
         $ing->setCiqualCode($request->request->get('ciqual_code'));
+        $uw = $request->request->get('unit_weight_g');
+        $ing->setUnitWeightG($uw !== null && $uw !== '' ? (float) str_replace(',', '.', $uw) : null);
 
         $catId = (int) $request->request->get('category_id');
         $cat = $catRepo->find($catId);

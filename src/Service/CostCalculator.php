@@ -37,20 +37,25 @@ class CostCalculator
      *   'approx' conversion approximative (densité = 1 pour litre↔kg)
      *   'none'   conversion impossible (ex. pièce → kg)
      */
-    private function conversionStatus(string $from, string $to): string
+    private function conversionStatus(string $from, string $to, ?float $unitW = null): string
     {
         if ($from === $to)                        return 'ok';
         if ($from === 'g'     && $to === 'kg')    return 'ok';
         if ($from === 'kg'    && $to === 'g')     return 'ok';
         if ($from === 'litre' && $to === 'kg')    return 'approx';
         if ($from === 'kg'    && $to === 'litre') return 'approx';
+        // Pont pièce ↔ masse si un poids unitaire (g/pièce) est renseigné sur l'ingrédient
+        if ($unitW !== null && $unitW > 0) {
+            if ($from === 'piece' && ($to === 'g' || $to === 'kg'))   return 'ok';
+            if (($from === 'g' || $from === 'kg') && $to === 'piece') return 'ok';
+        }
         return 'none';
     }
 
     /** Facteur de conversion entre deux unités. Null si impossible. */
-    private function unitFactor(string $from, string $to): ?float
+    private function unitFactor(string $from, string $to, ?float $unitW = null): ?float
     {
-        switch ($this->conversionStatus($from, $to)) {
+        switch ($this->conversionStatus($from, $to, $unitW)) {
             case 'ok':
             case 'approx':
                 if ($from === $to)                        return 1.0;
@@ -58,6 +63,12 @@ class CostCalculator
                 if ($from === 'kg'    && $to === 'g')     return 1000.0;
                 if ($from === 'litre' && $to === 'kg')    return 1.0; // densité = 1 (approx)
                 if ($from === 'kg'    && $to === 'litre') return 1.0;
+                if ($unitW !== null && $unitW > 0) {
+                    if ($from === 'piece' && $to === 'g')     return $unitW;
+                    if ($from === 'piece' && $to === 'kg')    return $unitW / 1000.0;
+                    if ($from === 'g'     && $to === 'piece') return 1.0 / $unitW;
+                    if ($from === 'kg'    && $to === 'piece') return 1000.0 / $unitW;
+                }
                 return 1.0;
             default:
                 return null;
@@ -68,9 +79,9 @@ class CostCalculator
      * Convertit une quantité. Retourne 0.0 si la conversion est impossible
      * (le coût de la ligne sera alors 0 et une alerte sera levée).
      */
-    private function convertQty(float $qty, string $from, string $to): float
+    private function convertQty(float $qty, string $from, string $to, ?float $unitW = null): float
     {
-        $f = $this->unitFactor($from, $to);
+        $f = $this->unitFactor($from, $to, $unitW);
         return $f !== null ? $qty * $f : 0.0;
     }
 
@@ -146,11 +157,12 @@ class CostCalculator
 
             if ($line->getIngredient()) {
                 $ing      = $line->getIngredient();
+                $unitW    = $ing->getUnitWeightG(); // g/pièce (null si non renseigné)
                 $priceRow = $this->getPrice($ing->getId(), $atDate);
                 $price    = $priceRow ? (float) $priceRow['price_ht'] : 0.0;
 
-                $status   = $this->conversionStatus($line->getUnit(), $ing->getBaseUnit());
-                $lineCost = $this->convertQty($line->getQtyBrute(), $line->getUnit(), $ing->getBaseUnit()) * $price;
+                $status   = $this->conversionStatus($line->getUnit(), $ing->getBaseUnit(), $unitW);
+                $lineCost = $this->convertQty($line->getQtyBrute(), $line->getUnit(), $ing->getBaseUnit(), $unitW) * $price;
 
                 $allergens = array_merge($allergens, $ing->getAllergens());
                 $traces    = array_merge($traces, $ing->getTraces());
@@ -161,12 +173,12 @@ class CostCalculator
                 if ($status === 'approx')  $lineData['warnings'][] = 'approx_density';
 
                 // Contrôle de cohérence masse + base nutritionnelle (grammes nets)
-                $kgStatus = $this->conversionStatus($line->getUnit(), 'kg');
+                $kgStatus = $this->conversionStatus($line->getUnit(), 'kg', $unitW);
                 if ($kgStatus === 'none') {
                     $allLinesWeighable = false;
-                    $nutMissing++; // non pesable (ex. pièce) → exclu du calcul nutritionnel
+                    $nutMissing++; // non pesable (ex. pièce sans poids unitaire) → exclu du calcul nutritionnel
                 } else {
-                    $lineNetKg = $this->convertQty($line->getQtyBrute(), $line->getUnit(), 'kg')
+                    $lineNetKg = $this->convertQty($line->getQtyBrute(), $line->getUnit(), 'kg', $unitW)
                         * (1 - $loss / 100) * ($yield / 100);
                     $netInputKg += $lineNetKg;
 
