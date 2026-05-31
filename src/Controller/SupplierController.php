@@ -3,6 +3,7 @@ namespace App\Controller;
 
 use App\Repository\SupplierRepository;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
@@ -19,18 +20,22 @@ class SupplierController extends AbstractController
     }
 
     #[Route('/fournisseurs/{id}', name: 'app_supplier_show', requirements: ['id' => '\d+'])]
-    public function show(int $id, SupplierRepository $repo): Response
+    public function show(int $id, Request $request, SupplierRepository $repo): Response
     {
         $supplier = $repo->find($id);
         if (!$supplier) throw $this->createNotFoundException('Fournisseur introuvable');
 
-        $stats = $repo->findDetailStats($id);
+        // Filtre optionnel par facture (?facture=42)
+        $filterInvoiceId = $request->query->getInt('facture') ?: null;
+
+        $stats = $repo->findDetailStats($id, $filterInvoiceId);
 
         return $this->render('supplier/show.html.twig', [
-            'supplier' => $supplier,
-            'invoices' => $stats['invoices'],
-            'products' => $stats['products'],
-            'history'  => $stats['history_by_ingredient'],
+            'supplier'        => $supplier,
+            'invoices'        => $stats['invoices'],
+            'products'        => $stats['products'],
+            'history'         => $stats['history_by_ingredient'],
+            'filter_invoice'  => $filterInvoiceId,
         ]);
     }
 }
