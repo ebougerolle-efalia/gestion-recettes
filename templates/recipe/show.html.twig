@@ -37,132 +37,33 @@
         </div>
     {% endif %}
 
-    {# KPI Cards #}
-    <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 mb-6">
-        <div class="rounded-2xl border border-gray-200 bg-white px-4 py-3">
-            <p class="text-[10px] font-semibold uppercase tracking-wider text-gray-400">Coût matière</p>
-            <p class="text-lg font-bold text-[#1c2434] mt-0.5">{{ t.material_cost_ht|number_format(2, ',', ' ') }} €</p>
+    {# Bandeau financier condensé #}
+    <div class="rounded-2xl border border-gray-200 bg-white px-4 py-4 mb-6">
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
+            <div class="rounded-xl bg-gray-50 px-3 py-2.5"><p class="text-[10px] font-semibold uppercase tracking-wider text-gray-400">Coût / {{ unitLabel }} HT</p><p class="text-base font-bold text-blue-600 mt-0.5">{{ t.cost_per_output_ht|number_format(2, ',', ' ') }} €</p></div>
+            <div class="rounded-xl bg-gray-50 px-3 py-2.5"><p class="text-[10px] font-semibold uppercase tracking-wider text-gray-400">PV / {{ unitLabel }} HT</p><p class="text-base font-bold text-[#1c2434] mt-0.5">{{ t.advised_sell_ht|number_format(2, ',', ' ') }} €</p></div>
+            <div class="rounded-xl bg-gray-50 px-3 py-2.5"><p class="text-[10px] font-semibold uppercase tracking-wider text-gray-400">PV / {{ unitLabel }} TTC</p><p class="text-base font-bold text-blue-600 mt-0.5">{{ t.advised_sell_ttc|number_format(2, ',', ' ') }} €</p></div>
+            <div class="rounded-xl bg-gray-50 px-3 py-2.5"><p class="text-[10px] font-semibold uppercase tracking-wider text-gray-400">Marge brute / {{ unitLabel }}</p><p class="text-base font-bold text-emerald-600 mt-0.5">{{ t.margin_ht|number_format(2, ',', ' ') }} €</p></div>
         </div>
-        <div class="rounded-2xl border border-gray-200 bg-white px-4 py-3">
-            <p class="text-[10px] font-semibold uppercase tracking-wider text-gray-400">Coût total HT</p>
-            <p class="text-lg font-bold text-[#1c2434] mt-0.5">{{ t.total_cost_ht|number_format(2, ',', ' ') }} €</p>
-        </div>
-        <div class="rounded-2xl border border-gray-200 bg-white px-4 py-3">
-            <p class="text-[10px] font-semibold uppercase tracking-wider text-gray-400">Coût / {{ unitLabel }} HT</p>
-            <p class="text-lg font-bold text-blue-600 mt-0.5">{{ t.cost_per_output_ht|number_format(2, ',', ' ') }} €</p>
-        </div>
-        <div class="rounded-2xl border border-gray-200 bg-white px-4 py-3">
-            <p class="text-[10px] font-semibold uppercase tracking-wider text-gray-400">PV / {{ unitLabel }} HT</p>
-            <p class="text-lg font-bold text-[#1c2434] mt-0.5">{{ t.advised_sell_ht|number_format(2, ',', ' ') }} €</p>
-        </div>
-        <div class="rounded-2xl border border-gray-200 bg-white px-4 py-3">
-            <p class="text-[10px] font-semibold uppercase tracking-wider text-gray-400">PV / {{ unitLabel }} TTC</p>
-            <p class="text-lg font-bold text-blue-600 mt-0.5">{{ t.advised_sell_ttc|number_format(2, ',', ' ') }} €</p>
-        </div>
-        <div class="rounded-2xl border border-gray-200 bg-white px-4 py-3">
-            <p class="text-[10px] font-semibold uppercase tracking-wider text-gray-400">Marge brute / {{ unitLabel }}</p>
-            <p class="text-lg font-bold text-emerald-600 mt-0.5">{{ t.margin_ht|number_format(2, ',', ' ') }} €</p>
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-3 mt-3">
+            <div class="rounded-xl bg-emerald-50/60 px-3 py-2.5"><p class="text-[10px] font-semibold uppercase tracking-wider text-emerald-600">Taux de marque <span class="normal-case font-normal text-emerald-500">(PV)</span></p><p class="text-base font-bold text-emerald-700 mt-0.5">{{ t.markup_percent|number_format(1) }} %</p></div>
+            <div class="rounded-xl bg-gray-50 px-3 py-2.5"><p class="text-[10px] font-semibold uppercase tracking-wider text-gray-400">Taux de marge <span class="normal-case font-normal text-gray-300">(coût)</span></p><p class="text-base font-bold text-[#1c2434] mt-0.5">{{ t.margin_on_cost_percent|number_format(1) }} %</p></div>
+            <div class="rounded-xl bg-gray-50 px-3 py-2.5"><p class="text-[10px] font-semibold uppercase tracking-wider text-gray-400">Coefficient</p><p class="text-base font-bold text-[#1c2434] mt-0.5">× {{ t.coefficient|number_format(2, ',', ' ') }}</p></div>
+            <div class="rounded-xl bg-gray-50 px-3 py-2.5"><p class="text-[10px] font-semibold uppercase tracking-wider text-gray-400">Ratio matière <span class="normal-case font-normal text-gray-300">(food cost)</span></p><p class="text-base font-bold {{ t.material_ratio_percent > 40 ? 'text-amber-600' : 'text-[#1c2434]' }} mt-0.5">{{ t.material_ratio_percent|number_format(1) }} %</p></div>
         </div>
     </div>
 
-    {# ══ Indicateurs de marge : trois écritures de la même marge + ratio matière ══ #}
-    <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-        <div class="rounded-2xl border border-emerald-200 bg-emerald-50/50 px-4 py-3">
-            <p class="text-[10px] font-semibold uppercase tracking-wider text-emerald-600">Taux de marque <span class="normal-case font-normal text-emerald-500">(sur PV)</span></p>
-            <p class="text-lg font-bold text-emerald-700 mt-0.5">{{ t.markup_percent|number_format(1) }} %</p>
-        </div>
-        <div class="rounded-2xl border border-gray-200 bg-white px-4 py-3">
-            <p class="text-[10px] font-semibold uppercase tracking-wider text-gray-400">Taux de marge <span class="normal-case font-normal text-gray-300">(sur coût)</span></p>
-            <p class="text-lg font-bold text-[#1c2434] mt-0.5">{{ t.margin_on_cost_percent|number_format(1) }} %</p>
-        </div>
-        <div class="rounded-2xl border border-gray-200 bg-white px-4 py-3">
-            <p class="text-[10px] font-semibold uppercase tracking-wider text-gray-400">Coefficient</p>
-            <p class="text-lg font-bold text-[#1c2434] mt-0.5">× {{ t.coefficient|number_format(2, ',', ' ') }}</p>
-        </div>
-        <div class="rounded-2xl border border-gray-200 bg-white px-4 py-3">
-            <p class="text-[10px] font-semibold uppercase tracking-wider text-gray-400">Ratio matière <span class="normal-case font-normal text-gray-300">(food cost)</span></p>
-            <p class="text-lg font-bold {{ t.material_ratio_percent > 40 ? 'text-amber-600' : 'text-[#1c2434]' }} mt-0.5">{{ t.material_ratio_percent|number_format(1) }} %</p>
-        </div>
-    </div>
+    {# Zone de travail : Paramètres + Composition + rail (allergènes & nutrition) #}
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
 
-    {# ══ Allergènes (agrégés depuis les ingrédients, sous-recettes incluses) ══ #}
-    <div class="mb-6 rounded-2xl border border-gray-200 bg-white px-6 py-4">
-        <div class="flex items-center gap-2 mb-3">
-            <div class="w-2 h-2 rounded-full bg-red-500"></div>
-            <h3 class="font-semibold text-[15px] text-[#1c2434]">Allergènes</h3>
-            <span class="text-xs text-gray-400 ml-1">calculés automatiquement à partir des ingrédients</span>
-        </div>
-        {% if t.allergens is empty and t.traces is empty %}
-            <p class="text-sm text-gray-400">Aucun allergène renseigné sur les ingrédients de cette recette. Pensez à compléter les fiches ingrédients.</p>
-        {% else %}
-            {% if t.allergens is not empty %}
-                <div class="flex flex-wrap items-center gap-2">
-                    <span class="text-xs font-semibold text-gray-500 uppercase tracking-wider mr-1">Présents :</span>
-                    {% for code in t.allergens %}
-                        <span class="inline-flex items-center rounded-full bg-red-50 text-red-700 text-xs font-semibold px-3 py-1">{{ allergen_label(code) }}</span>
-                    {% endfor %}
-                </div>
-            {% endif %}
-            {% if t.traces is not empty %}
-                <div class="flex flex-wrap items-center gap-2 mt-2">
-                    <span class="text-xs font-semibold text-gray-400 uppercase tracking-wider mr-1">Traces :</span>
-                    {% for code in t.traces %}
-                        <span class="inline-flex items-center rounded-full bg-amber-50 text-amber-700 text-xs font-medium px-3 py-1">{{ allergen_label(code) }}</span>
-                    {% endfor %}
-                </div>
-            {% endif %}
-        {% endif %}
-    </div>
-
-    {# ══ Valeurs nutritionnelles (calculées depuis Ciqual, pour 100 g) ══ #}
-    {% set n = t.nutrition %}
-    <div class="rounded-2xl border border-gray-200 bg-white px-6 py-4 mb-6">
-        <div class="flex items-center gap-2 mb-3">
-            <div class="w-2 h-2 rounded-full bg-emerald-500"></div>
-            <h3 class="font-semibold text-[15px] text-[#1c2434]">Valeurs nutritionnelles</h3>
-            <span class="text-xs text-gray-400 ml-1">pour 100 g — valeurs moyennes calculées (Ciqual / Anses)</span>
-        </div>
-
-        {% if not n.available %}
-            <p class="text-sm text-gray-400">
-                {% if n.reason == 'not_weight' %}
-                    Disponible uniquement pour les recettes au poids.
-                {% elseif n.reason == 'no_data' %}
-                    Aucun ingrédient n'est encore associé à un aliment Ciqual. Renseigne-les sur les fiches ingrédient.
-                {% else %}
-                    Valeurs indisponibles.
-                {% endif %}
-            </p>
-        {% else %}
-            {% if not n.complete %}
-                <div class="mb-3 rounded-lg bg-amber-50 border border-amber-200 px-3 py-2 text-xs text-amber-700">
-                    <i class="fas fa-triangle-exclamation mr-1"></i>
-                    Calcul incomplet : {{ n.missing }} élément(s) sans correspondance Ciqual (ou non pesables) — valeurs probablement sous-estimées.
-                </div>
-            {% endif %}
-            <table class="w-full text-sm">
-                <tbody class="divide-y divide-gray-100">
-                <tr><td class="py-1.5 text-gray-600">Énergie</td><td class="py-1.5 text-right font-medium text-[#1c2434]">{{ n.per_100g.energie_kj|number_format(0, ',', ' ') }} kJ / {{ n.per_100g.energie_kcal|number_format(0, ',', ' ') }} kcal</td></tr>
-                <tr><td class="py-1.5 text-gray-600">Matières grasses</td><td class="py-1.5 text-right font-medium text-[#1c2434]">{{ n.per_100g.lipides|number_format(1, ',', ' ') }} g</td></tr>
-                <tr><td class="py-1.5 pl-4 text-gray-400">dont acides gras saturés</td><td class="py-1.5 text-right text-gray-500">{{ n.per_100g.ag_satures|number_format(1, ',', ' ') }} g</td></tr>
-                <tr><td class="py-1.5 text-gray-600">Glucides</td><td class="py-1.5 text-right font-medium text-[#1c2434]">{{ n.per_100g.glucides|number_format(1, ',', ' ') }} g</td></tr>
-                <tr><td class="py-1.5 pl-4 text-gray-400">dont sucres</td><td class="py-1.5 text-right text-gray-500">{{ n.per_100g.sucres|number_format(1, ',', ' ') }} g</td></tr>
-                <tr><td class="py-1.5 text-gray-600">Protéines</td><td class="py-1.5 text-right font-medium text-[#1c2434]">{{ n.per_100g.proteines|number_format(1, ',', ' ') }} g</td></tr>
-                <tr><td class="py-1.5 text-gray-600">Sel</td><td class="py-1.5 text-right font-medium text-[#1c2434]">{{ n.per_100g.sel|number_format(2, ',', ' ') }} g</td></tr>
-                </tbody>
-            </table>
-        {% endif %}
-    </div>
-
-    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {# LEFT: Paramètres #}
-        <div>
+        {# ── Paramètres ── #}
+        <div class="lg:col-span-4">
             <div class="rounded-2xl border border-gray-200 bg-white">
-                <div class="px-6 py-4 border-b border-gray-100 flex items-center gap-2">
+                <div class="px-5 py-4 border-b border-gray-100 flex items-center gap-2">
                     <div class="w-2 h-2 rounded-full bg-purple-500"></div>
                     <h3 class="font-semibold text-[15px] text-[#1c2434]">Paramètres</h3>
                 </div>
-                <form method="post" action="{{ path('app_recipe_update', {id: recipe.id}) }}" class="p-6 space-y-4">
+                <form method="post" action="{{ path('app_recipe_update', {id: recipe.id}) }}" class="p-5 space-y-3">
                     <div><label class="block text-sm font-medium text-gray-600 mb-1.5">Nom</label><input type="text" name="name" value="{{ recipe.name }}" {{ canEdit ? '' : 'disabled' }} class="w-full rounded-lg border border-gray-200 px-4 py-2.5 text-sm outline-none focus:border-blue-400 disabled:bg-gray-50 disabled:text-gray-400"></div>
                     <div><label class="block text-sm font-medium text-gray-600 mb-1.5">Famille</label><input type="text" name="family" value="{{ recipe.family }}" {{ canEdit ? '' : 'disabled' }} class="w-full rounded-lg border border-gray-200 px-4 py-2.5 text-sm outline-none focus:border-blue-400 disabled:bg-gray-50"></div>
                     <div class="grid grid-cols-2 gap-3">
@@ -207,8 +108,8 @@
             {% endif %}
         </div>
 
-        {# RIGHT: Composition #}
-        <div class="lg:col-span-2">
+        {# ── Composition ── #}
+        <div class="lg:col-span-5">
             <div class="rounded-2xl border border-gray-200 bg-white">
                 <div class="px-6 py-4 border-b border-gray-100 flex items-center justify-between">
                     <div class="flex items-center gap-2">
@@ -259,6 +160,74 @@
                 {% endif %}
             </div>
         </div>
+
+        {# ── Rail : Allergènes + Nutrition (collant) ── #}
+        <div class="lg:col-span-3 lg:sticky lg:top-4 space-y-6">
+
+            {# Allergènes #}
+            <div class="rounded-2xl border border-gray-200 bg-white px-5 py-4">
+                <div class="flex items-center gap-2 mb-3">
+                    <div class="w-2 h-2 rounded-full bg-red-500"></div>
+                    <h3 class="font-semibold text-[15px] text-[#1c2434]">Allergènes</h3>
+                </div>
+                {% if t.allergens is empty and t.traces is empty %}
+                    <p class="text-sm text-gray-400">Aucun allergène renseigné sur les ingrédients de cette recette.</p>
+                {% else %}
+                    {% if t.allergens is not empty %}
+                        <p class="text-[10px] font-semibold text-gray-400 uppercase tracking-wider mb-1.5">Présents</p>
+                        <div class="flex flex-wrap gap-1.5">
+                            {% for code in t.allergens %}
+                                <span class="inline-flex items-center rounded-full bg-red-50 text-red-700 text-xs font-semibold px-2.5 py-1">{{ allergen_label(code) }}</span>
+                            {% endfor %}
+                        </div>
+                    {% endif %}
+                    {% if t.traces is not empty %}
+                        <p class="text-[10px] font-semibold text-gray-400 uppercase tracking-wider mt-3 mb-1.5">Traces</p>
+                        <div class="flex flex-wrap gap-1.5">
+                            {% for code in t.traces %}
+                                <span class="inline-flex items-center rounded-full bg-amber-50 text-amber-700 text-xs font-medium px-2.5 py-1">{{ allergen_label(code) }}</span>
+                            {% endfor %}
+                        </div>
+                    {% endif %}
+                {% endif %}
+            </div>
+
+            {# Valeurs nutritionnelles #}
+            {% set n = t.nutrition %}
+            <div class="rounded-2xl border border-gray-200 bg-white px-5 py-4">
+                <div class="flex items-center gap-2 mb-1">
+                    <div class="w-2 h-2 rounded-full bg-emerald-500"></div>
+                    <h3 class="font-semibold text-[15px] text-[#1c2434]">Valeurs nutritionnelles</h3>
+                </div>
+                <p class="text-xs text-gray-400 mb-3">pour 100 g — valeurs moyennes calculées (Ciqual / Anses)</p>
+                {% if not n.available %}
+                    <p class="text-sm text-gray-400">
+                        {% if n.reason == 'not_weight' %}Disponible uniquement pour les recettes au poids.
+                        {% elseif n.reason == 'no_data' %}Aucun ingrédient n'est encore associé à un aliment Ciqual.
+                        {% else %}Valeurs indisponibles.{% endif %}
+                    </p>
+                {% else %}
+                    {% if not n.complete %}
+                        <div class="mb-3 rounded-lg bg-amber-50 border border-amber-200 px-3 py-2 text-xs text-amber-700">
+                            <i class="fas fa-triangle-exclamation mr-1"></i> Calcul incomplet : {{ n.missing }} élément(s) sans donnée — valeurs sous-estimées.
+                        </div>
+                    {% endif %}
+                    <table class="w-full text-sm">
+                        <tbody class="divide-y divide-gray-100">
+                        <tr><td class="py-1.5 text-gray-600">Énergie</td><td class="py-1.5 text-right font-medium text-[#1c2434]">{{ n.per_100g.energie_kj|number_format(0, ',', ' ') }} kJ / {{ n.per_100g.energie_kcal|number_format(0, ',', ' ') }} kcal</td></tr>
+                        <tr><td class="py-1.5 text-gray-600">Matières grasses</td><td class="py-1.5 text-right font-medium text-[#1c2434]">{{ n.per_100g.lipides|number_format(1, ',', ' ') }} g</td></tr>
+                        <tr><td class="py-1.5 pl-4 text-gray-400">dont AG saturés</td><td class="py-1.5 text-right text-gray-500">{{ n.per_100g.ag_satures|number_format(1, ',', ' ') }} g</td></tr>
+                        <tr><td class="py-1.5 text-gray-600">Glucides</td><td class="py-1.5 text-right font-medium text-[#1c2434]">{{ n.per_100g.glucides|number_format(1, ',', ' ') }} g</td></tr>
+                        <tr><td class="py-1.5 pl-4 text-gray-400">dont sucres</td><td class="py-1.5 text-right text-gray-500">{{ n.per_100g.sucres|number_format(1, ',', ' ') }} g</td></tr>
+                        <tr><td class="py-1.5 text-gray-600">Protéines</td><td class="py-1.5 text-right font-medium text-[#1c2434]">{{ n.per_100g.proteines|number_format(1, ',', ' ') }} g</td></tr>
+                        <tr><td class="py-1.5 text-gray-600">Sel</td><td class="py-1.5 text-right font-medium text-[#1c2434]">{{ n.per_100g.sel|number_format(2, ',', ' ') }} g</td></tr>
+                        </tbody>
+                    </table>
+                {% endif %}
+            </div>
+
+        </div>
+
     </div>
 
     {# Analyse des coûts #}
