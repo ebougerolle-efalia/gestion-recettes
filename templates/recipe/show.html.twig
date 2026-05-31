@@ -4,7 +4,7 @@
 {% block page_subtitle %}<span class="inline-flex items-center rounded-full bg-gray-100 px-2 py-0.5 text-[11px] font-medium text-gray-600">{{ recipe.family }}</span> · {{ recipe.outputValue }} {{ recipe.outputUnitLabel }}{% endblock %}
 {% block page_actions %}
     <div class="flex items-center gap-2">
-        <button type="button" onclick="toggleInfo()" class="inline-flex items-center gap-1.5 rounded-lg border border-gray-200 px-3 py-2 text-xs text-gray-600 hover:bg-gray-50 transition-colors"><i class="fas fa-table-columns text-[10px]"></i> <span id="infoToggleLabel">Masquer infos</span></button>
+        <button type="button" onclick="toggleInfo()" class="inline-flex items-center gap-1.5 rounded-lg border border-gray-200 px-3 py-2 text-xs text-gray-600 hover:bg-gray-50 transition-colors"><i class="fas fa-table-columns text-[10px]"></i> <span id="infoToggleLabel">Afficher infos</span></button>
         <button onclick="openPrintModal()" class="inline-flex items-center gap-1.5 rounded-lg border border-gray-200 px-3 py-2 text-xs text-gray-600 hover:bg-gray-50 transition-colors"><i class="fas fa-print text-[10px]"></i> Imprimer</button>
         {% if is_granted('ROLE_EDITOR') %}
             <button onclick="document.getElementById('dupeModal').classList.remove('hidden');document.getElementById('dupeModal').classList.add('flex')" class="inline-flex items-center gap-1.5 rounded-lg border border-gray-200 px-3 py-2 text-xs text-gray-600 hover:bg-gray-50 transition-colors"><i class="fas fa-copy text-[10px]"></i> Dupliquer</button>
@@ -54,11 +54,143 @@
         </div>
     </div>
 
-    {# Zone de travail : barre latérale d'infos (gauche, repliable) + contenu principal #}
+    {# Zone de travail : contenu principal + barre latérale droite (repliable, masquée par défaut) #}
     <div id="recipeLayout" class="flex flex-col lg:flex-row gap-6 items-start">
 
-        {# ── Barre latérale gauche : Allergènes + Nutrition (affichable / masquable) ── #}
-        <aside id="infoSidebar" class="w-full lg:w-80 shrink-0 space-y-4 lg:sticky lg:top-4">
+        {# ── Contenu principal : Paramètres + onglets (Composition / Analyse des coûts) ── #}
+        <div class="flex-1 min-w-0 space-y-6">
+
+            {# Paramètres — résumé en lecture seule, édition via popup #}
+            <div class="rounded-2xl border border-gray-200 bg-white">
+                <div class="px-5 py-4 border-b border-gray-100 flex items-center justify-between">
+                    <div class="flex items-center gap-2">
+                        <div class="w-2 h-2 rounded-full bg-purple-500"></div>
+                        <h3 class="font-semibold text-[15px] text-[#1c2434]">Paramètres</h3>
+                    </div>
+                    {% if canEdit %}<button type="button" onclick="document.getElementById('paramsModal').classList.remove('hidden');document.getElementById('paramsModal').classList.add('flex')" class="inline-flex items-center gap-1.5 rounded-lg border border-gray-200 px-3 py-1.5 text-xs text-gray-600 hover:bg-gray-50 transition-colors"><i class="fas fa-pen text-[10px]"></i> Modifier</button>{% endif %}
+                </div>
+                <div class="p-5 grid grid-cols-1 sm:grid-cols-2 gap-x-10 gap-y-0.5">
+                    <div class="flex justify-between py-1.5 text-sm border-b border-gray-50"><span class="text-gray-500">Famille</span><span class="text-gray-800 font-medium">{{ recipe.family }}</span></div>
+                    <div class="flex justify-between py-1.5 text-sm border-b border-gray-50"><span class="text-gray-500">Type sortie</span><span class="text-gray-800 font-medium">{{ recipe.outputType == 'weight' ? 'Poids (kg)' : 'Portions' }}</span></div>
+                    <div class="flex justify-between py-1.5 text-sm border-b border-gray-50"><span class="text-gray-500">Sortie</span><span class="text-gray-800 font-medium">{{ recipe.outputValue }} {{ unitLabel }}</span></div>
+                    <div class="flex justify-between py-1.5 text-sm border-b border-gray-50"><span class="text-gray-500">TVA produit</span><span class="text-gray-800 font-medium">{{ recipe.productVatRate|number_format(1) }} %</span></div>
+                    <div class="flex justify-between py-1.5 text-sm border-b border-gray-50"><span class="text-gray-500">Perte</span><span class="text-gray-800 font-medium">{{ recipe.lossPercent|number_format(1) }} %</span></div>
+                    <div class="flex justify-between py-1.5 text-sm border-b border-gray-50"><span class="text-gray-500">Rendement</span><span class="text-gray-800 font-medium">{{ recipe.yieldPercent|number_format(1) }} %</span></div>
+                    <div class="flex justify-between py-1.5 text-sm border-b border-gray-50"><span class="text-gray-500">Main d'œuvre</span><span class="text-gray-800 font-medium">{{ t.labor_cost_ht|number_format(2, ',', ' ') }} € <span class="text-gray-400 font-normal">({{ recipe.laborMinutes }} min)</span></span></div>
+                    <div class="flex justify-between py-1.5 text-sm border-b border-gray-50"><span class="text-gray-500">Emballage</span><span class="text-gray-800 font-medium">{{ recipe.packagingCostHt|number_format(2, ',', ' ') }} €</span></div>
+                    <div class="flex justify-between py-1.5 text-sm"><span class="text-gray-500">Mode prix</span><span class="text-gray-800 font-medium">{{ recipe.pricingMode == 'coef' ? 'Coefficient' : 'Taux de marque' }}</span></div>
+                    <div class="flex justify-between py-1.5 text-sm"><span class="text-gray-500">Objectif</span><span class="text-gray-800 font-medium">{{ recipe.pricingValue|number_format(2, ',', ' ') }}{{ recipe.pricingMode == 'coef' ? ' ×' : ' %' }}</span></div>
+                </div>
+            </div>
+
+            {# Carte à onglets : Composition / Analyse des coûts #}
+            <div class="rounded-2xl border border-gray-200 bg-white">
+                <div class="px-4 border-b border-gray-100 flex items-center justify-between">
+                    <div class="flex">
+                        <button type="button" id="tabBtn-compo" onclick="showRecipeTab('compo')" class="tab-btn px-4 py-3 text-sm font-medium border-b-2 border-transparent text-gray-500 transition-colors">Composition <span class="text-xs text-gray-400 ml-0.5">({{ lines|length }})</span></button>
+                        {% if t.total_cost_ht > 0 %}<button type="button" id="tabBtn-couts" onclick="showRecipeTab('couts')" class="tab-btn px-4 py-3 text-sm font-medium border-b-2 border-transparent text-gray-500 transition-colors">Analyse des coûts</button>{% endif %}
+                    </div>
+                    {% if canEdit %}
+                        <button onclick="document.getElementById('addLineModal').classList.remove('hidden');document.getElementById('addLineModal').classList.add('flex')" class="inline-flex items-center gap-1.5 rounded-lg bg-blue-500 hover:bg-blue-600 px-3 py-1.5 text-xs font-medium text-white transition-colors"><i class="fas fa-plus text-[10px]"></i> Ajouter</button>
+                    {% endif %}
+                </div>
+
+                {# Panneau : Composition (condensé) #}
+                <div id="tab-compo">
+                    {% if lines|length == 0 %}
+                        <div class="py-16 text-center text-gray-400"><i class="fas fa-leaf text-3xl mb-3 block text-gray-200"></i><p class="text-sm">Aucun ingrédient</p></div>
+                    {% else %}
+                        <div class="divide-y divide-gray-50">
+                            {% for l in lines %}
+                                <div class="px-5 py-2.5 flex items-center justify-between gap-3 hover:bg-gray-50/50 transition-colors">
+                                    <div class="flex-1 min-w-0">
+                                        <div class="text-sm font-medium text-gray-900">
+                                            {% if l.type == 'ingredient' %}{{ l.ingredient.name }}{% else %}{{ l.sub_recipe.name }} <span class="ml-1 inline-flex items-center rounded-full bg-blue-50 px-1.5 py-px text-[10px] font-medium text-blue-600">sous-recette</span>{% endif %}
+                                            {% if 'no_price' in l.warnings %}<span class="ml-1 inline-flex items-center rounded-full bg-red-50 px-1.5 py-px text-[10px] font-medium text-red-600" title="Aucun prix : ligne comptée à 0 €"><i class="fas fa-tag mr-0.5 text-[8px]"></i>sans prix</span>{% endif %}
+                                            {% if 'unit_mismatch' in l.warnings %}<span class="ml-1 inline-flex items-center rounded-full bg-red-50 px-1.5 py-px text-[10px] font-medium text-red-600" title="Unité incompatible : ligne comptée à 0 €"><i class="fas fa-triangle-exclamation mr-0.5 text-[8px]"></i>unité ?</span>{% endif %}
+                                            {% if 'approx_density' in l.warnings %}<span class="ml-1 inline-flex items-center rounded-full bg-amber-50 px-1.5 py-px text-[10px] font-medium text-amber-600" title="Conversion litre↔kg approximative (densité = 1)">≈ densité</span>{% endif %}
+                                        </div>
+                                        <div class="text-xs text-gray-400 mt-0.5">
+                                            {{ l.qty_brute }} {{ l.unit }}<span class="text-gray-300 mx-1">·</span>perte {{ l.loss_percent|number_format(1) }}%<span class="text-gray-300 mx-1">·</span>rdt {{ l.yield_percent|number_format(1) }}%{% if l.note %}<span class="text-gray-300 mx-1">·</span><span class="text-amber-600 italic">{{ l.note }}</span>{% endif %}
+                                        </div>
+                                    </div>
+                                    <div class="text-right shrink-0">
+                                        <div class="text-sm font-semibold text-gray-900">{{ l.line_cost_ht|number_format(2, ',', ' ') }} €</div>
+                                        <div class="text-xs text-gray-400">{{ l.price_ht_per_base_unit|number_format(2, ',', ' ') }} €/{% if l.type == 'ingredient' %}{{ l.ingredient.base_unit }}{% else %}{{ unitLabel }}{% endif %}</div>
+                                    </div>
+                                    {% if canEdit %}
+                                        <form method="post" action="{{ path('app_recipe_remove_line', {id: recipe.id, lineId: l.line_id}) }}" onsubmit="return confirm('Supprimer ?')" class="shrink-0">
+                                            <button class="w-7 h-7 inline-flex items-center justify-center rounded-lg text-gray-300 hover:text-red-500 hover:bg-red-50 transition-colors"><i class="fas fa-trash text-[11px]"></i></button>
+                                        </form>
+                                    {% endif %}
+                                </div>
+                            {% endfor %}
+                        </div>
+                        <div class="px-5 py-2.5 border-t border-gray-200 bg-gray-50/50 flex justify-between items-center rounded-b-2xl">
+                            <span class="text-sm font-semibold text-gray-600">Total matière HT</span>
+                            <span class="text-base font-bold text-[#1c2434]">{{ t.material_cost_ht|number_format(2, ',', ' ') }} €</span>
+                        </div>
+                    {% endif %}
+                </div>
+
+                {# Panneau : Analyse des coûts #}
+                {% if t.total_cost_ht > 0 %}
+                    <div id="tab-couts" class="hidden p-6">
+                        <p class="text-xs text-gray-400 mb-5">Décomposition du coût total HT pour {{ recipe.outputValue }} {{ unitLabel }}.</p>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-8 items-center">
+                            <div class="flex justify-center">
+                                <div style="position:relative; width:220px; height:220px;">
+                                    <canvas id="costChart"
+                                            data-mat="{{ t.material_cost_ht }}"
+                                            data-labor="{{ t.labor_cost_ht }}"
+                                            data-pack="{{ t.packaging_cost_ht }}">
+                                    </canvas>
+                                    <div style="position:absolute; top:50%; left:50%; transform:translate(-50%,-50%); text-align:center; pointer-events:none;">
+                                        <div class="text-xl font-bold text-[#1c2434]">{{ t.total_cost_ht|number_format(2,',',' ') }} €</div>
+                                        <div class="text-xs text-gray-400">coût total HT</div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="space-y-4">
+                                {% set pct_mat   = t.total_cost_ht > 0 ? (t.material_cost_ht   / t.total_cost_ht * 100)|round(1) : 0 %}
+                                {% set pct_labor = t.total_cost_ht > 0 ? (t.labor_cost_ht      / t.total_cost_ht * 100)|round(1) : 0 %}
+                                {% set pct_pack  = t.total_cost_ht > 0 ? (t.packaging_cost_ht  / t.total_cost_ht * 100)|round(1) : 0 %}
+                                <div class="flex items-center gap-4">
+                                    <div class="w-3 h-3 rounded-full bg-blue-500 flex-shrink-0"></div>
+                                    <div class="flex-1">
+                                        <div class="flex justify-between text-sm mb-1"><span class="font-medium text-gray-700">Matières premières</span><span class="font-semibold text-[#1c2434]">{{ t.material_cost_ht|number_format(2,',',' ') }} € <span class="text-gray-400 font-normal">({{ pct_mat }}%)</span></span></div>
+                                        <div class="h-2 rounded-full bg-gray-100"><div class="h-2 rounded-full bg-blue-500" style="width:{{ pct_mat }}%"></div></div>
+                                    </div>
+                                </div>
+                                <div class="flex items-center gap-4">
+                                    <div class="w-3 h-3 rounded-full bg-emerald-500 flex-shrink-0"></div>
+                                    <div class="flex-1">
+                                        <div class="flex justify-between text-sm mb-1"><span class="font-medium text-gray-700">Main d'œuvre</span><span class="font-semibold text-[#1c2434]">{{ t.labor_cost_ht|number_format(2,',',' ') }} € <span class="text-gray-400 font-normal">({{ pct_labor }}%)</span></span></div>
+                                        <div class="h-2 rounded-full bg-gray-100"><div class="h-2 rounded-full bg-emerald-500" style="width:{{ pct_labor }}%"></div></div>
+                                    </div>
+                                </div>
+                                <div class="flex items-center gap-4">
+                                    <div class="w-3 h-3 rounded-full bg-amber-500 flex-shrink-0"></div>
+                                    <div class="flex-1">
+                                        <div class="flex justify-between text-sm mb-1"><span class="font-medium text-gray-700">Emballage</span><span class="font-semibold text-[#1c2434]">{{ t.packaging_cost_ht|number_format(2,',',' ') }} € <span class="text-gray-400 font-normal">({{ pct_pack }}%)</span></span></div>
+                                        <div class="h-2 rounded-full bg-gray-100"><div class="h-2 rounded-full bg-amber-500" style="width:{{ pct_pack }}%"></div></div>
+                                    </div>
+                                </div>
+                                <hr class="border-gray-100">
+                                <div class="flex justify-between items-center bg-emerald-50/70 rounded-xl px-4 py-3">
+                                    <span class="text-sm font-semibold text-gray-700">Marge brute</span>
+                                    <span class="font-bold text-emerald-700">{{ t.margin_ht|number_format(2,',',' ') }} € <span class="font-normal text-emerald-500 text-sm">(marque {{ t.markup_percent|number_format(1) }} %)</span></span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                {% endif %}
+            </div>
+
+        </div>
+
+        {# ── Barre latérale DROITE : Allergènes + Nutrition (masquée par défaut) ── #}
+        <aside id="infoSidebar" class="hidden w-full lg:w-80 shrink-0 space-y-4 lg:sticky lg:top-4">
 
             {# Allergènes #}
             <div class="rounded-2xl border border-gray-200 bg-white px-5 py-4">
@@ -124,142 +256,7 @@
 
         </aside>
 
-        {# ── Contenu principal : Paramètres (lecture seule) + Composition ── #}
-        <div class="flex-1 min-w-0 space-y-6">
-
-            {# Paramètres — résumé en lecture seule, édition via popup #}
-            <div class="rounded-2xl border border-gray-200 bg-white">
-                <div class="px-5 py-4 border-b border-gray-100 flex items-center justify-between">
-                    <div class="flex items-center gap-2">
-                        <div class="w-2 h-2 rounded-full bg-purple-500"></div>
-                        <h3 class="font-semibold text-[15px] text-[#1c2434]">Paramètres</h3>
-                    </div>
-                    {% if canEdit %}<button type="button" onclick="document.getElementById('paramsModal').classList.remove('hidden');document.getElementById('paramsModal').classList.add('flex')" class="inline-flex items-center gap-1.5 rounded-lg border border-gray-200 px-3 py-1.5 text-xs text-gray-600 hover:bg-gray-50 transition-colors"><i class="fas fa-pen text-[10px]"></i> Modifier</button>{% endif %}
-                </div>
-                <div class="p-5 grid grid-cols-1 sm:grid-cols-2 gap-x-10 gap-y-0.5">
-                    <div class="flex justify-between py-1.5 text-sm border-b border-gray-50"><span class="text-gray-500">Famille</span><span class="text-gray-800 font-medium">{{ recipe.family }}</span></div>
-                    <div class="flex justify-between py-1.5 text-sm border-b border-gray-50"><span class="text-gray-500">Type sortie</span><span class="text-gray-800 font-medium">{{ recipe.outputType == 'weight' ? 'Poids (kg)' : 'Portions' }}</span></div>
-                    <div class="flex justify-between py-1.5 text-sm border-b border-gray-50"><span class="text-gray-500">Sortie</span><span class="text-gray-800 font-medium">{{ recipe.outputValue }} {{ unitLabel }}</span></div>
-                    <div class="flex justify-between py-1.5 text-sm border-b border-gray-50"><span class="text-gray-500">TVA produit</span><span class="text-gray-800 font-medium">{{ recipe.productVatRate|number_format(1) }} %</span></div>
-                    <div class="flex justify-between py-1.5 text-sm border-b border-gray-50"><span class="text-gray-500">Perte</span><span class="text-gray-800 font-medium">{{ recipe.lossPercent|number_format(1) }} %</span></div>
-                    <div class="flex justify-between py-1.5 text-sm border-b border-gray-50"><span class="text-gray-500">Rendement</span><span class="text-gray-800 font-medium">{{ recipe.yieldPercent|number_format(1) }} %</span></div>
-                    <div class="flex justify-between py-1.5 text-sm border-b border-gray-50"><span class="text-gray-500">Main d'œuvre</span><span class="text-gray-800 font-medium">{{ t.labor_cost_ht|number_format(2, ',', ' ') }} € <span class="text-gray-400 font-normal">({{ recipe.laborMinutes }} min)</span></span></div>
-                    <div class="flex justify-between py-1.5 text-sm border-b border-gray-50"><span class="text-gray-500">Emballage</span><span class="text-gray-800 font-medium">{{ recipe.packagingCostHt|number_format(2, ',', ' ') }} €</span></div>
-                    <div class="flex justify-between py-1.5 text-sm"><span class="text-gray-500">Mode prix</span><span class="text-gray-800 font-medium">{{ recipe.pricingMode == 'coef' ? 'Coefficient' : 'Taux de marque' }}</span></div>
-                    <div class="flex justify-between py-1.5 text-sm"><span class="text-gray-500">Objectif</span><span class="text-gray-800 font-medium">{{ recipe.pricingValue|number_format(2, ',', ' ') }}{{ recipe.pricingMode == 'coef' ? ' ×' : ' %' }}</span></div>
-                </div>
-            </div>
-
-            {# Composition #}
-            <div class="rounded-2xl border border-gray-200 bg-white">
-                <div class="px-6 py-4 border-b border-gray-100 flex items-center justify-between">
-                    <div class="flex items-center gap-2">
-                        <div class="w-2 h-2 rounded-full bg-blue-500"></div>
-                        <h3 class="font-semibold text-[15px] text-[#1c2434]">Composition</h3>
-                        <span class="text-xs text-gray-400 ml-1">({{ lines|length }} ligne{{ lines|length > 1 ? 's' }})</span>
-                    </div>
-                    {% if canEdit %}
-                        <button onclick="document.getElementById('addLineModal').classList.remove('hidden');document.getElementById('addLineModal').classList.add('flex')" class="inline-flex items-center gap-1.5 rounded-lg bg-blue-500 hover:bg-blue-600 px-3 py-2 text-xs font-medium text-white transition-colors"><i class="fas fa-plus text-[10px]"></i> Ajouter</button>
-                    {% endif %}
-                </div>
-                {% if lines|length == 0 %}
-                    <div class="py-16 text-center text-gray-400"><i class="fas fa-leaf text-3xl mb-3 block text-gray-200"></i><p class="text-sm">Aucun ingrédient</p></div>
-                {% else %}
-                    <div class="divide-y divide-gray-50">
-                        {% for l in lines %}
-                            <div class="px-6 py-4 flex items-center justify-between gap-4 hover:bg-gray-50/50 transition-colors">
-                                <div class="flex-1 min-w-0">
-                                    <div class="font-medium text-gray-900">
-                                        {% if l.type == 'ingredient' %}{{ l.ingredient.name }}{% else %}{{ l.sub_recipe.name }} <span class="ml-1 inline-flex items-center rounded-full bg-blue-50 px-2 py-px text-[10px] font-medium text-blue-600">sous-recette</span>{% endif %}
-                                        {% if 'no_price' in l.warnings %}<span class="ml-1 inline-flex items-center rounded-full bg-red-50 px-2 py-px text-[10px] font-medium text-red-600" title="Aucun prix : ligne comptée à 0 €"><i class="fas fa-tag mr-1 text-[8px]"></i>sans prix</span>{% endif %}
-                                        {% if 'unit_mismatch' in l.warnings %}<span class="ml-1 inline-flex items-center rounded-full bg-red-50 px-2 py-px text-[10px] font-medium text-red-600" title="Unité incompatible avec l'ingrédient : ligne comptée à 0 €"><i class="fas fa-triangle-exclamation mr-1 text-[8px]"></i>unité ?</span>{% endif %}
-                                        {% if 'approx_density' in l.warnings %}<span class="ml-1 inline-flex items-center rounded-full bg-amber-50 px-2 py-px text-[10px] font-medium text-amber-600" title="Conversion litre↔kg approximative (densité = 1)">≈ densité</span>{% endif %}
-                                    </div>
-                                    <div class="text-sm text-gray-500 mt-0.5">
-                                        {{ l.qty_brute }} {{ l.unit }}
-                                        <span class="text-gray-300 mx-1">·</span>perte {{ l.loss_percent|number_format(1) }}%
-                                        <span class="text-gray-300 mx-1">·</span>rendement {{ l.yield_percent|number_format(1) }}%
-                                        {% if l.note %}<span class="text-gray-300 mx-1">·</span><span class="text-amber-600 italic">{{ l.note }}</span>{% endif %}
-                                    </div>
-                                </div>
-                                <div class="text-right shrink-0">
-                                    <div class="font-semibold text-gray-900">{{ l.line_cost_ht|number_format(2, ',', ' ') }} €</div>
-                                    <div class="text-sm text-gray-500">{{ l.price_ht_per_base_unit|number_format(2, ',', ' ') }} € / {% if l.type == 'ingredient' %}{{ l.ingredient.base_unit }}{% else %}{{ unitLabel }}{% endif %}</div>
-                                </div>
-                                {% if canEdit %}
-                                    <form method="post" action="{{ path('app_recipe_remove_line', {id: recipe.id, lineId: l.line_id}) }}" onsubmit="return confirm('Supprimer ?')" class="shrink-0">
-                                        <button class="w-8 h-8 inline-flex items-center justify-center rounded-lg text-gray-400 hover:text-red-500 hover:bg-red-50 transition-colors"><i class="fas fa-trash text-xs"></i></button>
-                                    </form>
-                                {% endif %}
-                            </div>
-                        {% endfor %}
-                    </div>
-                    <div class="px-6 py-3 border-t border-gray-200 bg-gray-50/50 flex justify-between items-center rounded-b-2xl">
-                        <span class="text-sm font-semibold text-gray-600">Total matière HT</span>
-                        <span class="text-base font-bold text-[#1c2434]">{{ t.material_cost_ht|number_format(2, ',', ' ') }} €</span>
-                    </div>
-                {% endif %}
-            </div>
-
-        </div>
     </div>
-
-    {# Analyse des coûts #}
-    {% if t.total_cost_ht > 0 %}
-        <div class="mt-6 rounded-2xl border border-gray-200 bg-white">
-            <div class="px-6 py-4 border-b border-gray-100 flex items-center gap-2">
-                <div class="w-2 h-2 rounded-full bg-amber-500"></div>
-                <h3 class="font-semibold text-[15px] text-[#1c2434]">Analyse des coûts</h3>
-                <span class="text-xs text-gray-400 ml-1">décomposition pour {{ recipe.outputValue }} {{ unitLabel }}</span>
-            </div>
-            <div class="p-6 grid grid-cols-1 md:grid-cols-2 gap-8 items-center">
-                <div class="flex justify-center">
-                    <div style="position:relative; width:220px; height:220px;">
-                        <canvas id="costChart"
-                                data-mat="{{ t.material_cost_ht }}"
-                                data-labor="{{ t.labor_cost_ht }}"
-                                data-pack="{{ t.packaging_cost_ht }}">
-                        </canvas>
-                        <div style="position:absolute; top:50%; left:50%; transform:translate(-50%,-50%); text-align:center; pointer-events:none;">
-                            <div class="text-xl font-bold text-[#1c2434]">{{ t.total_cost_ht|number_format(2,',',' ') }} €</div>
-                            <div class="text-xs text-gray-400">coût total HT</div>
-                        </div>
-                    </div>
-                </div>
-                <div class="space-y-4">
-                    {% set pct_mat   = t.total_cost_ht > 0 ? (t.material_cost_ht   / t.total_cost_ht * 100)|round(1) : 0 %}
-                    {% set pct_labor = t.total_cost_ht > 0 ? (t.labor_cost_ht      / t.total_cost_ht * 100)|round(1) : 0 %}
-                    {% set pct_pack  = t.total_cost_ht > 0 ? (t.packaging_cost_ht  / t.total_cost_ht * 100)|round(1) : 0 %}
-                    <div class="flex items-center gap-4">
-                        <div class="w-3 h-3 rounded-full bg-blue-500 flex-shrink-0"></div>
-                        <div class="flex-1">
-                            <div class="flex justify-between text-sm mb-1"><span class="font-medium text-gray-700">Matières premières</span><span class="font-semibold text-[#1c2434]">{{ t.material_cost_ht|number_format(2,',',' ') }} € <span class="text-gray-400 font-normal">({{ pct_mat }}%)</span></span></div>
-                            <div class="h-2 rounded-full bg-gray-100"><div class="h-2 rounded-full bg-blue-500" style="width:{{ pct_mat }}%"></div></div>
-                        </div>
-                    </div>
-                    <div class="flex items-center gap-4">
-                        <div class="w-3 h-3 rounded-full bg-emerald-500 flex-shrink-0"></div>
-                        <div class="flex-1">
-                            <div class="flex justify-between text-sm mb-1"><span class="font-medium text-gray-700">Main d'œuvre</span><span class="font-semibold text-[#1c2434]">{{ t.labor_cost_ht|number_format(2,',',' ') }} € <span class="text-gray-400 font-normal">({{ pct_labor }}%)</span></span></div>
-                            <div class="h-2 rounded-full bg-gray-100"><div class="h-2 rounded-full bg-emerald-500" style="width:{{ pct_labor }}%"></div></div>
-                        </div>
-                    </div>
-                    <div class="flex items-center gap-4">
-                        <div class="w-3 h-3 rounded-full bg-amber-500 flex-shrink-0"></div>
-                        <div class="flex-1">
-                            <div class="flex justify-between text-sm mb-1"><span class="font-medium text-gray-700">Emballage</span><span class="font-semibold text-[#1c2434]">{{ t.packaging_cost_ht|number_format(2,',',' ') }} € <span class="text-gray-400 font-normal">({{ pct_pack }}%)</span></span></div>
-                            <div class="h-2 rounded-full bg-gray-100"><div class="h-2 rounded-full bg-amber-500" style="width:{{ pct_pack }}%"></div></div>
-                        </div>
-                    </div>
-                    <hr class="border-gray-100">
-                    <div class="flex justify-between items-center bg-emerald-50/70 rounded-xl px-4 py-3">
-                        <span class="text-sm font-semibold text-gray-700">Marge brute</span>
-                        <span class="font-bold text-emerald-700">{{ t.margin_ht|number_format(2,',',' ') }} € <span class="font-normal text-emerald-500 text-sm">(marque {{ t.markup_percent|number_format(1) }} %)</span></span>
-                    </div>
-                </div>
-            </div>
-        </div>
-    {% endif %}
 
     {# ===== MODAL IMPRESSION ===== #}
     <div id="printQtyModal" class="fixed inset-0 z-[9999] hidden items-center justify-center bg-black/50">
@@ -408,7 +405,7 @@
             try{ localStorage.setItem('recipeInfoHidden', hidden ? '1':'0'); }catch(e){}
         }
         function closeParamsModal(){ const m=document.getElementById('paramsModal'); if(m){m.classList.add('hidden');m.classList.remove('flex');} }
-        (function(){ try{ if(localStorage.getItem('recipeInfoHidden')==='1'){ const sb=document.getElementById('infoSidebar'); const lbl=document.getElementById('infoToggleLabel'); if(sb){sb.classList.add('hidden'); if(lbl) lbl.textContent='Afficher infos';} } }catch(e){} })();
+        (function(){ try{ if(localStorage.getItem('recipeInfoHidden')==='0'){ const sb=document.getElementById('infoSidebar'); const lbl=document.getElementById('infoToggleLabel'); if(sb){sb.classList.remove('hidden'); if(lbl) lbl.textContent='Masquer infos';} } }catch(e){} })();
         function toggleLineType(){const t=document.getElementById('lineTypeSelect').value;document.getElementById('ingredientField').style.display=t==='ingredient'?'':'none';document.getElementById('subRecipeField').style.display=t==='sub_recipe'?'':'none';}
 
         function majCoutMO(input){
@@ -419,23 +416,33 @@
         }
         document.querySelectorAll('input[name="labor_minutes"]').forEach(majCoutMO);
 
-        // Doughnut décomposition des coûts
-        const costCanvas = document.getElementById('costChart');
-        if (costCanvas) {
-            const mat     = parseFloat(costCanvas.dataset.mat)   || 0;
-            const labor   = parseFloat(costCanvas.dataset.labor) || 0;
-            const packing = parseFloat(costCanvas.dataset.pack)  || 0;
-            if (mat + labor + packing > 0) {
-                new Chart(costCanvas, {
-                    type: 'doughnut',
-                    data: {
-                        labels: ['Matières', "Main d'œuvre", 'Emballage'],
-                        datasets: [{ data: [mat, labor, packing], backgroundColor: ['#3b82f6','#10b981','#f59e0b'], borderWidth: 0, hoverOffset: 6 }]
-                    },
-                    options: { cutout: '68%', plugins: { legend: { display: false }, tooltip: { callbacks: { label: ctx => ' ' + parseFloat(ctx.raw).toFixed(2).replace('.',',') + ' €' } } } }
-                });
+        // Onglets de la fiche + graphe en initialisation différée
+        let _costChartDone = false;
+        function initCostChart(){
+            if(_costChartDone) return;
+            const costCanvas = document.getElementById('costChart');
+            if(!costCanvas) return;
+            const mat=parseFloat(costCanvas.dataset.mat)||0, labor=parseFloat(costCanvas.dataset.labor)||0, packing=parseFloat(costCanvas.dataset.pack)||0;
+            if(mat+labor+packing>0){
+                new Chart(costCanvas,{type:'doughnut',data:{labels:['Matières',"Main d'œuvre",'Emballage'],datasets:[{data:[mat,labor,packing],backgroundColor:['#3b82f6','#10b981','#f59e0b'],borderWidth:0,hoverOffset:6}]},options:{cutout:'68%',plugins:{legend:{display:false},tooltip:{callbacks:{label:ctx=>' '+parseFloat(ctx.raw).toFixed(2).replace('.',',')+' €'}}}}});
             }
+            _costChartDone = true;
         }
+        function showRecipeTab(name){
+            ['compo','couts'].forEach(function(tn){
+                const panel=document.getElementById('tab-'+tn);
+                const btn=document.getElementById('tabBtn-'+tn);
+                if(!panel||!btn) return;
+                const active=(tn===name);
+                panel.classList.toggle('hidden', !active);
+                btn.classList.toggle('text-blue-600', active);
+                btn.classList.toggle('border-blue-500', active);
+                btn.classList.toggle('text-gray-500', !active);
+                btn.classList.toggle('border-transparent', !active);
+            });
+            if(name==='couts') initCostChart();
+        }
+        showRecipeTab('compo');
 
         // Impression avec choix de quantité
         const BASE_QTY    = {{ recipe.outputValue }};
