@@ -20,6 +20,23 @@
         <a href="{{ path('app_recipe_index') }}" class="inline-flex items-center gap-1.5 text-sm text-gray-500 hover:text-blue-500 transition-colors"><i class="fas fa-arrow-left text-[10px]"></i> Retour aux recettes</a>
     </div>
 
+    {# ══ Bandeau d'alertes : coûts potentiellement faussés ══ #}
+    {% set w = t.warnings %}
+    {% if w.total > 0 %}
+        <div class="mb-5 rounded-xl border border-amber-200 bg-amber-50 px-5 py-4 text-sm text-amber-800">
+            <div class="flex items-center gap-2 font-semibold mb-1.5">
+                <i class="fas fa-triangle-exclamation"></i> Attention : le coût affiché peut être sous-évalué
+            </div>
+            <ul class="list-disc ml-5 space-y-0.5 text-amber-700">
+                {% if w.no_price > 0 %}<li>{{ w.no_price }} ligne(s) sans prix d'ingrédient → comptées à 0 €.</li>{% endif %}
+                {% if w.unit_mismatch > 0 %}<li>{{ w.unit_mismatch }} ligne(s) avec une unité incompatible avec l'ingrédient → comptées à 0 €.</li>{% endif %}
+                {% if w.approx_density > 0 %}<li>{{ w.approx_density }} conversion(s) litre↔kg approximative(s) (densité = 1).</li>{% endif %}
+                {% if w.output_exceeds_input %}<li>La sortie déclarée ({{ t.output_effective }} kg) dépasse la masse nette des ingrédients ({{ w.net_input_kg }} kg) : vérifiez la quantité de sortie.</li>{% endif %}
+                {% if w.pricing == 'markup_over_100' %}<li>Le taux de marque ≥ 100 % est impossible : aucun prix de vente n'a pu être calculé.</li>{% endif %}
+            </ul>
+        </div>
+    {% endif %}
+
     {# KPI Cards #}
     <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 mb-6">
         <div class="rounded-2xl border border-gray-200 bg-white px-4 py-3">
@@ -43,8 +60,28 @@
             <p class="text-lg font-bold text-blue-600 mt-0.5">{{ t.advised_sell_ttc|number_format(2, ',', ' ') }} €</p>
         </div>
         <div class="rounded-2xl border border-gray-200 bg-white px-4 py-3">
-            <p class="text-[10px] font-semibold uppercase tracking-wider text-gray-400">Marge</p>
-            <p class="text-lg font-bold text-emerald-600 mt-0.5">{{ t.margin_ht|number_format(2, ',', ' ') }} € <span class="text-sm">({{ t.margin_percent|number_format(1) }}%)</span></p>
+            <p class="text-[10px] font-semibold uppercase tracking-wider text-gray-400">Marge brute / {{ unitLabel }}</p>
+            <p class="text-lg font-bold text-emerald-600 mt-0.5">{{ t.margin_ht|number_format(2, ',', ' ') }} €</p>
+        </div>
+    </div>
+
+    {# ══ Indicateurs de marge : trois écritures de la même marge + ratio matière ══ #}
+    <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+        <div class="rounded-2xl border border-emerald-200 bg-emerald-50/50 px-4 py-3">
+            <p class="text-[10px] font-semibold uppercase tracking-wider text-emerald-600">Taux de marque <span class="normal-case font-normal text-emerald-500">(sur PV)</span></p>
+            <p class="text-lg font-bold text-emerald-700 mt-0.5">{{ t.markup_percent|number_format(1) }} %</p>
+        </div>
+        <div class="rounded-2xl border border-gray-200 bg-white px-4 py-3">
+            <p class="text-[10px] font-semibold uppercase tracking-wider text-gray-400">Taux de marge <span class="normal-case font-normal text-gray-300">(sur coût)</span></p>
+            <p class="text-lg font-bold text-[#1c2434] mt-0.5">{{ t.margin_on_cost_percent|number_format(1) }} %</p>
+        </div>
+        <div class="rounded-2xl border border-gray-200 bg-white px-4 py-3">
+            <p class="text-[10px] font-semibold uppercase tracking-wider text-gray-400">Coefficient</p>
+            <p class="text-lg font-bold text-[#1c2434] mt-0.5">× {{ t.coefficient|number_format(2, ',', ' ') }}</p>
+        </div>
+        <div class="rounded-2xl border border-gray-200 bg-white px-4 py-3">
+            <p class="text-[10px] font-semibold uppercase tracking-wider text-gray-400">Ratio matière <span class="normal-case font-normal text-gray-300">(food cost)</span></p>
+            <p class="text-lg font-bold {{ t.material_ratio_percent > 40 ? 'text-amber-600' : 'text-[#1c2434]' }} mt-0.5">{{ t.material_ratio_percent|number_format(1) }} %</p>
         </div>
     </div>
 
@@ -83,9 +120,14 @@
                         </div>
                     </div>
                     <div class="grid grid-cols-2 gap-3">
-                        <div><label class="block text-sm font-medium text-gray-600 mb-1.5">Mode prix</label><select name="pricing_mode" {{ canEdit ? '' : 'disabled' }} class="w-full rounded-lg border border-gray-200 px-4 py-2.5 text-sm outline-none focus:border-blue-400 bg-white disabled:bg-gray-50"><option value="coef" {{ recipe.pricingMode == 'coef' ? 'selected' }}>Coefficient</option><option value="margin" {{ recipe.pricingMode == 'margin' ? 'selected' }}>Marge %</option></select></div>
+                        <div><label class="block text-sm font-medium text-gray-600 mb-1.5">Mode prix</label><select name="pricing_mode" id="pricingMode" {{ canEdit ? '' : 'disabled' }} class="w-full rounded-lg border border-gray-200 px-4 py-2.5 text-sm outline-none focus:border-blue-400 bg-white disabled:bg-gray-50"><option value="coef" {{ recipe.pricingMode == 'coef' ? 'selected' }}>Coefficient (× coût HT)</option><option value="margin" {{ recipe.pricingMode == 'margin' ? 'selected' }}>Taux de marque (% du PV)</option></select></div>
                         <div><label class="block text-sm font-medium text-gray-600 mb-1.5">Objectif</label><input type="number" name="pricing_value" step="0.01" value="{{ recipe.pricingValue }}" {{ canEdit ? '' : 'disabled' }} class="w-full rounded-lg border border-gray-200 px-4 py-2.5 text-sm outline-none focus:border-blue-400 disabled:bg-gray-50"></div>
                     </div>
+                    <p class="text-xs text-gray-400 -mt-1">
+                        <i class="fas fa-circle-info mr-1"></i>
+                        En mode <strong>coefficient</strong>, le multiplicateur s'applique au <strong>coût HT</strong> (la TVA est ajoutée ensuite).
+                        En mode <strong>taux de marque</strong>, la valeur est la part de marge dans le prix de vente : marque 30 % ⇔ marge 42,9 % ⇔ coef ×1,43.
+                    </p>
                     {% if canEdit %}<button type="submit" class="w-full rounded-lg bg-blue-500 hover:bg-blue-600 px-5 py-2.5 text-sm font-medium text-white transition-colors"><i class="fas fa-check text-[11px] mr-1"></i> Enregistrer</button>{% endif %}
                 </form>
             </div>
@@ -118,6 +160,9 @@
                                 <div class="flex-1 min-w-0">
                                     <div class="font-medium text-gray-900">
                                         {% if l.type == 'ingredient' %}{{ l.ingredient.name }}{% else %}{{ l.sub_recipe.name }} <span class="ml-1 inline-flex items-center rounded-full bg-blue-50 px-2 py-px text-[10px] font-medium text-blue-600">sous-recette</span>{% endif %}
+                                        {% if 'no_price' in l.warnings %}<span class="ml-1 inline-flex items-center rounded-full bg-red-50 px-2 py-px text-[10px] font-medium text-red-600" title="Aucun prix : ligne comptée à 0 €"><i class="fas fa-tag mr-1 text-[8px]"></i>sans prix</span>{% endif %}
+                                        {% if 'unit_mismatch' in l.warnings %}<span class="ml-1 inline-flex items-center rounded-full bg-red-50 px-2 py-px text-[10px] font-medium text-red-600" title="Unité incompatible avec l'ingrédient : ligne comptée à 0 €"><i class="fas fa-triangle-exclamation mr-1 text-[8px]"></i>unité ?</span>{% endif %}
+                                        {% if 'approx_density' in l.warnings %}<span class="ml-1 inline-flex items-center rounded-full bg-amber-50 px-2 py-px text-[10px] font-medium text-amber-600" title="Conversion litre↔kg approximative (densité = 1)">≈ densité</span>{% endif %}
                                     </div>
                                     <div class="text-sm text-gray-500 mt-0.5">
                                         {{ l.qty_brute }} {{ l.unit }}
@@ -197,7 +242,7 @@
                     <hr class="border-gray-100">
                     <div class="flex justify-between items-center bg-emerald-50/70 rounded-xl px-4 py-3">
                         <span class="text-sm font-semibold text-gray-700">Marge brute</span>
-                        <span class="font-bold text-emerald-700">{{ t.margin_ht|number_format(2,',',' ') }} € <span class="font-normal text-emerald-500 text-sm">({{ t.margin_percent|number_format(1) }}%)</span></span>
+                        <span class="font-bold text-emerald-700">{{ t.margin_ht|number_format(2,',',' ') }} € <span class="font-normal text-emerald-500 text-sm">(marque {{ t.markup_percent|number_format(1) }} %)</span></span>
                     </div>
                 </div>
             </div>
