@@ -205,7 +205,7 @@
     {% endif %}
 
     {# ===== MODAL IMPRESSION ===== #}
-    <div id="printQtyModal" class="fixed inset-0 z-[9999] hidden items-center justify-center bg-black/50" onclick="if(event.target===this){this.classList.add('hidden');this.classList.remove('flex')}">
+    <div id="printQtyModal" class="fixed inset-0 z-[9999] hidden items-center justify-center bg-black/50">
         <div class="bg-white rounded-2xl shadow-xl w-full max-w-sm mx-4">
             <div class="px-6 py-4 border-b border-gray-100">
                 <h3 class="font-semibold text-[#1c2434]"><i class="fas fa-print text-blue-500 mr-2 text-sm"></i>Quantité à imprimer</h3>
@@ -252,7 +252,7 @@
     </div>
 
     {# Modal ajouter ligne #}
-    <div id="addLineModal" class="fixed inset-0 z-[9999] hidden items-center justify-center bg-black/50" onclick="if(event.target===this){this.classList.add('hidden');this.classList.remove('flex')}">
+    <div id="addLineModal" class="fixed inset-0 z-[9999] hidden items-center justify-center bg-black/50">
         <form method="post" action="{{ path('app_recipe_add_line', {id: recipe.id}) }}" class="bg-white rounded-2xl shadow-xl w-full max-w-lg mx-4">
             <div class="px-6 py-4 border-b border-gray-100"><h3 class="font-semibold text-[#1c2434]"><i class="fas fa-plus text-blue-500 mr-2 text-sm"></i>Ajouter une ligne</h3></div>
             <div class="p-6 space-y-4">
@@ -275,7 +275,7 @@
         </form></div>
 
     {# Modal dupliquer #}
-    <div id="dupeModal" class="fixed inset-0 z-[9999] hidden items-center justify-center bg-black/50" onclick="if(event.target===this){this.classList.add('hidden');this.classList.remove('flex')}">
+    <div id="dupeModal" class="fixed inset-0 z-[9999] hidden items-center justify-center bg-black/50">
         <form method="post" action="{{ path('app_recipe_duplicate', {id: recipe.id}) }}" class="bg-white rounded-2xl shadow-xl w-full max-w-sm mx-4">
             <div class="px-6 py-4 border-b border-gray-100"><h3 class="font-semibold text-[#1c2434]">Dupliquer</h3></div>
             <div class="p-6"><p class="text-xs text-gray-400 mb-3">Copie la recette avec tous ses ingrédients.</p><label class="block text-sm font-medium text-gray-600 mb-1.5">Nom de la copie</label><input type="text" name="new_name" value="{{ recipe.name }} (copie)" required class="w-full rounded-lg border border-gray-200 px-4 py-2.5 text-sm outline-none focus:border-blue-400"></div>
