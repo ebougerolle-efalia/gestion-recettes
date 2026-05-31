@@ -88,7 +88,7 @@
 
     {# ══ MODAL MODIFIER ══ #}
     <div id="editModal" class="fixed inset-0 z-[9999] hidden items-center justify-center bg-black/50"
-         onclick="if(event.target===this) closeEditModal()">
+    >
         <form id="editForm" method="post" action=""
               class="bg-white rounded-2xl shadow-xl w-full max-w-sm mx-4">
             <div class="px-6 py-4 border-b border-gray-100 flex items-center justify-between">
@@ -129,7 +129,7 @@
 
     {# ══ MODAL AJOUTER ══ #}
     <div id="addModal" class="fixed inset-0 z-[9999] hidden items-center justify-center bg-black/50"
-         onclick="if(event.target===this) closeAddModal()">
+    >
         <form method="post" action="{{ path('app_admin_category_create') }}"
               class="bg-white rounded-2xl shadow-xl w-full max-w-sm mx-4">
             <div class="px-6 py-4 border-b border-gray-100 flex items-center justify-between">
