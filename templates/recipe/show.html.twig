@@ -85,6 +85,35 @@
         </div>
     </div>
 
+    {# ══ Allergènes (agrégés depuis les ingrédients, sous-recettes incluses) ══ #}
+    <div class="mb-6 rounded-2xl border border-gray-200 bg-white px-6 py-4">
+        <div class="flex items-center gap-2 mb-3">
+            <div class="w-2 h-2 rounded-full bg-red-500"></div>
+            <h3 class="font-semibold text-[15px] text-[#1c2434]">Allergènes</h3>
+            <span class="text-xs text-gray-400 ml-1">calculés automatiquement à partir des ingrédients</span>
+        </div>
+        {% if t.allergens is empty and t.traces is empty %}
+            <p class="text-sm text-gray-400">Aucun allergène renseigné sur les ingrédients de cette recette. Pensez à compléter les fiches ingrédients.</p>
+        {% else %}
+            {% if t.allergens is not empty %}
+                <div class="flex flex-wrap items-center gap-2">
+                    <span class="text-xs font-semibold text-gray-500 uppercase tracking-wider mr-1">Présents :</span>
+                    {% for code in t.allergens %}
+                        <span class="inline-flex items-center rounded-full bg-red-50 text-red-700 text-xs font-semibold px-3 py-1">{{ allergen_label(code) }}</span>
+                    {% endfor %}
+                </div>
+            {% endif %}
+            {% if t.traces is not empty %}
+                <div class="flex flex-wrap items-center gap-2 mt-2">
+                    <span class="text-xs font-semibold text-gray-400 uppercase tracking-wider mr-1">Traces :</span>
+                    {% for code in t.traces %}
+                        <span class="inline-flex items-center rounded-full bg-amber-50 text-amber-700 text-xs font-medium px-3 py-1">{{ allergen_label(code) }}</span>
+                    {% endfor %}
+                </div>
+            {% endif %}
+        {% endif %}
+    </div>
+
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {# LEFT: Paramètres #}
         <div>

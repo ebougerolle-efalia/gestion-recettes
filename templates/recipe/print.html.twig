@@ -213,6 +213,23 @@
     </tr>
 </table>
 
+<!-- ALLERGÈNES -->
+{% if totals.allergens is not empty or totals.traces is not empty %}
+    <table style="width:100%; margin-top:14px; border:1px solid #e2e8f0; border-radius:4px; background:#fff;">
+        <tr>
+            <td style="padding:8px 14px; font-size:9pt; color:#555;">
+                <strong style="color:#1c2434;">Allergènes :</strong>
+                {% if totals.allergens is not empty %}
+                    {% for code in totals.allergens %}{{ allergen_label(code) }}{% if not loop.last %}, {% endif %}{% endfor %}
+                {% else %}—{% endif %}
+                {% if totals.traces is not empty %}
+                    <br><span style="color:#94a3b8;">Traces éventuelles : {% for code in totals.traces %}{{ allergen_label(code) }}{% if not loop.last %}, {% endif %}{% endfor %}</span>
+                {% endif %}
+            </td>
+        </tr>
+    </table>
+{% endif %}
+
 <!-- PIED -->
 <div class="footer">
     Généré le {{ 'now'|date('d/m/Y à H:i') }} — {{ boutique().nomEtablissement }}{% if boutique().sousTitre %}, {{ boutique().sousTitre }}{% endif %}
