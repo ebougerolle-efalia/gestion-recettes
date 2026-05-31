@@ -39,45 +39,50 @@
             </a>
 
             {% if is_granted('ROLE_EDITOR') %}
-            <p class="text-[11px] font-semibold uppercase tracking-wider text-gray-500 px-3 mt-5 mb-2">Achats</p>
+                <p class="text-[11px] font-semibold uppercase tracking-wider text-gray-500 px-3 mt-5 mb-2">Achats</p>
 
-            <a href="{{ path('app_invoice_import') }}" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors
+                <a href="{{ path('app_invoice_import') }}" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors
                 {{ app.request.attributes.get('_route') starts with 'app_invoice' ? 'bg-white/[.08] text-white' : 'text-gray-400 hover:text-white hover:bg-white/[.04]' }}">
-                <i class="fas fa-file-import w-5 text-center text-[13px]"></i> Import facture
-            </a>
+                    <i class="fas fa-file-import w-5 text-center text-[13px]"></i> Import facture
+                </a>
 
-            <a href="{{ path('app_supplier_index') }}" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors
+                <a href="{{ path('app_supplier_index') }}" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors
                 {{ app.request.attributes.get('_route') starts with 'app_supplier' ? 'bg-white/[.08] text-white' : 'text-gray-400 hover:text-white hover:bg-white/[.04]' }}">
-                <i class="fas fa-truck w-5 text-center text-[13px]"></i> Fournisseurs
-            </a>
+                    <i class="fas fa-truck w-5 text-center text-[13px]"></i> Fournisseurs
+                </a>
             {% endif %}
 
             {% if is_granted('ROLE_ADMIN') %}
-            <p class="text-[11px] font-semibold uppercase tracking-wider text-gray-500 px-3 mt-5 mb-2">Administration</p>
+                <p class="text-[11px] font-semibold uppercase tracking-wider text-gray-500 px-3 mt-5 mb-2">Administration</p>
 
-            <a href="{{ path('app_admin_index') }}" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors
+                <a href="{{ path('app_admin_index') }}" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors
                 {{ app.request.attributes.get('_route') == 'app_admin_index' ? 'bg-white/[.08] text-white' : 'text-gray-400 hover:text-white hover:bg-white/[.04]' }}">
-                <i class="fas fa-chart-bar w-5 text-center text-[13px]"></i> Tableau de bord
-            </a>
-            <a href="{{ path('app_admin_categories') }}" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors
+                    <i class="fas fa-chart-bar w-5 text-center text-[13px]"></i> Tableau de bord
+                </a>
+                <a href="{{ path('app_admin_categories') }}" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors
                 {{ app.request.attributes.get('_route') == 'app_admin_categories' ? 'bg-white/[.08] text-white' : 'text-gray-400 hover:text-white hover:bg-white/[.04]' }}">
-                <i class="fas fa-tags w-5 text-center text-[13px]"></i> Catégories
-            </a>
-            <a href="{{ path('app_admin_families') }}" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors
+                    <i class="fas fa-tags w-5 text-center text-[13px]"></i> Catégories
+                </a>
+                <a href="{{ path('app_admin_families') }}" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors
                 {{ app.request.attributes.get('_route') == 'app_admin_families' ? 'bg-white/[.08] text-white' : 'text-gray-400 hover:text-white hover:bg-white/[.04]' }}">
-                <i class="fas fa-layer-group w-5 text-center text-[13px]"></i> Familles
-            </a>
-            <a href="{{ path('app_admin_users') }}" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors
+                    <i class="fas fa-layer-group w-5 text-center text-[13px]"></i> Familles
+                </a>
+                <a href="{{ path('app_admin_users') }}" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors
                 {{ app.request.attributes.get('_route') == 'app_admin_users' ? 'bg-white/[.08] text-white' : 'text-gray-400 hover:text-white hover:bg-white/[.04]' }}">
-                <i class="fas fa-users w-5 text-center text-[13px]"></i> Utilisateurs
-            </a>
+                    <i class="fas fa-users w-5 text-center text-[13px]"></i> Utilisateurs
+                </a>
+
+                <a href="{{ path('app_admin_parametres') }}" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors
+                {{ app.request.attributes.get('_route') == 'app_admin_parametres' ? 'bg-white/[.08] text-white' : 'text-gray-400 hover:text-white hover:bg-white/[.04]' }}">
+                    <i class="fas fa-store w-5 text-center text-[13px]"></i> Paramètres
+                </a>
             {% endif %}
         </nav>
 
         <div class="border-t border-white/[.06] px-7 py-4">
             {% if app.user %}
-            <p class="text-[12px] text-gray-400">{{ app.user.username }} <span class="text-gray-600">({{ app.user.role }})</span></p>
-            <a href="{{ path('app_logout') }}" class="text-[11px] text-red-400 hover:text-red-300">Déconnexion</a>
+                <p class="text-[12px] text-gray-400">{{ app.user.username }} <span class="text-gray-600">({{ app.user.role }})</span></p>
+                <a href="{{ path('app_logout') }}" class="text-[11px] text-red-400 hover:text-red-300">Déconnexion</a>
             {% endif %}
         </div>
     </aside>
@@ -103,15 +108,15 @@
         <main class="flex-1 overflow-y-auto p-4 lg:p-7">
             {% for type, messages in app.flashes %}
                 {% for message in messages %}
-                <div class="mb-4 flex items-center gap-3 rounded-xl px-5 py-3.5 text-sm border
+                    <div class="mb-4 flex items-center gap-3 rounded-xl px-5 py-3.5 text-sm border
                     {{ type == 'success' ? 'bg-green-50 border-green-200 text-green-700' : '' }}
                     {{ type == 'danger'  ? 'bg-red-50 border-red-200 text-red-700'       : '' }}
                     {{ type == 'warning' ? 'bg-amber-50 border-amber-200 text-amber-700' : '' }}
                     {{ type == 'info'    ? 'bg-blue-50 border-blue-200 text-blue-700'    : '' }}
                     flash-msg" onclick="this.remove()">
-                    <i class="fas fa-{{ type == 'success' ? 'check-circle' : (type == 'danger' ? 'exclamation-circle' : (type == 'info' ? 'info-circle' : 'exclamation-triangle')) }}"></i>
-                    {{ message }}
-                </div>
+                        <i class="fas fa-{{ type == 'success' ? 'check-circle' : (type == 'danger' ? 'exclamation-circle' : (type == 'info' ? 'info-circle' : 'exclamation-triangle')) }}"></i>
+                        {{ message }}
+                    </div>
                 {% endfor %}
             {% endfor %}
 
@@ -121,13 +126,13 @@
 </div>
 
 <script>
-function toggleSidebar() {
-    const s = document.getElementById('sidebar');
-    const o = document.getElementById('sidebarOverlay');
-    s.classList.toggle('-translate-x-full');
-    o.classList.toggle('hidden');
-}
-document.querySelectorAll('.flash-msg').forEach(el => setTimeout(() => el.remove(), 6000));
+    function toggleSidebar() {
+        const s = document.getElementById('sidebar');
+        const o = document.getElementById('sidebarOverlay');
+        s.classList.toggle('-translate-x-full');
+        o.classList.toggle('hidden');
+    }
+    document.querySelectorAll('.flash-msg').forEach(el => setTimeout(() => el.remove(), 6000));
 </script>
 {% block javascripts %}{% endblock %}
 </body>

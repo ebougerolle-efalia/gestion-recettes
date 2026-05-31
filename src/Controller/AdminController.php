@@ -340,4 +340,57 @@ class AdminController extends AbstractController
         $this->addFlash('success', 'Données initiales créées.');
         return $this->redirectToRoute('app_admin_index');
     }
+
+    // ==================== PARAMETRES ====================
+
+    #[Route('/parametres', name: 'app_admin_parametres')]
+    public function parametres(
+        Request $request,
+        EntityManagerInterface $em,
+    ): Response {
+        $repo   = $em->getRepository(\App\Entity\ConfigBoutique::class);
+        $config = $repo->find(1);
+
+        if (!$config) {
+            $config = new \App\Entity\ConfigBoutique();
+            $em->persist($config);
+        }
+
+        if ($request->isMethod('POST')) {
+            $config->setNomEtablissement($request->request->get('nom_etablissement', $config->getNomEtablissement()));
+            $config->setSousTitre($request->request->get('sous_titre'));
+            $config->setAdresse($request->request->get('adresse'));
+            $config->setCodePostal($request->request->get('code_postal'));
+            $config->setVille($request->request->get('ville'));
+            $config->setTelephone($request->request->get('telephone'));
+            $config->setEmail($request->request->get('email'));
+            $config->setSiret($request->request->get('siret'));
+            $config->setMentionPied($request->request->get('mention_pied'));
+            $config->setTvaDefaut((float) $request->request->get('tva_defaut', 5.5));
+            $config->setCoefDefaut((float) $request->request->get('coef_defaut', 3.0));
+            $config->setTauxHoraireMo((float) $request->request->get('taux_horaire_mo', 25.0));
+
+            // Upload logo
+            $logoFile = $request->files->get('logo_file');
+            if ($logoFile && $logoFile->isValid()) {
+                $ext      = $logoFile->guessExtension() ?: 'png';
+                $filename = 'logo_' . uniqid() . '.' . $ext;
+                $dest     = $this->getParameter('kernel.project_dir') . '/public/uploads/boutique';
+                if (!is_dir($dest)) mkdir($dest, 0755, true);
+                $logoFile->move($dest, $filename);
+                // Supprimer l'ancien logo
+                if ($config->getLogoPath()) {
+                    @unlink($this->getParameter('kernel.project_dir') . '/public/' . $config->getLogoPath());
+                }
+                $config->setLogoPath('uploads/boutique/' . $filename);
+            }
+
+            $em->flush();
+            $this->addFlash('success', 'Paramètres enregistrés.');
+            return $this->redirectToRoute('app_admin_parametres');
+        }
+
+        return $this->render('admin/parametres.html.twig', ['config' => $config]);
+    }
+
 }
