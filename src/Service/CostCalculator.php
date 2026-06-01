@@ -253,13 +253,32 @@ class CostCalculator
                     $lineData['warnings'][] = 'sub_recipe_warning';
                 }
 
+                $subComponents = [];
+                foreach ($subComputed['lines'] as $sl) {
+                    $subComponents[] = [
+                        'type'          => $sl['type'],
+                        'name'          => $sl['type'] === 'ingredient' ? ($sl['ingredient']['name'] ?? '') : ($sl['sub_recipe']['name'] ?? ''),
+                        'qty_brute'     => $sl['qty_brute'] ?? null,
+                        'unit'          => $sl['unit'] ?? '',
+                        'qty_net'       => $sl['qty_net'] ?? null,
+                        'loss_percent'  => $sl['loss_percent'] ?? 0,
+                        'yield_percent' => $sl['yield_percent'] ?? 0,
+                        'line_cost_ht'  => $sl['line_cost_ht'] ?? 0,
+                        'note'          => $sl['note'] ?? null,
+                    ];
+                }
+
                 $lineData += [
                     'type'       => 'sub_recipe',
                     'sub_recipe' => [
                         'id'            => $line->getSubRecipe()->getId(),
                         'name'          => $line->getSubRecipe()->getName(),
                         'output_type'   => $line->getSubRecipe()->getOutputType(),
+                        'output_value'  => $subComputed['recipe']->getOutputValue(),
+                        'output_unit'   => $subUnit,
+                        'qty_used'      => $this->r2($qtyInSubUnit),
                         'cost_per_unit' => $subCostPerUnit,
+                        'components'    => $subComponents,
                     ],
                     'price_ht_per_base_unit' => $this->r2($subCostPerUnit),
                     'price_meta'             => null,

@@ -155,6 +155,25 @@
             <td class="r">{{ l.price_ht_per_base_unit|number_format(2, ',', ' ') }} €</td>
             <td class="r bold">{{ (l.line_cost_ht * f)|number_format(2, ',', ' ') }} €</td>
         </tr>
+        {% if l.type == 'sub_recipe' and l.sub_recipe.components is not empty %}
+            <tr>
+                <td colspan="5" style="padding:3px 8px 8px 22px; background:#f8fafc; border-bottom:1px solid #eef2f7;">
+                    <div style="font-size:8.5pt; color:#6b7280; margin-bottom:3px;">
+                        Composition de « {{ l.sub_recipe.name }} » — pour {{ l.sub_recipe.output_value|number_format(3, ',', ' ') }} {{ l.sub_recipe.output_unit }}
+                        <span style="color:#9ca3af;">(utilisé ici : {{ (l.sub_recipe.qty_used * f)|number_format(3, ',', ' ') }} {{ l.sub_recipe.output_unit }})</span>
+                    </div>
+                    <table style="width:100%; border-collapse:collapse; font-size:8.5pt;">
+                        {% for c in l.sub_recipe.components %}
+                            <tr>
+                                <td style="padding:1px 0; color:#374151;">– {{ c.name }}{% if c.note %} <span style="color:#9ca3af;">({{ c.note }})</span>{% endif %}</td>
+                                <td style="text-align:right; width:130px; color:#6b7280;">{{ c.qty_brute|number_format(3, ',', ' ') }} {{ c.unit }}</td>
+                                <td style="text-align:right; width:90px; color:#374151;">{{ c.line_cost_ht|number_format(2, ',', ' ') }} €</td>
+                            </tr>
+                        {% endfor %}
+                    </table>
+                </td>
+            </tr>
+        {% endif %}
     {% endfor %}
     </tbody>
 </table>
