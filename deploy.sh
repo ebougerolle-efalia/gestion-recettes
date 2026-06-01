@@ -4,7 +4,8 @@ set -euo pipefail
 APP_DIR="$(cd "$(dirname "$0")" && pwd)"
 PHP_BIN="${PHP_BIN:-php}"
 COMPOSER_BIN="${COMPOSER_BIN:-composer}"
-GIT_BRANCH="${GIT_BRANCH:-master}"
+# Priorité : variable d'env → branche active du clone local → master
+GIT_BRANCH="${GIT_BRANCH:-$(git rev-parse --abbrev-ref HEAD 2>/dev/null || echo master)}"
 DB_PATH="${APP_DIR}/var/data/recettes.db"
 BACKUP_DIR="${APP_DIR}/var/backups"
 WEB_USER="${WEB_USER:-www-data}"
