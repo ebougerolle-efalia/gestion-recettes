@@ -220,6 +220,7 @@ class RecipeController extends AbstractController
      * Accepte ?qty=X pour adapter les quantités à une production différente de la base.
      */
     #[Route('/recettes/{id}/pdf', name: 'app_recipe_pdf')]
+    #[IsGranted('ROLE_EDITOR')]
     public function pdf(int $id, Request $request, CostCalculator $calc, GotenbergPdfInterface $gotenberg): Response
     {
         $computed = $calc->compute($id);

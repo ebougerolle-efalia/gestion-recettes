@@ -5,12 +5,12 @@ set -e
 #  setup-server.sh — Déploiement d'une instance client
 #
 #  Usage :
-#     sudo ./setup-server.sh <slug-client>
+#     sudo ./setup-server.sh <slug-client> [branche]
 #
-#  Exemple :
-#     sudo ./setup-server.sh dupont
-#     → déploie l'instance sur  dupont.<BASE_DOMAIN>
-#       dans le dossier         <INSTALL_ROOT>/dupont
+#  Exemples :
+#     sudo ./setup-server.sh demo              → instance de dev sur master
+#     sudo ./setup-server.sh dupont production → instance client sur production
+#     sudo ./setup-server.sh martin            → branche définie dans setup.conf
 #
 #  Toute la configuration (domaine, dépôt, e-mail…) vit dans setup.conf.
 #  Le script est idempotent : les paquets système ne sont installés qu'une fois.
@@ -34,9 +34,16 @@ source "$SCRIPT_DIR/setup.conf"
 [ -z "$ADMIN_EMAIL" ] && err "ADMIN_EMAIL est vide. Renseigne-le dans setup.conf."
 
 CLIENT_SLUG="${1:-}"
-[ -z "$CLIENT_SLUG" ] && err "Usage : sudo ./setup-server.sh <slug-client>   (ex: dupont)"
-# Slug : minuscules, chiffres et tirets uniquement
+[ -z "$CLIENT_SLUG" ] && err "Usage : sudo ./setup-server.sh <slug-client> [branche]   (ex: dupont production)"
 echo "$CLIENT_SLUG" | grep -qE '^[a-z0-9][a-z0-9-]*$' || err "Slug invalide. Utilise minuscules, chiffres et tirets (ex: ma-boutique)."
+
+# Branche optionnelle en 2e argument — remplace GIT_BRANCH de setup.conf
+if [ -n "${2:-}" ]; then
+    GIT_BRANCH="${2}"
+    log "Branche     : $GIT_BRANCH (argument)"
+else
+    log "Branche     : $GIT_BRANCH (setup.conf)"
+fi
 
 DOMAIN="${CLIENT_SLUG}.${BASE_DOMAIN}"
 APP_DIR="${INSTALL_ROOT}/${CLIENT_SLUG}"
