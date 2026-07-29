@@ -18,6 +18,15 @@ class CiqualFood
     #[ORM\Column(length: 255)]
     private string $nom = '';
 
+    /**
+     * Nom réduit en ASCII minuscule (accents et ligatures dépliés), rempli à
+     * l'import. Sert aux recherches et à l'appariement automatique : LOWER()
+     * de SQLite/MySQL ne replie ni « Œ » ni « É », une comparaison sur `nom`
+     * échouerait sur ces caractères.
+     */
+    #[ORM\Column(name: 'nom_norm', length: 255, nullable: true)]
+    private ?string $nomNorm = null;
+
     #[ORM\Column(length: 120, nullable: true)]
     private ?string $groupe = null;
 
@@ -35,7 +44,14 @@ class CiqualFood
     public function setCode(string $v): static { $this->code = $v; return $this; }
 
     public function getNom(): string { return $this->nom; }
-    public function setNom(string $v): static { $this->nom = $v; return $this; }
+    public function setNom(string $v): static
+    {
+        $this->nom     = $v;
+        $this->nomNorm = \App\Service\CiqualMatcher::normalize($v);
+        return $this;
+    }
+
+    public function getNomNorm(): ?string { return $this->nomNorm; }
 
     public function getGroupe(): ?string { return $this->groupe; }
     public function setGroupe(?string $v): static { $this->groupe = $v; return $this; }

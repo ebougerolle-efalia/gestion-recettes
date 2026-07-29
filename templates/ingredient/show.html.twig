@@ -100,11 +100,21 @@
                             <span class="text-sm text-blue-700"><i class="fas fa-link text-[10px] mr-1.5"></i><span id="ciqualCurrentName">{{ ciqualName }}</span></span>
                             {% if canEdit %}<button type="button" onclick="clearCiqual()" class="text-blue-400 hover:text-red-500" title="Retirer le lien"><i class="fas fa-times text-xs"></i></button>{% endif %}
                         </div>
+                        {% if ingredient.ciqualAuto %}
+                            <p class="flex items-center gap-1.5 text-xs text-amber-700 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2 mb-2">
+                                <i class="fas fa-triangle-exclamation text-[11px]"></i>
+                                Rattachement automatique non vérifié — contrôlez l'état (cru / cuit) avant toute déclaration nutritionnelle.
+                            </p>
+                        {% endif %}
                         {% if canEdit %}
+                            <div id="ciqualSuggestions" class="hidden rounded-lg border border-gray-200 bg-gray-50 px-3 py-2 mb-2"></div>
                             <div class="relative">
                                 <input type="text" id="ciqualSearch" autocomplete="off" placeholder="Rechercher un aliment Ciqual…" class="w-full rounded-lg border border-gray-200 px-4 py-2.5 text-sm outline-none focus:border-blue-400">
                                 <div id="ciqualResults" class="hidden absolute z-20 mt-1 w-full max-h-60 overflow-y-auto rounded-lg border border-gray-200 bg-white shadow-lg"></div>
                             </div>
+                            <button type="button" id="ciqualSuggestBtn" class="mt-2 text-xs text-blue-600 hover:text-blue-800">
+                                <i class="fas fa-wand-magic-sparkles text-[10px] mr-1"></i>Proposer un aliment d'après le nom
+                            </button>
                             <p class="text-xs text-gray-400 mt-1.5">Associe cet ingrédient à un aliment Ciqual pour calculer les valeurs nutritionnelles des recettes. Source : Anses / Ciqual.</p>
                         {% endif %}
                     </div>
@@ -112,6 +122,13 @@
                     {% if canEdit %}<button type="submit" class="w-full rounded-lg bg-blue-500 hover:bg-blue-600 px-5 py-2.5 text-sm font-medium text-white"><i class="fas fa-check text-[11px] mr-1"></i> Enregistrer</button>{% endif %}
                 </form>
             </div>
+            {% if canEdit and ingredient.ciqualAuto %}
+                <form method="post" action="{{ path('app_ingredient_ciqual_confirm', {id: ingredient.id}) }}" class="mt-4">
+                    <button class="w-full rounded-lg border border-amber-300 bg-amber-50 px-5 py-2.5 text-sm font-medium text-amber-800 hover:bg-amber-100">
+                        <i class="fas fa-check-double text-[11px] mr-1"></i> Confirmer le rattachement Ciqual
+                    </button>
+                </form>
+            {% endif %}
             {% if canEdit %}
                 <form method="post" action="{{ path('app_ingredient_delete', {id: ingredient.id}) }}" onsubmit="return confirm('Supprimer ?')" class="mt-4">
                     <button class="w-full rounded-lg border border-red-200 px-5 py-2.5 text-sm font-medium text-red-500 hover:bg-red-50"><i class="fas fa-trash text-[11px] mr-1"></i> Supprimer</button>
@@ -298,9 +315,7 @@
             box.addEventListener('click', e => {
                 const btn = e.target.closest('button[data-code]');
                 if (!btn) return;
-                document.getElementById('ciqualCode').value = btn.dataset.code;
-                document.getElementById('ciqualCurrentName').textContent = btn.dataset.nom;
-                document.getElementById('ciqualCurrent').classList.remove('hidden');
+                applyCiqual(btn.dataset.code, btn.dataset.nom);
                 box.classList.add('hidden');
                 input.value = '';
             });
@@ -309,6 +324,63 @@
                 if (!box.contains(e.target) && e.target !== input) box.classList.add('hidden');
             });
         })();
+
+        // ===== Suggestion automatique d'après le nom de l'ingrédient =====
+        (function () {
+            const panel = document.getElementById('ciqualSuggestions');
+            const btn   = document.getElementById('ciqualSuggestBtn');
+            if (!panel || !btn) return;
+
+            const escape = s => s.replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+
+            async function suggest() {
+                const name = document.querySelector('input[name="name"]')?.value.trim() || '';
+                const cat  = document.querySelector('select[name="category_id"]')?.value || '';
+                if (!name) return;
+
+                panel.innerHTML = '<p class="text-xs text-gray-400">Recherche…</p>';
+                panel.classList.remove('hidden');
+
+                try {
+                    const res = await fetch('{{ path('app_ciqual_suggest') }}?name=' + encodeURIComponent(name) + '&category_id=' + encodeURIComponent(cat));
+                    const items = await res.json();
+                    if (!items.length) {
+                        panel.innerHTML = '<p class="text-xs text-gray-400">Aucune correspondance trouvée — utilisez la recherche ci-dessous.</p>';
+                        return;
+                    }
+                    panel.innerHTML =
+                        '<p class="text-[11px] font-semibold uppercase tracking-wider text-gray-400 mb-1.5">Suggestions</p>' +
+                        items.map(it => {
+                            const pct = Math.round(it.score * 100);
+                            const tone = pct >= 60 ? 'text-emerald-600' : 'text-amber-600';
+                            return `<button type="button" data-code="${escape(it.code)}" data-nom="${escape(it.nom)}"
+                                        class="flex w-full items-center justify-between gap-2 rounded px-2 py-1.5 text-left text-sm hover:bg-white">
+                                        <span>${escape(it.nom)}${it.groupe ? ` <span class="text-gray-400 text-xs">· ${escape(it.groupe)}</span>` : ''}</span>
+                                        <span class="${tone} text-xs font-semibold shrink-0">${pct} %</span>
+                                    </button>`;
+                        }).join('');
+                } catch (e) {
+                    panel.innerHTML = '<p class="text-xs text-red-500">Suggestion indisponible.</p>';
+                }
+            }
+
+            btn.addEventListener('click', suggest);
+            panel.addEventListener('click', e => {
+                const b = e.target.closest('button[data-code]');
+                if (!b) return;
+                applyCiqual(b.dataset.code, b.dataset.nom);
+                panel.classList.add('hidden');
+            });
+
+            // Ingrédient non encore rattaché : on propose sans attendre une action.
+            if (!document.getElementById('ciqualCode').value) suggest();
+        })();
+
+        function applyCiqual(code, nom) {
+            document.getElementById('ciqualCode').value = code;
+            document.getElementById('ciqualCurrentName').textContent = nom;
+            document.getElementById('ciqualCurrent').classList.remove('hidden');
+        }
 
         function clearCiqual() {
             document.getElementById('ciqualCode').value = '';

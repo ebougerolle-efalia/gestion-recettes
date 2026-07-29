@@ -33,6 +33,14 @@ class Ingredient
     #[ORM\Column(length: 20, nullable: true)]
     private ?string $ciqualCode = null;
 
+    /**
+     * Vrai tant que le rattachement Ciqual vient d'un appariement automatique
+     * non validé. Les valeurs nutritionnelles finissent en déclaration INCO :
+     * elles doivent avoir été confirmées par un humain.
+     */
+    #[ORM\Column(name: 'ciqual_auto', type: 'boolean', options: ['default' => false])]
+    private bool $ciqualAuto = false;
+
     // Poids d'une pièce en grammes (uniquement utile si base_unit = piece) :
     // permet de convertir pièce ↔ grammes pour le coût ET la nutrition.
     #[ORM\Column(name: 'unit_weight_g', type: 'float', nullable: true)]
@@ -76,6 +84,12 @@ class Ingredient
 
     public function getCiqualCode(): ?string { return $this->ciqualCode; }
     public function setCiqualCode(?string $v): static { $this->ciqualCode = ($v === '' ? null : $v); return $this; }
+
+    public function isCiqualAuto(): bool { return $this->ciqualAuto && $this->ciqualCode !== null; }
+    public function setCiqualAuto(bool $v): static { $this->ciqualAuto = $v; return $this; }
+
+    /** Rattachement validé par un utilisateur (ou saisi à la main). */
+    public function confirmCiqual(): static { $this->ciqualAuto = false; return $this; }
 
     public function getUnitWeightG(): ?float { return $this->unitWeightG; }
     public function setUnitWeightG(?float $v): static { $this->unitWeightG = ($v !== null && $v > 0) ? $v : null; return $this; }

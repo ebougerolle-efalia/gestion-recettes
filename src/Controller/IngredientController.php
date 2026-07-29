@@ -6,6 +6,7 @@ use App\Entity\IngredientPrice;
 use App\Repository\IngredientRepository;
 use App\Repository\IngredientCategoryRepository;
 use App\Repository\CiqualFoodRepository;
+use App\Service\CiqualMatcher;
 use App\Service\CostCalculator;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -36,6 +37,52 @@ class IngredientController extends AbstractController
             $repo->search($q, 20)
         );
         return $this->json($results);
+    }
+
+    /**
+     * Suggestion automatique d'aliments Ciqual pour un libellé d'ingrédient.
+     * Renvoie les meilleurs candidats avec leur score : le choix reste à
+     * l'utilisateur, aucune valeur nutritionnelle n'est appliquée ici.
+     */
+    #[Route('/api/ciqual/suggest', name: 'app_ciqual_suggest', methods: ['GET'])]
+    public function ciqualSuggest(Request $request, CiqualMatcher $matcher, IngredientCategoryRepository $catRepo): JsonResponse
+    {
+        $name = trim((string) $request->query->get('name', ''));
+        if ($name === '') {
+            return $this->json([]);
+        }
+
+        $category = null;
+        if ($catId = (int) $request->query->get('category_id')) {
+            $category = $catRepo->find($catId)?->getName();
+        }
+
+        $results = array_map(
+            fn (array $r) => [
+                'code'   => $r['food']->getCode(),
+                'nom'    => $r['food']->getNom(),
+                'groupe' => $r['food']->getGroupe(),
+                'score'  => $r['score'],
+            ],
+            $matcher->suggest($name, $category, 5)
+        );
+
+        return $this->json($results);
+    }
+
+    /** Valide un rattachement Ciqual posé automatiquement. */
+    #[Route('/ingredients/{id}/ciqual/confirmer', name: 'app_ingredient_ciqual_confirm', methods: ['POST'])]
+    #[IsGranted('ROLE_EDITOR')]
+    public function confirmCiqual(int $id, IngredientRepository $repo, EntityManagerInterface $em): Response
+    {
+        $ing = $repo->find($id);
+        if (!$ing) throw $this->createNotFoundException();
+
+        $ing->confirmCiqual();
+        $em->flush();
+        $this->addFlash('success', 'Rattachement Ciqual confirmé.');
+
+        return $this->redirectToRoute('app_ingredient_show', ['id' => $id]);
     }
 
     #[Route('/ingredients/{id}', name: 'app_ingredient_show', requirements: ['id' => '\d+'])]
@@ -108,7 +155,16 @@ class IngredientController extends AbstractController
         $ing->setDefaultSupplier($request->request->get('default_supplier'));
         $ing->setAllergens($this->cleanAllergens($request->request->all('allergens')));
         $ing->setTraces($this->cleanAllergens($request->request->all('traces')));
-        $ing->setCiqualCode($request->request->get('ciqual_code'));
+
+        // Un code Ciqual choisi à la main lève le marqueur « auto ». Renvoyer le
+        // même code sans y toucher ne vaut pas validation : elle passe par le
+        // bouton de confirmation dédié.
+        $submittedCiqual = $request->request->get('ciqual_code');
+        if ($submittedCiqual !== $ing->getCiqualCode()) {
+            $ing->setCiqualCode($submittedCiqual);
+            $ing->setCiqualAuto(false);
+        }
+
         $uw = $request->request->get('unit_weight_g');
         $ing->setUnitWeightG($uw !== null && $uw !== '' ? (float) str_replace(',', '.', $uw) : null);
 
