@@ -1,0 +1,30 @@
+# Base PostgreSQL de développement.
+#
+# Le port hôte est 5433 : 5432 est déjà pris par un PostgreSQL installé
+# nativement sur la machine. À l'intérieur du conteneur, le port reste 5432.
+#
+#   docker compose up -d        démarre la base
+#   docker compose down         arrête (les données restent dans le volume)
+#   docker compose down -v      arrête ET supprime les données
+services:
+  database:
+    image: postgres:17-alpine
+    container_name: recettes-db
+    environment:
+      POSTGRES_DB: recettes
+      POSTGRES_USER: recettes
+      POSTGRES_PASSWORD: recettes
+      # Collation déterministe : évite les surprises de tri entre machines.
+      POSTGRES_INITDB_ARGS: '--locale=C --encoding=UTF8'
+    ports:
+      - '5433:5432'
+    volumes:
+      - db-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U recettes -d recettes']
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+volumes:
+  db-data:
