@@ -84,6 +84,9 @@
                             {{ line.qty_billed|number_format(3, ',', ' ') }} {{ line.unit_code }}
                             · TVA {{ line.vat_rate }}%
                         </p>
+                        <p class="text-[10px] text-gray-400 mt-0.5">
+                            facturé {{ line.billed_price|number_format(4, ',', ' ') }} € / {{ line.billed_unit }}
+                        </p>
                     </div>
 
                     {# Flèche #}
@@ -203,18 +206,30 @@
 
                     </div>{# fin zone correspondance #}
 
-                    {# Prix + Date #}
+                    {# Prix + Date — le prix saisi est TOUJOURS dans l'unité de
+                       base de l'ingrédient, pas dans celle de la facture. #}
                     <div class="flex-shrink-0 w-28">
                         <label class="text-[10px] font-semibold text-gray-500 uppercase tracking-wider">Prix HT</label>
                         <div class="relative mt-1">
                             <input type="number"
                                    name="lines[{{ i }}][price_ht]"
-                                   value="{{ line.price_ht }}"
+                                   value="{{ line.price_ht is null ? '' : line.price_ht }}"
                                    step="0.0001" min="0"
-                                   class="w-full rounded-lg border border-gray-200 px-3 py-1.5 text-sm text-right outline-none focus:border-blue-400"
+                                   {{ line.conversion == 'none' ? 'required placeholder="à saisir"' : '' }}
+                                   class="w-full rounded-lg border {{ line.conversion == 'none' ? 'border-red-300 bg-red-50/40' : 'border-gray-200' }} px-3 py-1.5 text-sm text-right outline-none focus:border-blue-400"
                                    onchange="document.getElementById('check-{{ i }}').checked = true">
                         </div>
                         <p class="text-[10px] text-gray-400 text-right mt-0.5">€ / {{ line.unit }}</p>
+                        {% if line.conversion == 'none' %}
+                            <p class="text-[10px] text-red-600 text-right mt-1 leading-tight">
+                                <i class="fas fa-triangle-exclamation text-[9px]"></i>
+                                {{ line.billed_unit }} → {{ line.unit }} impossible : saisir le prix au {{ line.unit }}
+                            </p>
+                        {% elseif line.conversion == 'approx' %}
+                            <p class="text-[10px] text-amber-600 text-right mt-1">converti (densité 1)</p>
+                        {% elseif line.billed_unit != line.unit %}
+                            <p class="text-[10px] text-blue-500 text-right mt-1">converti depuis {{ line.billed_unit }}</p>
+                        {% endif %}
                         {# Écart avec le dernier prix connu : un +400 % signale
                            un changement de conditionnement, pas une inflation. #}
                         {% if line.delta_percent is not null %}

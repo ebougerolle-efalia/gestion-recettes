@@ -8,6 +8,7 @@ use App\Repository\IngredientPriceRepository;
 use App\Repository\IngredientRepository;
 use App\Repository\PurchaseInvoiceRepository;
 use App\Service\InvoiceInbox;
+use App\Service\UnitConverter;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\{Request, Response};
 use Symfony\Component\Routing\Attribute\Route;
@@ -97,10 +98,11 @@ class InvoiceImportController extends AbstractController
         IngredientRepository $ingRepo,
         IngredientCategoryRepository $catRepo,
         IngredientPriceRepository $priceRepo,
+        InvoiceInbox $inbox,
     ): Response {
         return $this->render('invoice/confirm.html.twig', [
             'purchaseInvoice' => $invoice,
-            'invoice'         => $this->buildViewModel($invoice, $priceRepo),
+            'invoice'         => $this->buildViewModel($invoice, $priceRepo, $inbox),
             'ingredients'     => $ingRepo->findBy([], ['name' => 'ASC']),
             'categories'      => $catRepo->findBy([], ['name' => 'ASC']),
             'stats'           => $this->buildStats($invoice),
@@ -151,15 +153,24 @@ class InvoiceImportController extends AbstractController
      * d'un coup d'œil un changement de conditionnement ou une erreur de saisie
      * fournisseur avant qu'elle ne contamine les marges.
      */
-    private function buildViewModel(PurchaseInvoice $invoice, IngredientPriceRepository $priceRepo): array
+    private function buildViewModel(PurchaseInvoice $invoice, IngredientPriceRepository $priceRepo, InvoiceInbox $inbox): array
     {
         $lines = [];
 
         foreach ($invoice->getLines() as $line) {
-            $previous = null;
-            $delta    = null;
+            $previous   = null;
+            $delta      = null;
+            $targetUnit = $line->getUnit();
+            $converted  = $line->getPriceHt();
+            $conversion = UnitConverter::OK;
 
             if ($ingredient = $line->getIngredient()) {
+                // Le prix affiché est celui qui sera enregistré : ramené à
+                // l'unité de base de l'ingrédient, pas celui de la facture.
+                $targetUnit = $ingredient->getBaseUnit();
+                $conversion = $inbox->conversionStatus($line, $ingredient);
+                $converted  = $inbox->convertedPrice($line, $ingredient);
+
                 $known = $priceRepo->findBy(
                     ['ingredient' => $ingredient],
                     ['effectiveDate' => 'DESC', 'id' => 'DESC'],
@@ -167,8 +178,8 @@ class InvoiceImportController extends AbstractController
                 );
                 if ($known) {
                     $previous = $known[0]->getPriceHt();
-                    if ($previous > 0) {
-                        $delta = round((($line->getPriceHt() - $previous) / $previous) * 100, 1);
+                    if ($previous > 0 && $converted !== null) {
+                        $delta = round((($converted - $previous) / $previous) * 100, 1);
                     }
                 }
             }
@@ -178,8 +189,13 @@ class InvoiceImportController extends AbstractController
                 'supplier_ref'       => $line->getSupplierRef(),
                 'qty_billed'         => $line->getQty(),
                 'unit_code'          => $line->getUnitCode(),
-                'unit'               => $line->getUnit(),
-                'price_ht'           => $line->getPriceHt(),
+                // « unit » est l'unité dans laquelle le prix sera enregistré ;
+                // l'unité facturée reste visible via billed_unit.
+                'unit'               => $targetUnit,
+                'billed_unit'        => $line->getUnit(),
+                'billed_price'       => $line->getPriceHt(),
+                'conversion'         => $conversion,
+                'price_ht'           => $converted,
                 'vat_rate'           => $line->getVatRate(),
                 'line_total'         => $line->getLineTotal(),
                 'matched_ingredient' => $line->getIngredient(),

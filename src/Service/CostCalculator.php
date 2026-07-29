@@ -19,6 +19,7 @@ class CostCalculator
         private IngredientPriceRepository $priceRepo,
         private ConfigBoutiqueRepository $configRepo,
         private CiqualFoodRepository $ciqualRepo,
+        private UnitConverter $units,
     ) {}
 
     private function r2(float $n): float { return round($n, 2); }
@@ -31,58 +32,22 @@ class CostCalculator
         return array_values(array_intersect($ref, array_unique($codes)));
     }
 
-    /**
-     * Statut de conversion entre deux unités :
-     *   'ok'     conversion exacte
-     *   'approx' conversion approximative (densité = 1 pour litre↔kg)
-     *   'none'   conversion impossible (ex. pièce → kg)
-     */
+    // Les conversions d'unités vivent dans UnitConverter, partagé avec la
+    // réception des factures. Ces trois méthodes ne sont plus que des relais.
+
     private function conversionStatus(string $from, string $to, ?float $unitW = null): string
     {
-        if ($from === $to)                        return 'ok';
-        if ($from === 'g'     && $to === 'kg')    return 'ok';
-        if ($from === 'kg'    && $to === 'g')     return 'ok';
-        if ($from === 'litre' && $to === 'kg')    return 'approx';
-        if ($from === 'kg'    && $to === 'litre') return 'approx';
-        // Pont pièce ↔ masse si un poids unitaire (g/pièce) est renseigné sur l'ingrédient
-        if ($unitW !== null && $unitW > 0) {
-            if ($from === 'piece' && ($to === 'g' || $to === 'kg'))   return 'ok';
-            if (($from === 'g' || $from === 'kg') && $to === 'piece') return 'ok';
-        }
-        return 'none';
+        return $this->units->status($from, $to, $unitW);
     }
 
-    /** Facteur de conversion entre deux unités. Null si impossible. */
     private function unitFactor(string $from, string $to, ?float $unitW = null): ?float
     {
-        switch ($this->conversionStatus($from, $to, $unitW)) {
-            case 'ok':
-            case 'approx':
-                if ($from === $to)                        return 1.0;
-                if ($from === 'g'     && $to === 'kg')    return 0.001;
-                if ($from === 'kg'    && $to === 'g')     return 1000.0;
-                if ($from === 'litre' && $to === 'kg')    return 1.0; // densité = 1 (approx)
-                if ($from === 'kg'    && $to === 'litre') return 1.0;
-                if ($unitW !== null && $unitW > 0) {
-                    if ($from === 'piece' && $to === 'g')     return $unitW;
-                    if ($from === 'piece' && $to === 'kg')    return $unitW / 1000.0;
-                    if ($from === 'g'     && $to === 'piece') return 1.0 / $unitW;
-                    if ($from === 'kg'    && $to === 'piece') return 1000.0 / $unitW;
-                }
-                return 1.0;
-            default:
-                return null;
-        }
+        return $this->units->factor($from, $to, $unitW);
     }
 
-    /**
-     * Convertit une quantité. Retourne 0.0 si la conversion est impossible
-     * (le coût de la ligne sera alors 0 et une alerte sera levée).
-     */
     private function convertQty(float $qty, string $from, string $to, ?float $unitW = null): float
     {
-        $f = $this->unitFactor($from, $to, $unitW);
-        return $f !== null ? $qty * $f : 0.0;
+        return $this->units->convertQty($qty, $from, $to, $unitW);
     }
 
     /** Dernier prix connu pour un ingrédient (optionnellement à une date) */

@@ -36,7 +36,36 @@ class InvoiceInbox
         private IngredientRepository $ingredients,
         private IngredientCategoryRepository $categories,
         private CostCalculator $calc,
+        private UnitConverter $units,
     ) {}
+
+    /**
+     * Prix de la ligne ramené à l'unité de base de l'ingrédient.
+     *
+     * Une facture au gramme ou au colis ne parle pas la même unité que le
+     * catalogue : sans cette conversion, 0,0084 €/g s'enregistrerait comme
+     * 0,0084 €/kg. Null quand aucune conversion n'est possible — il faut alors
+     * un prix saisi à la main, pas un chiffre inventé.
+     */
+    public function convertedPrice(PurchaseInvoiceLine $line, Ingredient $ingredient): ?float
+    {
+        return $this->units->convertPrice(
+            $line->getPriceHt(),
+            $line->getUnit(),
+            $ingredient->getBaseUnit(),
+            $ingredient->getUnitWeightG()
+        );
+    }
+
+    /** Statut de conversion d'une ligne vers l'unité de son ingrédient. */
+    public function conversionStatus(PurchaseInvoiceLine $line, Ingredient $ingredient): string
+    {
+        return $this->units->status(
+            $line->getUnit(),
+            $ingredient->getBaseUnit(),
+            $ingredient->getUnitWeightG()
+        );
+    }
 
     /**
      * Enregistre une facture entrante et propose des correspondances.
@@ -153,23 +182,43 @@ class InvoiceInbox
         }
 
         if (!$operations) {
-            return ['prices' => 0, 'ingredients' => 0, 'skipped' => count($lines)];
+            return ['prices' => 0, 'ingredients' => 0, 'skipped' => count($lines), 'unit_issues' => []];
         }
 
         // Les nouveaux ingrédients doivent avoir un id avant d'être référencés.
         $this->em->flush();
 
         // ── Passe 2 : prix, mémorisation, traçabilité ────────────────────────
-        $affected = [];
+        $affected   = [];
+        $applied    = 0;
+        $unitIssues = [];
 
         foreach ($operations as $op) {
             /** @var PurchaseInvoiceLine $line */
             $line       = $op['line'];
             $ingredient = $op['ingredient'];
-            $priceHt    = (float) ($op['decision']['price_ht'] ?? $line->getPriceHt());
+
+            // Le formulaire affiche déjà des prix ramenés à l'unité de base :
+            // une valeur saisie est donc prise telle quelle. En son absence
+            // (canal automatique), la conversion est faite ici.
+            $submitted = $op['decision']['price_ht'] ?? null;
+            $priceHt   = ($submitted !== null && $submitted !== '')
+                ? (float) $submitted
+                : $this->convertedPrice($line, $ingredient);
+
+            if ($priceHt === null) {
+                // Unité inconvertible et aucun prix fourni : mieux vaut ne rien
+                // enregistrer qu'un prix faux d'un facteur mille.
+                $unitIssues[] = sprintf(
+                    '%s (%s → %s)',
+                    $line->getDescription(),
+                    $line->getUnit(),
+                    $ingredient->getBaseUnit()
+                );
+                continue;
+            }
 
             $line->setIngredient($ingredient);
-            $line->setPriceHt($priceHt);
             $line->setApplied(true);
 
             $price = new IngredientPrice();
@@ -186,15 +235,29 @@ class InvoiceInbox
             $this->matcher->saveMapping($line->getDescription(), $ingredient);
 
             $affected[] = $ingredient->getId();
+            $applied++;
+        }
+
+        if ($applied === 0) {
+            // Rien n'a pu être enregistré : la facture reste en attente pour que
+            // l'utilisateur corrige, au lieu d'être classée comme traitée à vide.
+            $this->em->flush();
+
+            return ['prices' => 0, 'ingredients' => $ingsCreated, 'skipped' => count($lines), 'unit_issues' => $unitIssues];
         }
 
         $invoice->setStatus(PurchaseInvoice::STATUS_APPLIED);
         $invoice->setAppliedAt(new \DateTimeImmutable());
 
         $skipped = $invoice->getPendingLineCount();
+        $notes   = [];
         if ($skipped > 0) {
-            $invoice->setNote(sprintf('%d ligne(s) non reprise(s) à la validation.', $skipped));
+            $notes[] = sprintf('%d ligne(s) non reprise(s) à la validation.', $skipped);
         }
+        if ($unitIssues) {
+            $notes[] = 'Unité inconvertible, prix non enregistré : ' . implode(', ', $unitIssues);
+        }
+        $invoice->setNote($notes ? implode(' ', $notes) : null);
 
         $this->em->flush();
 
@@ -202,7 +265,7 @@ class InvoiceInbox
             $this->calc->recalculateAll($ingredientId);
         }
 
-        return ['prices' => count($operations), 'ingredients' => $ingsCreated, 'skipped' => $skipped];
+        return ['prices' => $applied, 'ingredients' => $ingsCreated, 'skipped' => $skipped, 'unit_issues' => $unitIssues];
     }
 
     public function reject(PurchaseInvoice $invoice, ?string $reason = null): void
