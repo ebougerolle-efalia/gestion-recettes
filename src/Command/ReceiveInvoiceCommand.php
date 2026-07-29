@@ -28,7 +28,7 @@ class ReceiveInvoiceCommand extends Command
     protected function configure(): void
     {
         $this
-            ->addArgument('file', InputArgument::REQUIRED, 'Chemin du PDF Factur-X ou du XML CII')
+            ->addArgument('file', InputArgument::REQUIRED, 'Chemin d\'un PDF Factur-X, d\'un XML CII, ou d\'un dossier en contenant')
             ->addOption('source', null, InputOption::VALUE_OPTIONAL, 'manual | email | platform', PurchaseInvoice::SOURCE_MANUAL);
     }
 
@@ -37,10 +37,10 @@ class ReceiveInvoiceCommand extends Command
         $io   = new SymfonyStyle($input, $output);
         $path = (string) $input->getArgument('file');
 
-        if (!is_file($path)) {
+        if (!file_exists($path)) {
             $alt = \dirname(__DIR__, 2) . '/' . ltrim($path, '/');
-            if (!is_file($alt)) {
-                $io->error("Fichier introuvable : $path");
+            if (!file_exists($alt)) {
+                $io->error("Chemin introuvable : $path");
                 return Command::FAILURE;
             }
             $path = $alt;
@@ -52,6 +52,38 @@ class ReceiveInvoiceCommand extends Command
             return Command::FAILURE;
         }
 
+        // Un dossier est traité fichier par fichier : c'est déjà la forme que
+        // prendra une relève de boîte de réception.
+        if (is_dir($path)) {
+            $files = array_merge(
+                glob(rtrim($path, '/\\') . '/*.xml') ?: [],
+                glob(rtrim($path, '/\\') . '/*.pdf') ?: []
+            );
+            sort($files);
+
+            if (!$files) {
+                $io->warning("Aucun fichier .xml ou .pdf dans $path");
+                return Command::SUCCESS;
+            }
+
+            $failed = 0;
+            foreach ($files as $file) {
+                $io->section(basename($file));
+                if ($this->receiveOne($file, $source, $io) !== Command::SUCCESS) {
+                    $failed++;
+                }
+            }
+
+            $io->writeln(sprintf('%d fichier(s) traité(s), %d en échec.', count($files), $failed));
+
+            return $failed === count($files) ? Command::FAILURE : Command::SUCCESS;
+        }
+
+        return $this->receiveOne($path, $source, $io);
+    }
+
+    private function receiveOne(string $path, string $source, SymfonyStyle $io): int
+    {
         $mime = str_ends_with(strtolower($path), '.pdf') ? 'application/pdf' : 'application/xml';
         $result = $this->inbox->receive((string) file_get_contents($path), $mime, $source);
 
