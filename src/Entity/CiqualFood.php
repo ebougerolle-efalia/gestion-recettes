@@ -10,6 +10,11 @@ use App\Repository\CiqualFoodRepository;
  */
 #[ORM\Entity(repositoryClass: CiqualFoodRepository::class)]
 #[ORM\Table(name: 'ciqual_foods')]
+// Index déclaré ici uniquement pour que doctrine:migrations:diff cesse de
+// proposer sa suppression. Sa vraie définition est un GIN trigramme
+// (Version20260729200500) que les métadonnées ORM ne savent pas exprimer :
+// ne jamais le laisser recréer en B-tree, la recherche floue s'effondrerait.
+#[ORM\Index(name: 'idx_ciqual_nom_norm_trgm', columns: ['nom_norm'])]
 class CiqualFood
 {
     #[ORM\Id, ORM\Column(length: 20)]

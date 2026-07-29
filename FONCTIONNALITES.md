@@ -20,7 +20,8 @@ Un outil **simple et précis** de fiches techniques et de pilotage de la rentabi
 - Coût matière, **main d'œuvre en direct** (minutes × taux horaire courant), emballage.
 - **Trois lectures simultanées** souvent confondues ailleurs : **taux de marque** (marge / PV), **taux de marge** (marge / coût), **coefficient** (PV / coût HT), plus le **ratio matière / food cost**.
 - Prix conseillé HT **et** TTC, marge par unité, gestion fine HT/TVA.
-- **Recalcul automatique en cascade** : un changement de prix d'achat ou de taux de main d'œuvre répercute immédiatement toutes les recettes et sous-recettes concernées.
+- **Recalcul automatique en cascade** : un changement de prix d'achat ou de taux de main d'œuvre répercute immédiatement toutes les recettes et sous-recettes concernées, y compris les recettes parentes qui n'utilisent l'ingrédient qu'à travers une sous-recette.
+- **Prix de vente pratiqué** : un champ par recette, le prix de l'étiquette. Il donne la **marge réelle** (et non seulement théorique), l'écart avec le prix conseillé, et alimente l'alerte du tableau de bord. Saisi une fois, modifié rarement — aucune saisie récurrente, aucun relevé de ventes.
 
 ### Garde-fous / fiabilité (rare sur le marché)
 Avertissements explicites quand un chiffre n'est pas fiable, au lieu d'afficher un coût faussement précis :
@@ -100,7 +101,8 @@ Légende : ✅ livré / solide · ◐ partiel · ⭕ prévu (roadmap) · ❌ abs
 | Garde-fous / alertes de fiabilité | ✅ | ❌ | ◐ | ◐ | ◐ |
 | Allergènes (14 INCO) **+ traces distinctes** | ✅ | ✅ | ◐ | ◐ | ◐ |
 | Valeurs nutritionnelles | ✅ (Ciqual / Anses) | ◐ (base **USDA** ; sorties INCO annoncées) | ◐ | ❌ | ◐ |
-| Ingénierie de menu / arbitrage par marge | ⭕ (roadmap) | ❌ | ✅ (méthode Omnès, annoncé) | ◐ | ◐ |
+| Marge réelle (prix pratiqué) + alerte d'écart | ✅ | n.c. | n.c. | n.c. | n.c. |
+| Ingénierie de menu (méthode Omnès) | ❌ (choix) | ❌ | ✅ (annoncé) | ◐ | ◐ |
 | Rattachement Ciqual assisté (suggestion auto) | ✅ | n.c. | n.c. | n.c. | n.c. |
 | Fiche labo séparée (sans coûts) | ✅ | ❌ | ❌ | ❌ | ❌ |
 | Rôles + impression restreinte | ✅ | ◐ | ◐ | ◐ | ◐ |
@@ -120,6 +122,7 @@ RestoPilot est le concurrent le plus proche de nous, et plus proche que ce table
 ## 5. Choix assumés (ce que l'app ne fait pas — volontairement)
 
 - **Pas de gestion de stock, pas de facturation, pas de caisse** : on reste sur recette & coût, là où les artisans souffrent vraiment, sans la complexité d'un ERP.
+- **Pas d'ingénierie de menu, pas de saisie des ventes.** La méthode Omnès classe des plats les uns contre les autres sur une carte fermée ; un charcutier-traiteur n'a pas de carte mais une production quotidienne variable, vendue au poids. Le cadre ne transpose pas. Et la donnée qui manquait n'était pas le volume des ventes, c'était le **prix pratiqué** : un champ, saisi une fois, contre un relevé permanent. Ne pas avoir de saisie des ventes est ce qui rend l'outil installable en une heure.
 - Nutrition : limite connue sur l'égouttage des graisses à la cuisson (légère surestimation) — correction manuelle prévue en v2.
 - Rattachement Ciqual : les suggestions automatiques restent **à confirmer par un humain**. L'état cru/cuit change fortement les valeurs, et elles finissent en déclaration INCO : on préfère laisser un ingrédient non rattaché qu'associer un aliment faux.
 
@@ -128,8 +131,10 @@ RestoPilot est le concurrent le plus proche de nous, et plus proche que ce table
 ## 6. Pistes (roadmap)
 
 1. **Réception des factures sans geste manuel** : se brancher sur une PDP, ou offrir une adresse de réception dédiée, pour que la mercuriale se mette à jour sans dépôt de fichier. L'import Factur-X étant livré, c'est là que se joue la suite du différenciateur — et l'échéance du 1ᵉʳ septembre 2026 en fait le bon moment.
-2. **Rentabilité par produit / gamme** (l'équivalent charcutier du *menu engineering*) : classer les produits par marge et ratio matière, puis enrichir avec un volume de ventes léger (saisie périodique ou import caisse) — sans devenir un outil de gestion des ventes.
-3. Surcharge manuelle des valeurs nutritionnelles (cuisson) ; étiquettes produit prêtes pour la vente préemballée et les appels d'offres B2B.
+2. **Alerte de dérive de marge par e-mail** : « cette semaine, 3 recettes ont perdu plus de 2 points de marque réelle, le poivre noir a pris 8 % ». Le prix pratiqué et l'écart au conseillé sont livrés ; il reste à en faire un envoi périodique. C'est le vrai produit de l'alimentation automatique des prix — aucun concurrent ne peut l'écrire sans les factures qui entrent seules.
+3. **Repérage par famille de recettes**, en distribution (nombre, marque minimale, médiane, maximale) et non en moyenne : sans volumes de vente, une moyenne se laisse tirer par un produit confidentiel. Presque gratuit, les familles existent déjà.
+4. Si un besoin de pondération apparaît : un champ **importance A/B/C** par recette, coché une fois, pour trier les alertes — plutôt qu'un relevé de ventes récurrent.
+5. Surcharge manuelle des valeurs nutritionnelles (cuisson) ; étiquettes produit prêtes pour la vente préemballée et les appels d'offres B2B.
 
 ---
 

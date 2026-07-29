@@ -50,9 +50,29 @@
             <p class="text-[17px] font-bold text-[#1c2434]">{{ t.advised_sell_ht|number_format(2, ',', ' ') }} €</p>
         </div>
         <div class="flex-1 min-w-[90px] px-4 py-1 border-l border-gray-100">
-            <p class="text-[11px] text-gray-400">PV / {{ unitLabel }} TTC</p>
+            <p class="text-[11px] text-gray-400">PV conseillé TTC</p>
             <p class="text-[17px] font-bold text-blue-600">{{ t.advised_sell_ttc|number_format(2, ',', ' ') }} €</p>
         </div>
+        {# Prix pratiqué : la colonne qui donne la marge opposable #}
+        <div class="flex-1 min-w-[110px] px-4 py-1 border-l border-gray-100 {{ t.price_gap_percent is not null and t.price_gap_percent < -2 ? 'bg-red-50/60 rounded-lg' : '' }}">
+            <p class="text-[11px] text-gray-400">PV pratiqué TTC</p>
+            {% if t.real_sell_ttc is null %}
+                <p class="text-[17px] font-bold text-gray-300">—</p>
+                <p class="text-[10px] text-gray-400">à renseigner</p>
+            {% else %}
+                <p class="text-[17px] font-bold text-[#1c2434]">{{ t.real_sell_ttc|number_format(2, ',', ' ') }} €</p>
+                <p class="text-[10px] {{ t.price_gap_percent < -2 ? 'font-semibold text-red-600' : (t.price_gap_percent > 2 ? 'text-emerald-600' : 'text-gray-400') }}">
+                    {{ t.price_gap_percent > 0 ? '+' : '' }}{{ t.price_gap_percent|number_format(1, ',', ' ') }} % vs conseillé
+                </p>
+            {% endif %}
+        </div>
+        {% if t.real_markup_percent is not null %}
+            <div class="flex-1 min-w-[100px] px-4 py-1 border-l border-gray-100">
+                <p class="text-[11px] text-gray-400">Marge réelle</p>
+                <p class="text-[17px] font-bold {{ t.real_margin_ht > 0 ? 'text-emerald-600' : 'text-red-600' }}">{{ t.real_margin_ht|number_format(2, ',', ' ') }} €</p>
+                <p class="text-[10px] text-gray-400">marque {{ t.real_markup_percent|number_format(1) }} %</p>
+            </div>
+        {% endif %}
         <div class="flex-1 min-w-[90px] px-4 py-1 border-l border-gray-100">
             <p class="text-[11px] text-gray-400">Marge / {{ unitLabel }}</p>
             <p class="text-[17px] font-bold text-emerald-600">{{ t.margin_ht|number_format(2, ',', ' ') }} €</p>
@@ -394,6 +414,20 @@
                         <div class="sm:col-span-2"><label class="block text-xs font-medium text-gray-500 mb-1">Objectif</label><input type="number" name="pricing_value" step="0.01" value="{{ recipe.pricingValue }}" class="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm outline-none focus:border-blue-400"></div>
 
                         <p class="sm:col-span-2 text-[11px] text-gray-400 leading-relaxed"><i class="fas fa-circle-info mr-1"></i> <strong>Coefficient</strong> : multiplie le coût HT (TVA ajoutée ensuite). <strong>Taux de marque</strong> : part de la marge dans le prix de vente (marque 30 % ⇔ marge 42,9 % ⇔ coef ×1,43).</p>
+
+                        <div class="sm:col-span-2">
+                            <label class="block text-xs font-medium text-gray-500 mb-1">
+                                Prix de vente pratiqué <span class="text-gray-400 font-normal">(€ TTC / {{ recipe.outputUnitLabel }})</span>
+                            </label>
+                            <input type="number" name="sell_price_ttc" step="0.01" min="0"
+                                   value="{{ recipe.sellPriceTtc }}"
+                                   placeholder="prix affiché en boutique"
+                                   class="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm outline-none focus:border-blue-400">
+                            <p class="text-[11px] text-gray-400 mt-1">
+                                Votre prix réel, celui de l'étiquette. Renseigné, il donne la <strong>marge réelle</strong> et
+                                signale les recettes vendues sous l'objectif. Laisser vide si le produit n'est pas encore tarifé.
+                            </p>
+                        </div>
                     </div>
                 </form>
 

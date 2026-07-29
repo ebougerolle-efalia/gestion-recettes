@@ -293,6 +293,22 @@ class CostCalculator
 
         $marginHt = $this->r2($advisedSellHt - $costPerOutput);
 
+        // ── Prix réellement pratiqué ─────────────────────────────────────────
+        // Le conseillé dit ce qu'il faudrait vendre ; le pratiqué dit ce qui est
+        // vendu. Seul le second donne une marge opposable.
+        $realSellTtc = $recipe->getSellPriceTtc();
+        $realSellHt  = null;
+        $realMargin  = null;
+        $realMarkup  = null;
+        $priceGap    = null;
+
+        if ($realSellTtc !== null) {
+            $realSellHt = $this->r2($realSellTtc / (1 + $vat));
+            $realMargin = $this->r2($realSellHt - $costPerOutput);
+            $realMarkup = $realSellHt > 0 ? $this->r2(($realMargin / $realSellHt) * 100) : null;
+            $priceGap   = $advisedSellTtc > 0 ? $this->r2((($realSellTtc - $advisedSellTtc) / $advisedSellTtc) * 100) : null;
+        }
+
         // Trois écritures de la même marge :
         //  - marque  (sur PV)   = (PV − coût) / PV
         //  - marge   (sur coût) = (PV − coût) / coût
@@ -372,6 +388,11 @@ class CostCalculator
                 'material_per_output_ht'  => $materialPerOut,
                 'advised_sell_ht'         => $advisedSellHt,
                 'advised_sell_ttc'        => $advisedSellTtc,
+                'real_sell_ttc'           => $realSellTtc,   // prix pratiqué saisi
+                'real_sell_ht'            => $realSellHt,
+                'real_margin_ht'          => $realMargin,
+                'real_markup_percent'     => $realMarkup,    // marque réelle
+                'price_gap_percent'       => $priceGap,      // pratiqué vs conseillé
                 'margin_ht'               => $marginHt,
                 'markup_percent'          => $markPercent,    // taux de marque (sur PV)
                 'margin_percent'          => $markPercent,    // alias rétro-compat (= marque, comme avant)

@@ -51,6 +51,17 @@ class Recipe
     #[ORM\Column(name: 'pricing_value', type: 'decimal', precision: 10, scale: 3)]
     private string $pricingValue = '1.000';
 
+    /**
+     * Prix de vente réellement pratiqué, TTC, par unité de sortie (€/kg ou
+     * €/portion). Saisi une fois, modifié rarement.
+     *
+     * Sans lui, l'application ne connaît qu'un prix *conseillé* et ne peut donc
+     * affirmer aucune marge réelle : c'est cette valeur qui transforme un calcul
+     * théorique en pilotage. Null = non renseigné, et non pas gratuit.
+     */
+    #[ORM\Column(name: 'sell_price_ttc', type: 'decimal', precision: 10, scale: 2, nullable: true)]
+    private ?string $sellPriceTtc = null;
+
     #[ORM\OneToMany(targetEntity: RecipeLine::class, mappedBy: 'recipe', cascade: ['persist', 'remove'], orphanRemoval: true)]
     #[ORM\OrderBy(['sortOrder' => 'ASC', 'id' => 'ASC'])]
     private Collection $lines;
@@ -129,5 +140,83 @@ class Recipe
     public function getOutputUnitLabel(): string
     {
         return $this->outputType === 'weight' ? 'kg' : 'portion';
+    }
+
+    // ── Prix pratiqué et marge réelle ────────────────────────────────────────
+
+    public function getSellPriceTtc(): ?float { return $this->sellPriceTtc !== null ? (float) $this->sellPriceTtc : null; }
+
+    public function setSellPriceTtc(?float $v): static
+    {
+        // 0 signifie « pas renseigné », pas « donné gratuitement » : un produit
+        // à 0 € afficherait une marge de −100 % et polluerait les alertes.
+        $this->sellPriceTtc = ($v !== null && $v > 0) ? number_format($v, 2, '.', '') : null;
+        return $this;
+    }
+
+    public function hasSellPrice(): bool { return $this->sellPriceTtc !== null; }
+
+    /** Prix pratiqué hors taxes, déduit du TTC par le taux de TVA du produit. */
+    public function getSellPriceHt(): ?float
+    {
+        $ttc = $this->getSellPriceTtc();
+        if ($ttc === null) {
+            return null;
+        }
+
+        return round($ttc / (1 + $this->getProductVatRate() / 100), 2);
+    }
+
+    /** Marge réelle par unité de sortie : prix pratiqué HT moins coût complet. */
+    public function getRealMarginHt(): ?float
+    {
+        $ht = $this->getSellPriceHt();
+        if ($ht === null || !$this->costCache) {
+            return null;
+        }
+
+        return round($ht - $this->costCache->getCostPerOutputHt(), 2);
+    }
+
+    /** Taux de marque réel (marge / prix de vente), cohérent avec l'affichage du reste. */
+    public function getRealMarkupPercent(): ?float
+    {
+        $ht     = $this->getSellPriceHt();
+        $margin = $this->getRealMarginHt();
+        if ($ht === null || $margin === null || $ht <= 0) {
+            return null;
+        }
+
+        return round(($margin / $ht) * 100, 1);
+    }
+
+    /**
+     * Écart entre prix pratiqué et prix conseillé, en pourcentage du conseillé.
+     * Négatif = vendu trop bas par rapport à l'objectif de la recette.
+     */
+    public function getPriceGapPercent(): ?float
+    {
+        $ttc = $this->getSellPriceTtc();
+        if ($ttc === null || !$this->costCache) {
+            return null;
+        }
+        $advised = $this->costCache->getAdvisedSellTtc();
+        if ($advised <= 0) {
+            return null;
+        }
+
+        return round((($ttc - $advised) / $advised) * 100, 1);
+    }
+
+    /**
+     * Vendu sensiblement sous l'objectif. La tolérance évite de signaler les
+     * arrondis d'étiquette : vendre 24,90 € au lieu de 25,12 € n'est pas une
+     * dérive, c'est un prix rond.
+     */
+    public function isUnderpriced(float $tolerancePercent = 2.0): bool
+    {
+        $gap = $this->getPriceGapPercent();
+
+        return $gap !== null && $gap < -$tolerancePercent;
     }
 }
