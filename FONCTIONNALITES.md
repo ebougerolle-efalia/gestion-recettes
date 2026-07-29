@@ -39,6 +39,8 @@ Avertissements explicites quand un chiffre n'est pas fiable, au lieu d'afficher 
 - Calcul des **7 valeurs réglementaires pour 100 g** (énergie kJ/kcal, matières grasses dont AG saturés, glucides dont sucres, protéines, sel) à partir de la table officielle **Ciqual / Anses**.
 - Valeurs moyennes **calculées** (acceptées par la réglementation INCO) → évite des analyses labo à ~80–150 € par recette.
 - Gestion de la concentration par perte d'eau à la cuisson ; signalement honnête quand un ingrédient n'a pas de donnée (calcul « incomplet, sous-estimé »).
+- **Rattachement Ciqual assisté** : l'application propose l'aliment correspondant au nom de l'ingrédient (« Épaule de porc désossée » → « Porc, épaule crue »), en une suggestion classée par score. Rattachement en masse possible en ligne de commande (`app:match-ciqual`).
+- Tout rattachement automatique reste marqué **« à vérifier »** tant qu'un utilisateur ne l'a pas confirmé : l'état cru/cuit change fortement les valeurs, et elles finissent en déclaration INCO.
 
 ### Impression / documents
 - **Fiche technique complète** (avec coûts, marges, traçabilité prix) — réservée aux profils éditeurs.

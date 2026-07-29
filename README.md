@@ -32,21 +32,29 @@ sous-domaine : `client.<BASE_DOMAIN>`.
 
 ## Installation locale (développement)
 
-Pré-requis : PHP 8.2+ (extensions `sqlite3`, `xml`, `intl`, `mbstring`, `curl`)
-et Composer. Docker uniquement si tu veux tester la génération PDF.
+Pré-requis : PHP 8.2+ (extensions `pgsql`, `xml`, `intl`, `mbstring`, `curl`),
+Composer, et Docker pour la base PostgreSQL de développement (ainsi que pour
+Gotenberg si tu veux tester la génération PDF).
 
 ```bash
 git clone <REPO_URL> gestion-recettes
 cd gestion-recettes
 composer install
 
+# Base PostgreSQL de dev (port hôte 5433, pour ne pas heurter un PostgreSQL local)
+docker compose up -d
+
 # (optionnel) Gotenberg pour les PDF
 docker run -d --name gotenberg --restart unless-stopped -p 3000:3000 gotenberg/gotenberg:8
 
-# Base + schéma + données initiales
-mkdir -p var/data public/uploads/boutique
-php bin/console doctrine:schema:create
+# Schéma + données initiales
+mkdir -p public/uploads/boutique
+php bin/console doctrine:migrations:migrate --no-interaction
 php bin/console app:seed          # crée admin/admin123 + catégories + familles
+
+# (optionnel) Valeurs nutritionnelles + jeu de démonstration
+php bin/console app:import-ciqual
+php bin/console app:demo-data     # 3 métiers, 54 ingrédients, 24 recettes
 
 # Serveur de dev
 symfony serve

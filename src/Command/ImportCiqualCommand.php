@@ -97,6 +97,7 @@ class ImportCiqualCommand extends Command
         $this->em->flush();
         fclose($fh);
 
+        // setNom() calcule nom_norm : rien à faire de plus ici.
         $io->success("$count aliments Ciqual importés. (Source : Anses, table Ciqual)");
         return Command::SUCCESS;
     }

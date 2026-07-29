@@ -17,7 +17,10 @@
         "symfony/yaml": "^7.0",
         "symfony/password-hasher": "^7.0",
         "symfony/http-client": "^7.0",
-        "sensiolabs/gotenberg-bundle": "^1.2"
+        "sensiolabs/gotenberg-bundle": "^1.2",
+        "ext-intl": "*",
+        "ext-iconv": "*",
+        "doctrine/doctrine-migrations-bundle": "^3.7"
     },
     "autoload": {
         "psr-4": { "App\\": "src/" }

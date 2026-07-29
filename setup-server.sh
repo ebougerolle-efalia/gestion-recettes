@@ -67,7 +67,12 @@ if [ ! -f "$BOOTSTRAP_FLAG" ]; then
     done
     [ -z "$PHP_V" ] && err "Aucune version PHP 8.x trouvée dans les dépôts."
     log "PHP $PHP_V détecté."
-    apt install -y php${PHP_V}-cli php${PHP_V}-fpm php${PHP_V}-sqlite3 php${PHP_V}-xml php${PHP_V}-intl php${PHP_V}-mbstring php${PHP_V}-curl
+    apt install -y php${PHP_V}-cli php${PHP_V}-fpm php${PHP_V}-pgsql php${PHP_V}-xml php${PHP_V}-intl php${PHP_V}-mbstring php${PHP_V}-curl
+
+    # PostgreSQL. postgresql-contrib fournit pg_trgm et unaccent, utilises par
+    # l'appariement Ciqual (extensions a activer par base, pas des paquets PHP).
+    apt install -y postgresql postgresql-contrib
+    systemctl enable postgresql && systemctl start postgresql
 
     # Docker + Gotenberg (partagés par toutes les instances)
     if ! command -v docker &>/dev/null; then
@@ -108,16 +113,37 @@ fi
 
 cd "$APP_DIR"
 
+# --- Base PostgreSQL propre à ce client --------------------------------------
+# Un rôle et une base par instance : les clients restent isolés, et une
+# restauration n'affecte qu'un seul d'entre eux.
+DB_NAME="$(echo "recettes_${CLIENT_SLUG}" | tr -c '[:alnum:]_' '_')"
+DB_USER="$DB_NAME"
+DB_PASS="$(openssl rand -hex 16)"
+
+if sudo -u postgres psql -tAc "SELECT 1 FROM pg_database WHERE datname = '$DB_NAME'" | grep -q 1; then
+    warn "Base $DB_NAME déjà présente — création ignorée."
+    EXISTING_DB=1
+else
+    log "Création du rôle et de la base $DB_NAME…"
+    sudo -u postgres psql -c "CREATE ROLE \"$DB_USER\" LOGIN PASSWORD '$DB_PASS'"
+    sudo -u postgres createdb -O "$DB_USER" -E UTF8 "$DB_NAME"
+    EXISTING_DB=0
+fi
+
 # --- .env.local propre à ce client -------------------------------------------
 if [ ! -f ".env.local" ]; then
+    # Le mot de passe n'existe qu'en mémoire : sans .env.local à écrire, il est
+    # perdu et la base existante devient inaccessible.
+    [ "$EXISTING_DB" = "1" ] && err "Base $DB_NAME présente mais .env.local absent : mot de passe inconnu, intervention manuelle requise."
     log "Création du .env.local…"
     cat > .env.local <<EOF
 APP_ENV=prod
 APP_SECRET=$(openssl rand -hex 16)
-DATABASE_URL="sqlite:///%kernel.project_dir%/var/data/recettes.db"
+DATABASE_URL="postgresql://${DB_USER}:${DB_PASS}@127.0.0.1:5432/${DB_NAME}?serverVersion=17&charset=utf8"
 GOTENBERG_DSN=http://localhost:${GOTENBERG_PORT}
 WEBHOOK_SECRET=$(openssl rand -hex 20)
 EOF
+    chmod 640 .env.local
 fi
 
 # --- Dossier d'upload du logo (module Paramètres) ----------------------------
@@ -130,6 +156,25 @@ GIT_BRANCH="$GIT_BRANCH" ./deploy.sh
 
 chown -R www-data:www-data var/ public/uploads/
 chmod -R 775 var/ public/uploads/
+
+# --- Sauvegarde quotidienne de la base ---------------------------------------
+# Indispensable depuis le passage à PostgreSQL : il n'y a plus de fichier à
+# copier, et une copie à chaud du répertoire de données serait inexploitable.
+BACKUP_CRON="/etc/cron.daily/${APP_NAME}-backup-${CLIENT_SLUG}"
+if [ ! -f "$BACKUP_CRON" ]; then
+    log "Installation de la sauvegarde quotidienne…"
+    cat > "$BACKUP_CRON" <<CRON
+#!/bin/bash
+set -euo pipefail
+DIR="${APP_DIR}/var/backups"
+mkdir -p "\$DIR"
+URL="\$(grep -E '^DATABASE_URL=' ${APP_DIR}/.env.local | tail -1 | cut -d= -f2- | tr -d '"')"
+pg_dump --format=custom --file="\$DIR/daily_\$(date +%Y%m%d).dump" "\$URL"
+# Rétention : 14 jours.
+find "\$DIR" -name 'daily_*.dump' -mtime +14 -delete
+CRON
+    chmod 750 "$BACKUP_CRON"
+fi
 
 # --- Vhost nginx pour ce sous-domaine ----------------------------------------
 log "Configuration Nginx pour $DOMAIN…"

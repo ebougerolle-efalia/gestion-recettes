@@ -6,7 +6,6 @@ PHP_BIN="${PHP_BIN:-php}"
 COMPOSER_BIN="${COMPOSER_BIN:-composer}"
 # Priorité : variable d'env → branche active du clone local → master
 GIT_BRANCH="${GIT_BRANCH:-$(git rev-parse --abbrev-ref HEAD 2>/dev/null || echo master)}"
-DB_PATH="${APP_DIR}/var/data/recettes.db"
 BACKUP_DIR="${APP_DIR}/var/backups"
 WEB_USER="${WEB_USER:-www-data}"
 
@@ -42,12 +41,22 @@ if [ ! -d "vendor" ]; then MODE="install"; log "=== PREMIER DEPLOIEMENT ===";
 else MODE="update"; log "=== MISE A JOUR ==="; fi
 
 # --- Sauvegarde de la base avant toute mise a jour -------------------------
-if [ "$MODE" = "update" ] && [ -f "$DB_PATH" ]; then
+# PostgreSQL : pg_dump obligatoire. Copier le repertoire de donnees a chaud
+# produirait une sauvegarde inexploitable.
+if [ "$MODE" = "update" ] && command -v pg_dump >/dev/null 2>&1; then
     mkdir -p "$BACKUP_DIR"
-    BACKUP_FILE="${BACKUP_DIR}/recettes_$(date +%Y%m%d_%H%M%S).db"
-    cp "$DB_PATH" "$BACKUP_FILE"
-    log "Base sauvegardee -> $BACKUP_FILE"
-    ls -t "$BACKUP_DIR"/recettes_*.db 2>/dev/null | tail -n +11 | xargs -r rm || true
+    BACKUP_FILE="${BACKUP_DIR}/recettes_$(date +%Y%m%d_%H%M%S).dump"
+    # DATABASE_URL vit dans .env.local ; on la lit sans exporter tout le fichier.
+    DB_URL="$(grep -E '^DATABASE_URL=' .env.local 2>/dev/null | tail -1 | cut -d= -f2- | tr -d '"')"
+    if [ -n "$DB_URL" ]; then
+        # Echec bloquant : deployer sans sauvegarde valide n'est pas acceptable.
+        pg_dump --format=custom --file="$BACKUP_FILE" "$DB_URL" \
+            || err "pg_dump a echoue - deploiement interrompu, base NON modifiee."
+        log "Base sauvegardee -> $BACKUP_FILE"
+        ls -t "$BACKUP_DIR"/recettes_*.dump 2>/dev/null | tail -n +11 | xargs -r rm || true
+    else
+        warn "DATABASE_URL introuvable dans .env.local : sauvegarde ignoree."
+    fi
 fi
 
 # --- Recuperation du code (synchro complete avec le depot) -----------------
@@ -64,17 +73,15 @@ log "Composer install..."
 "$COMPOSER_BIN" install --no-dev --optimize-autoloader --no-interaction
 
 # --- Base de donnees -------------------------------------------------------
-mkdir -p "$(dirname "$DB_PATH")"
-if [ ! -f "$DB_PATH" ]; then
-    log "Creation du schema..."
-    run_php bin/console doctrine:schema:create --no-interaction
+# Migrations versionnees : rejouables, reversibles, et tracees dans la table
+# doctrine_migration_versions. schema:update est proscrit ici, il peut
+# supprimer une colonne sans prevenir sur une base contenant des donnees.
+log "Migrations..."
+run_php bin/console doctrine:migrations:migrate --no-interaction --allow-no-migration
+
+if [ "$MODE" = "install" ]; then
     log "Seed initial..."
     run_php bin/console app:seed
-else
-    # Pas de masquage : schema:update sort 0 si rien a faire, et echoue
-    # franchement (donc stoppe le deploiement) en cas de vrai probleme.
-    log "Mise a jour du schema..."
-    run_php bin/console doctrine:schema:update --force --no-interaction
 fi
 
 # --- Cache : reconstruction propre, echec bloquant -------------------------

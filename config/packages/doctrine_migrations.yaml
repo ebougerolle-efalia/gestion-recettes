@@ -1,0 +1,8 @@
+doctrine_migrations:
+    migrations_paths:
+        'DoctrineMigrations': '%kernel.project_dir%/migrations'
+    enable_profiler: false
+    # Le schéma est décrit par les migrations versionnées, plus par
+    # doctrine:schema:update : c'est ce qui rend un déploiement rejouable et
+    # réversible sur une base contenant des données clients.
+    transactional: true
