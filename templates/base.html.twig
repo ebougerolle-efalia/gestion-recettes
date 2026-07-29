@@ -41,9 +41,14 @@
             {% if is_granted('ROLE_EDITOR') %}
                 <p class="text-[11px] font-semibold uppercase tracking-wider text-gray-500 px-3 mt-5 mb-2">Achats</p>
 
-                <a href="{{ path('app_invoice_import') }}" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors
+                {# La file d'attente est le point d'entrée : des factures peuvent
+                   y arriver sans qu'on soit passé par l'écran d'import. #}
+                <a href="{{ path('app_invoice_index') }}" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors
                 {{ app.request.attributes.get('_route') starts with 'app_invoice' ? 'bg-white/[.08] text-white' : 'text-gray-400 hover:text-white hover:bg-white/[.04]' }}">
-                    <i class="fas fa-file-import w-5 text-center text-[13px]"></i> Import facture
+                    <i class="fas fa-file-invoice w-5 text-center text-[13px]"></i> Factures d'achat
+                    {% if invoice_pending_count() > 0 %}
+                        <span class="ml-auto rounded-full bg-amber-500 px-1.5 py-0.5 text-[10px] font-bold text-white">{{ invoice_pending_count() }}</span>
+                    {% endif %}
                 </a>
 
                 <a href="{{ path('app_supplier_index') }}" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors

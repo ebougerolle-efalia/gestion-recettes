@@ -457,12 +457,18 @@ class CostCalculator
     {
         $conn = $this->em->getConnection();
 
-        $ids = $ingredientId
-            ? array_column($conn->fetchAllAssociative(
+        if ($ingredientId) {
+            $ids = array_column($conn->fetchAllAssociative(
                 'SELECT DISTINCT recipe_id FROM recipe_lines WHERE ingredient_id = ?',
                 [$ingredientId]
-            ), 'recipe_id')
-            : array_column($conn->fetchAllAssociative('SELECT id FROM recipes'), 'id');
+            ), 'recipe_id');
+            // Le cache des recettes parentes doit suivre : une terrine qui
+            // contient une farce voit son coût changer sans qu'aucune de ses
+            // lignes ne cite l'ingrédient dont le prix a bougé.
+            $ids = $this->withParentRecipes(array_map('intval', $ids));
+        } else {
+            $ids = array_column($conn->fetchAllAssociative('SELECT id FROM recipes'), 'id');
+        }
 
         $count = 0;
         foreach ($ids as $id) {
@@ -470,6 +476,39 @@ class CostCalculator
             catch (\Throwable) { /* cycle ou données incohérentes */ }
         }
         return $count;
+    }
+
+    /**
+     * Complète une liste de recettes par toutes celles qui les utilisent comme
+     * sous-recette, de façon transitive (farce → terrine → plateau).
+     *
+     * @param int[] $ids
+     * @return int[]
+     */
+    private function withParentRecipes(array $ids): array
+    {
+        $conn  = $this->em->getConnection();
+        $known = array_fill_keys($ids, true);
+        $queue = $ids;
+
+        while ($queue) {
+            $placeholders = implode(',', array_fill(0, count($queue), '?'));
+            $parents = array_column($conn->fetchAllAssociative(
+                "SELECT DISTINCT recipe_id FROM recipe_lines WHERE sub_recipe_id IN ($placeholders)",
+                $queue
+            ), 'recipe_id');
+
+            $queue = [];
+            foreach ($parents as $parentId) {
+                $parentId = (int) $parentId;
+                if (!isset($known[$parentId])) {   // coupe aussi les cycles éventuels
+                    $known[$parentId] = true;
+                    $queue[] = $parentId;
+                }
+            }
+        }
+
+        return array_keys($known);
     }
 
     public function wouldCreateCycle(int $parentRecipeId, int $subRecipeId): bool

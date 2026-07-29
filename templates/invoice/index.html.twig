@@ -1,0 +1,117 @@
+{% extends 'base.html.twig' %}
+{% block title %}Factures d'achat{% endblock %}
+{% block page_title %}Factures d'achat{% endblock %}
+{% block page_subtitle %}Réception, validation et historique{% endblock %}
+
+{% block body %}
+
+    <div class="flex items-center justify-between mb-6">
+        <div class="flex items-center gap-3">
+            <div class="rounded-2xl border border-gray-200 bg-white px-5 py-3">
+                <p class="text-[10px] font-semibold uppercase tracking-wider text-gray-400">À valider</p>
+                <p class="text-2xl font-bold {{ pending|length ? 'text-amber-600' : 'text-[#1c2434]' }} mt-0.5">{{ pending|length }}</p>
+            </div>
+            <div class="rounded-2xl border border-gray-200 bg-white px-5 py-3">
+                <p class="text-[10px] font-semibold uppercase tracking-wider text-gray-400">Traitées</p>
+                <p class="text-2xl font-bold text-[#1c2434] mt-0.5">{{ processed|length }}</p>
+            </div>
+        </div>
+        <a href="{{ path('app_invoice_import') }}"
+           class="inline-flex items-center gap-2 rounded-xl bg-blue-500 hover:bg-blue-600 px-5 py-2.5 text-sm font-medium text-white">
+            <i class="fas fa-file-import text-[11px]"></i> Importer une facture
+        </a>
+    </div>
+
+    {# ── File d'attente ── #}
+    <div class="rounded-2xl border border-gray-200 bg-white mb-6">
+        <div class="px-6 py-4 border-b border-gray-100 flex items-center gap-2">
+            <div class="w-2 h-2 rounded-full {{ pending|length ? 'bg-amber-500' : 'bg-gray-300' }}"></div>
+            <h3 class="font-semibold text-[15px] text-[#1c2434]">En attente de validation</h3>
+        </div>
+
+        {% if pending is empty %}
+            <p class="px-6 py-8 text-center text-sm text-gray-400">
+                Rien en attente. Les factures déposées ici attendent votre arbitrage avant de modifier le moindre prix.
+            </p>
+        {% else %}
+            <div class="divide-y divide-gray-50">
+                {% for invoice in pending %}
+                    <a href="{{ path('app_invoice_review', {id: invoice.id}) }}"
+                       class="flex items-center gap-4 px-6 py-4 hover:bg-blue-50/40 transition-colors">
+                        <div class="flex-1 min-w-0">
+                            <p class="font-medium text-sm text-gray-800">{{ invoice.supplier.name }}</p>
+                            <p class="text-[11px] text-gray-400 mt-0.5">
+                                {{ invoice.invoiceId }} · {{ invoice.invoiceDate|date('d/m/Y') }}
+                                {% if invoice.source != 'manual' %}
+                                    · <span class="text-blue-500">{{ invoice.source == 'email' ? 'reçue par mail' : 'plateforme' }}</span>
+                                {% endif %}
+                            </p>
+                        </div>
+                        <div class="text-right flex-shrink-0">
+                            <p class="text-sm font-semibold text-[#1c2434]">
+                                {{ invoice.totalHt ? invoice.totalHt|number_format(2, ',', ' ') ~ ' € HT' : '—' }}
+                            </p>
+                            <p class="text-[11px] text-gray-400">{{ invoice.lines|length }} ligne(s)</p>
+                        </div>
+                        <span class="inline-flex items-center rounded-full bg-amber-50 px-2.5 py-1 text-[10px] font-semibold text-amber-700 flex-shrink-0">
+                            À valider
+                        </span>
+                        <i class="fas fa-chevron-right text-[10px] text-gray-300 flex-shrink-0"></i>
+                    </a>
+                {% endfor %}
+            </div>
+        {% endif %}
+    </div>
+
+    {# ── Historique ── #}
+    <div class="rounded-2xl border border-gray-200 bg-white">
+        <div class="px-6 py-4 border-b border-gray-100">
+            <h3 class="font-semibold text-[15px] text-[#1c2434]"><i class="fas fa-clock-rotate-left text-gray-400 mr-2 text-sm"></i>Historique</h3>
+        </div>
+
+        {% if processed is empty %}
+            <p class="px-6 py-8 text-center text-sm text-gray-400">Aucune facture traitée pour le moment.</p>
+        {% else %}
+            <div class="overflow-x-auto">
+                <table class="w-full text-sm">
+                    <thead class="bg-gray-50/70 text-[11px] uppercase tracking-wider text-gray-400">
+                        <tr>
+                            <th class="px-6 py-3 text-left font-semibold">Fournisseur</th>
+                            <th class="px-4 py-3 text-left font-semibold">N°</th>
+                            <th class="px-4 py-3 text-left font-semibold">Date</th>
+                            <th class="px-4 py-3 text-right font-semibold">Total HT</th>
+                            <th class="px-4 py-3 text-right font-semibold">Lignes</th>
+                            <th class="px-6 py-3 text-left font-semibold">Statut</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-gray-50">
+                        {% for invoice in processed %}
+                            <tr class="hover:bg-gray-50/50">
+                                <td class="px-6 py-3 font-medium text-gray-800">{{ invoice.supplier.name }}</td>
+                                <td class="px-4 py-3 text-gray-500 font-mono text-xs">{{ invoice.invoiceId }}</td>
+                                <td class="px-4 py-3 text-gray-500">{{ invoice.invoiceDate|date('d/m/Y') }}</td>
+                                <td class="px-4 py-3 text-right text-gray-700">
+                                    {{ invoice.totalHt ? invoice.totalHt|number_format(2, ',', ' ') ~ ' €' : '—' }}
+                                </td>
+                                <td class="px-4 py-3 text-right text-gray-500">{{ invoice.lines|length }}</td>
+                                <td class="px-6 py-3">
+                                    {% if invoice.applied %}
+                                        <span class="inline-flex items-center rounded-full bg-emerald-50 px-2.5 py-1 text-[10px] font-semibold text-emerald-700">
+                                            <i class="fas fa-check text-[8px] mr-1"></i>Prix appliqués
+                                        </span>
+                                    {% else %}
+                                        <span class="inline-flex items-center rounded-full bg-gray-100 px-2.5 py-1 text-[10px] font-semibold text-gray-500"
+                                              title="{{ invoice.note }}">
+                                            <i class="fas fa-ban text-[8px] mr-1"></i>Écartée
+                                        </span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        {% endif %}
+    </div>
+
+{% endblock %}

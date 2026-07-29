@@ -43,7 +43,7 @@
     </div>
 
     {# ── Formulaire ── #}
-    <form method="post" id="confirm-form">
+    <form method="post" id="confirm-form" action="{{ path('app_invoice_apply', {id: purchaseInvoice.id}) }}">
         <div class="rounded-2xl border border-gray-200 bg-white">
 
             <div class="px-6 py-4 border-b border-gray-100 flex items-center justify-between">
@@ -215,6 +215,18 @@
                                    onchange="document.getElementById('check-{{ i }}').checked = true">
                         </div>
                         <p class="text-[10px] text-gray-400 text-right mt-0.5">€ / {{ line.unit }}</p>
+                        {# Écart avec le dernier prix connu : un +400 % signale
+                           un changement de conditionnement, pas une inflation. #}
+                        {% if line.delta_percent is not null %}
+                            {% set strong = line.delta_percent|abs >= 15 %}
+                            <p class="text-[10px] text-right mt-1 {{ strong ? 'font-bold text-red-600' : 'text-gray-400' }}"
+                               title="Dernier prix connu : {{ line.previous_price|number_format(4, ',', ' ') }} €">
+                                {{ line.delta_percent > 0 ? '+' : '' }}{{ line.delta_percent|number_format(1, ',', ' ') }} %
+                                {% if strong %}<i class="fas fa-triangle-exclamation text-[9px]"></i>{% endif %}
+                            </p>
+                        {% elseif line.matched_ingredient %}
+                            <p class="text-[10px] text-gray-300 text-right mt-1">1ᵉʳ prix</p>
+                        {% endif %}
                     </div>
 
                     <div class="flex-shrink-0 w-32">
@@ -250,9 +262,9 @@
 
             {# Pied #}
             <div class="px-6 py-4 border-t border-gray-100 bg-gray-50/50 flex items-center justify-between gap-4">
-                <a href="{{ path('app_invoice_cancel') }}"
+                <a href="{{ path('app_invoice_index') }}"
                    class="inline-flex items-center gap-1.5 rounded-xl border border-gray-200 px-4 py-2.5 text-sm text-gray-600 hover:bg-white transition-colors">
-                    <i class="fas fa-times text-[10px]"></i> Annuler
+                    <i class="fas fa-clock text-[10px]"></i> Reprendre plus tard
                 </a>
                 <div class="flex items-center gap-3">
                     <p class="text-xs text-gray-400 max-w-xs text-right">
@@ -268,6 +280,17 @@
             </div>
 
         </div>
+    </form>
+
+    {# Écarter la facture : formulaire séparé, hors du formulaire de validation #}
+    <form method="post" action="{{ path('app_invoice_reject', {id: purchaseInvoice.id}) }}"
+          onsubmit="return confirm('Écarter cette facture sans enregistrer de prix ?')"
+          class="mt-4 flex items-center gap-2">
+        <input type="text" name="reason" placeholder="Motif (facultatif) : doublon, hors périmètre…"
+               class="flex-1 rounded-xl border border-gray-200 px-4 py-2 text-sm outline-none focus:border-gray-400">
+        <button class="inline-flex items-center gap-1.5 rounded-xl border border-red-200 px-4 py-2 text-sm text-red-500 hover:bg-red-50">
+            <i class="fas fa-ban text-[10px]"></i> Écarter la facture
+        </button>
     </form>
 
 {% endblock %}

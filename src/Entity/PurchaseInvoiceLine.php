@@ -15,10 +15,24 @@ class PurchaseInvoiceLine
     #[ORM\JoinColumn(name: 'invoice_id', nullable: false, onDelete: 'CASCADE')]
     private ?PurchaseInvoice $invoice = null;
 
-    /** Ingrédient associé — null si non reconnu ou non confirmé */
+    /**
+     * Ingrédient associé — null si non reconnu. Avant validation c'est une
+     * proposition du rapprochement automatique, après c'est le choix retenu.
+     */
     #[ORM\ManyToOne(targetEntity: Ingredient::class)]
     #[ORM\JoinColumn(name: 'ingredient_id', nullable: true, onDelete: 'SET NULL')]
     private ?Ingredient $ingredient = null;
+
+    /** Origine de la proposition : mapping (mémorisé), fuzzy (similarité), none. */
+    #[ORM\Column(name: 'match_source', length: 20, options: ['default' => 'none'])]
+    private string $matchSource = 'none';
+
+    #[ORM\Column(name: 'match_score', type: 'integer', options: ['default' => 0])]
+    private int $matchScore = 0;
+
+    /** Vrai quand cette ligne a donné lieu à un prix enregistré. */
+    #[ORM\Column(type: 'boolean', options: ['default' => false])]
+    private bool $applied = false;
 
     /** Référence fournisseur brute (ex: PORC-GORGE-001) */
     #[ORM\Column(name: 'supplier_ref', length: 100, nullable: true)]
@@ -79,4 +93,13 @@ class PurchaseInvoiceLine
 
     public function getLineTotal(): float { return (float) $this->lineTotal; }
     public function setLineTotal(float $v): static { $this->lineTotal = number_format($v, 2, '.', ''); return $this; }
+
+    public function getMatchSource(): string { return $this->matchSource; }
+    public function setMatchSource(string $v): static { $this->matchSource = $v; return $this; }
+
+    public function getMatchScore(): int { return $this->matchScore; }
+    public function setMatchScore(int $v): static { $this->matchScore = $v; return $this; }
+
+    public function isApplied(): bool { return $this->applied; }
+    public function setApplied(bool $v): static { $this->applied = $v; return $this; }
 }

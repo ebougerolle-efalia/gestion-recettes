@@ -51,7 +51,9 @@ Avertissements explicites quand un chiffre n'est pas fiable, au lieu d'afficher 
 
 ### Mercuriale & traçabilité des prix
 - Prix d'achat **datés** par fournisseur, historisés ; chaque ligne de recette tracée (date + fournisseur du prix appliqué) sur les fiches.
-- **Import de facture électronique** : dépôt d'un PDF Factur-X ou d'un XML CII/EN 16931, extraction du fournisseur (SIRET) et des lignes, **rapprochement automatique** avec les ingrédients (correspondances mémorisées d'un import sur l'autre, puis similarité de libellé), écran de confirmation, puis création des prix datés et **recalcul en cascade** des recettes concernées.
+- **Import de facture électronique** : dépôt d'un PDF Factur-X ou d'un XML CII/EN 16931, extraction du fournisseur (SIRET) et des lignes, **rapprochement automatique** avec les ingrédients (correspondances mémorisées d'un import sur l'autre, puis similarité de libellé), écran de validation, puis création des prix datés et **recalcul en cascade** des recettes concernées.
+- **File d'attente des factures** : une facture est enregistrée dès sa réception, avec ses correspondances proposées, et attend l'arbitrage humain — elle peut donc arriver sans personne devant l'écran, et une validation interrompue se reprend intacte. Doublons écartés d'office (même fournisseur, même numéro).
+- **Écart de prix affiché à la validation** : chaque ligne montre son écart avec le dernier prix connu, signalé au-delà de 15 %. C'est ce qui permet de repérer un changement de conditionnement — un lot de 5 kg facturé à la pièce — avant qu'il ne contamine vingt fiches techniques.
 
 ### Déploiement / exploitation (SaaS multi-instances)
 - **Une instance isolée par client** (base de données séparée), déployée par script en une commande, avec sous-domaine, **HTTPS automatique** et **mise à jour par webhook** (git push → déploiement).
