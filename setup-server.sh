@@ -165,6 +165,11 @@ DATABASE_URL="postgresql://${DB_USER}:${DB_PASS}@127.0.0.1:5432/${DB_NAME}?serve
 GOTENBERG_DSN=http://localhost:${GOTENBERG_PORT}
 WEBHOOK_SECRET=$(openssl rand -hex 20)
 EOF
+    # Le fichier porte le mot de passe de la base : il ne doit pas être lisible
+    # par tous. Mais deploy.sh exécute la console sous www-data, qui doit
+    # pouvoir le lire — d'où le groupe. Sans ce chown, le déploiement échoue
+    # sur « Unable to read the .env.local environment file ».
+    chown root:www-data .env.local
     chmod 640 .env.local
 fi
 
