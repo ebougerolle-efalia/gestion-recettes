@@ -58,7 +58,8 @@ log "Dossier     : $APP_DIR"
 if [ ! -f "$BOOTSTRAP_FLAG" ]; then
     log "Premier déploiement sur ce serveur : installation des paquets…"
     apt update
-    apt install -y curl git unzip nginx openssl
+    # sudo est requis par deploy.sh (exécution sous www-data) et par le webhook.
+    apt install -y curl git unzip nginx openssl sudo
 
     # Détecter la meilleure version PHP disponible (8.4 > 8.3 > 8.2 > 8.1)
     PHP_V=""
@@ -73,6 +74,14 @@ if [ ! -f "$BOOTSTRAP_FLAG" ]; then
     # l'appariement Ciqual (extensions a activer par base, pas des paquets PHP).
     apt install -y postgresql postgresql-contrib
     systemctl enable postgresql && systemctl start postgresql
+
+    # La version majeure dépend du dépôt de la distribution (15 sur Bookworm,
+    # 17 sur Trixie) : elle est détectée, jamais supposée. Elle finit dans
+    # DATABASE_URL, où une valeur fausse ferait choisir à Doctrine le mauvais
+    # dialecte SQL.
+    PG_V="$(psql --version 2>/dev/null | grep -oE '[0-9]+' | head -1)"
+    [ -z "$PG_V" ] && err "PostgreSQL installé mais psql introuvable."
+    log "PostgreSQL $PG_V détecté."
 
     # Docker + Gotenberg (partagés par toutes les instances)
     if ! command -v docker &>/dev/null; then
@@ -94,12 +103,15 @@ if [ ! -f "$BOOTSTRAP_FLAG" ]; then
     # Certbot
     apt install -y certbot python3-certbot-nginx
 
-    echo "PHP_V=$PHP_V" > "$BOOTSTRAP_FLAG"
+    printf 'PHP_V=%s\nPG_V=%s\n' "$PHP_V" "$PG_V" > "$BOOTSTRAP_FLAG"
     log "Bootstrap système terminé."
 else
     # shellcheck source=/dev/null
-    source "$BOOTSTRAP_FLAG"   # récupère PHP_V
-    log "Serveur déjà initialisé (PHP $PHP_V). Étape système ignorée."
+    source "$BOOTSTRAP_FLAG"   # récupère PHP_V et PG_V
+    # Serveur initialisé avant l'ajout de PG_V au drapeau : on le redétecte.
+    PG_V="${PG_V:-$(psql --version 2>/dev/null | grep -oE '[0-9]+' | head -1)}"
+    [ -z "$PG_V" ] && err "PostgreSQL introuvable sur ce serveur déjà initialisé."
+    log "Serveur déjà initialisé (PHP $PHP_V, PostgreSQL $PG_V). Étape système ignorée."
 fi
 
 # --- Clonage de l'instance client --------------------------------------------
@@ -139,7 +151,7 @@ if [ ! -f ".env.local" ]; then
     cat > .env.local <<EOF
 APP_ENV=prod
 APP_SECRET=$(openssl rand -hex 16)
-DATABASE_URL="postgresql://${DB_USER}:${DB_PASS}@127.0.0.1:5432/${DB_NAME}?serverVersion=17&charset=utf8"
+DATABASE_URL="postgresql://${DB_USER}:${DB_PASS}@127.0.0.1:5432/${DB_NAME}?serverVersion=${PG_V}&charset=utf8"
 GOTENBERG_DSN=http://localhost:${GOTENBERG_PORT}
 WEBHOOK_SECRET=$(openssl rand -hex 20)
 EOF
@@ -169,6 +181,9 @@ set -euo pipefail
 DIR="${APP_DIR}/var/backups"
 mkdir -p "\$DIR"
 URL="\$(grep -E '^DATABASE_URL=' ${APP_DIR}/.env.local | tail -1 | cut -d= -f2- | tr -d '"')"
+# libpq refuse les paramètres propres à Doctrine (serverVersion, charset) :
+# « invalid URI query parameter ». On coupe tout ce qui suit le point d'interrogation.
+URL="\${URL%%\\?*}"
 pg_dump --format=custom --file="\$DIR/daily_\$(date +%Y%m%d).dump" "\$URL"
 # Rétention : 14 jours.
 find "\$DIR" -name 'daily_*.dump' -mtime +14 -delete

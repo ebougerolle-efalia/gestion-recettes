@@ -48,6 +48,9 @@ if [ "$MODE" = "update" ] && command -v pg_dump >/dev/null 2>&1; then
     BACKUP_FILE="${BACKUP_DIR}/recettes_$(date +%Y%m%d_%H%M%S).dump"
     # DATABASE_URL vit dans .env.local ; on la lit sans exporter tout le fichier.
     DB_URL="$(grep -E '^DATABASE_URL=' .env.local 2>/dev/null | tail -1 | cut -d= -f2- | tr -d '"')"
+    # libpq rejette les parametres propres a Doctrine (serverVersion, charset)
+    # avec « invalid URI query parameter » : on coupe la chaine de requete.
+    DB_URL="${DB_URL%%\?*}"
     if [ -n "$DB_URL" ]; then
         # Echec bloquant : deployer sans sauvegarde valide n'est pas acceptable.
         pg_dump --format=custom --file="$BACKUP_FILE" "$DB_URL" \
