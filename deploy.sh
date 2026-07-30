@@ -40,17 +40,18 @@ cd "$APP_DIR"
 if [ ! -d "vendor" ]; then MODE="install"; log "=== PREMIER DEPLOIEMENT ===";
 else MODE="update"; log "=== MISE A JOUR ==="; fi
 
+# DATABASE_URL vit dans .env.local ; on la lit sans exporter tout le fichier.
+# libpq rejette les parametres propres a Doctrine (serverVersion, charset) avec
+# « invalid URI query parameter » : on coupe la chaine de requete.
+DB_URL="$(grep -E '^DATABASE_URL=' .env.local 2>/dev/null | tail -1 | cut -d= -f2- | tr -d '"')"
+DB_URL="${DB_URL%%\?*}"
+
 # --- Sauvegarde de la base avant toute mise a jour -------------------------
 # PostgreSQL : pg_dump obligatoire. Copier le repertoire de donnees a chaud
 # produirait une sauvegarde inexploitable.
 if [ "$MODE" = "update" ] && command -v pg_dump >/dev/null 2>&1; then
     mkdir -p "$BACKUP_DIR"
     BACKUP_FILE="${BACKUP_DIR}/recettes_$(date +%Y%m%d_%H%M%S).dump"
-    # DATABASE_URL vit dans .env.local ; on la lit sans exporter tout le fichier.
-    DB_URL="$(grep -E '^DATABASE_URL=' .env.local 2>/dev/null | tail -1 | cut -d= -f2- | tr -d '"')"
-    # libpq rejette les parametres propres a Doctrine (serverVersion, charset)
-    # avec « invalid URI query parameter » : on coupe la chaine de requete.
-    DB_URL="${DB_URL%%\?*}"
     if [ -n "$DB_URL" ]; then
         # Echec bloquant : deployer sans sauvegarde valide n'est pas acceptable.
         pg_dump --format=custom --file="$BACKUP_FILE" "$DB_URL" \
@@ -92,8 +93,24 @@ fi
 log "Migrations..."
 run_php bin/console doctrine:migrations:migrate --no-interaction --allow-no-migration
 
+# Le seed depend de l'etat de la BASE, pas de la presence de vendor/ : un
+# premier deploiement interrompu apres composer install faisait basculer tous
+# les suivants en « mise a jour », et l'administrateur n'etait jamais cree.
+# app:seed est idempotent, mais on evite de le rejouer sur une instance vivante :
+# il recreerait les categories et familles par defaut qu'un client aurait
+# supprimees.
+NEEDS_SEED=0
 if [ "$MODE" = "install" ]; then
-    log "Seed initial..."
+    NEEDS_SEED=1
+elif [ -n "$DB_URL" ] && command -v psql >/dev/null 2>&1; then
+    # « || true » indispensable : avec set -euo pipefail, un psql en echec
+    # ferait avorter tout le deploiement sur une simple interrogation.
+    USER_COUNT="$(psql "$DB_URL" -tAc 'SELECT COUNT(*) FROM users' 2>/dev/null | tr -d '[:space:]' || true)"
+    [ "$USER_COUNT" = "0" ] && NEEDS_SEED=1
+fi
+
+if [ "$NEEDS_SEED" = "1" ]; then
+    log "Seed initial (aucun utilisateur en base)..."
     run_php bin/console app:seed
 fi
 
