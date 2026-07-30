@@ -1,0 +1,52 @@
+#!/bin/bash
+# =============================================================================
+#  Modèle de configuration du déploiement.
+#
+#  Sur le serveur :   cp setup.conf.example setup.conf   puis adapter les valeurs.
+#  setup.conf n'est pas versionné (.gitignore) : il porte des valeurs propres
+#  à chaque serveur, et le script refuse de démarrer si elles manquent.
+#
+#  ATTENTION — ce fichier est lu par « source » sous Linux :
+#    · enregistrer en fins de ligne Unix (LF), jamais CRLF. Un retour chariot
+#      Windows se retrouve collé aux valeurs et fabrique des domaines invalides,
+#      des vhosts nginx cassés et des échecs certbot incompréhensibles ;
+#    · fermer chaque guillemet. Un guillemet manquant fait échouer le script
+#      avant toute installation, sur un « unexpected EOF » peu parlant.
+#
+#  Vérification en une commande, avant de lancer l'installation :
+#      bash -c 'source setup.conf && echo "$BASE_DOMAIN | $INSTALL_ROOT"'
+# =============================================================================
+
+# -- Domaine principal du SaaS, SANS sous-domaine. ----------------------------
+#    Chaque client sera servi sur <slug>.$BASE_DOMAIN
+#    Laisser vide tant que le nom n'est pas choisi : le script le rappellera.
+BASE_DOMAIN=""
+
+# -- Adresse e-mail pour les certificats Let's Encrypt (expiration, sécurité).
+ADMIN_EMAIL=""
+
+# -- Dépôt Git de l'application. ----------------------------------------------
+REPO_URL="https://github.com/ebougerolle-efalia/gestion-recettes.git"
+
+# -- Branche Git par défaut (si aucun argument n'est passé à setup-server.sh).
+#    master     → instance de dev  (sudo ./setup-server.sh demo)
+#    production → instance client  (sudo ./setup-server.sh dupont production)
+#    Conseil : garder "master" ici et passer la branche en argument pour les clients.
+GIT_BRANCH="master"
+
+# -- Nom technique de l'application. ------------------------------------------
+#    Sert de préfixe aux sites nginx, aux journaux, au fichier sudoers, au
+#    drapeau de bootstrap et aux crons de sauvegarde. Le changer après une
+#    installation impose de renommer tous ces éléments à la main.
+APP_NAME="gestion-recettes"
+
+# -- Racine où sont déployées les instances clients. --------------------------
+#    Chaque client aura son propre dossier : $INSTALL_ROOT/<slug>
+#    /srv est l'emplacement prévu par la norme FHS pour les données servies par
+#    la machine, organisées par service — c'est exactement ce cas. Éviter
+#    /var/www (destiné aux données variables) et /opt (paquets tiers livrés
+#    clés en main).
+INSTALL_ROOT="/srv/gestion-recettes"
+
+# -- Port du conteneur Gotenberg (génération PDF), partagé par tous les clients.
+GOTENBERG_PORT="3000"

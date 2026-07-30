@@ -25,7 +25,17 @@ err()  { echo -e "${RED}[ERROR]${NC} $1"; exit 1; }
 [ "$EUID" -ne 0 ] && err "Ce script doit être lancé avec sudo."
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
-[ -f "$SCRIPT_DIR/setup.conf" ] || err "Fichier setup.conf introuvable à côté du script."
+[ -f "$SCRIPT_DIR/setup.conf" ] || err "Fichier setup.conf introuvable à côté du script. Partez du modèle : cp setup.conf.example setup.conf"
+
+# Un setup.conf enregistré sous Windows colle un retour chariot à chaque valeur.
+# Le script s'exécuterait sans erreur visible, mais fabriquerait un domaine
+# « demo.exemple.fr\r » : vhost nginx cassé et certbot en échec, sans indice.
+# Comparaison du fichier avec lui-même privé de ses retours chariot : s'ils
+# diffèrent, c'est qu'il en contient. Plus fiable qu'un grep, dont le
+# traitement des CR varie d'une implémentation à l'autre.
+if ! tr -d '\r' < "$SCRIPT_DIR/setup.conf" | cmp -s - "$SCRIPT_DIR/setup.conf"; then
+    err "setup.conf contient des fins de ligne Windows (CRLF). Convertissez-le : sed -i 's/\r\$//' setup.conf"
+fi
 # shellcheck source=/dev/null
 source "$SCRIPT_DIR/setup.conf"
 
