@@ -92,7 +92,7 @@
 <div>
     <span class="qty-badge">
         Pour {{ rqty|number_format(3, ',', ' ')|replace({',000': '', ',00': '', ',0': ''}) }} {{ recipe.outputUnitLabel }}
-        {% if f != 1 %} &nbsp;(× {{ f|number_format(2)|replace({'.00': '', '.0': ''}) }} par rapport à la base){% endif %}
+        {% if f != 1 %} &nbsp;(× {{ f|number_format(2, ',', ' ')|replace({',00': ''}) }} par rapport à la base){% endif %}
     </span>
 </div>
 
@@ -100,8 +100,8 @@
 <table class="meta-table">
     <tr>
         <td>Sortie cible : <strong>{{ (totals.output_target * f)|number_format(3, ',', ' ') }} {{ recipe.outputUnitLabel }}</strong></td>
-        <td>Perte : <strong>{{ recipe.lossPercent|number_format(1) }}%</strong></td>
-        <td>Rendement : <strong>{{ recipe.yieldPercent|number_format(1) }}%</strong></td>
+        <td>Perte : <strong>{{ recipe.lossPercent|number_format(1, ',', ' ') }}%</strong></td>
+        <td>Rendement : <strong>{{ recipe.yieldPercent|number_format(1, ',', ' ') }}%</strong></td>
         <td>Sortie effective : <strong>{{ (totals.output_effective * f)|number_format(3, ',', ' ') }} {{ recipe.outputUnitLabel }}</strong></td>
     </tr>
 </table>
@@ -209,11 +209,11 @@
         </td>
         <td class="kpi-cell">
             <div class="kpi-label">Taux de marque (sur PV)</div>
-            <div class="kpi-value kpi-green">{{ totals.markup_percent|number_format(1) }} %</div>
+            <div class="kpi-value kpi-green">{{ totals.markup_percent|number_format(1, ',', ' ') }} %</div>
         </td>
         <td class="kpi-cell">
             <div class="kpi-label">Taux de marge (sur coût)</div>
-            <div class="kpi-value">{{ totals.margin_on_cost_percent|number_format(1) }} %</div>
+            <div class="kpi-value">{{ totals.margin_on_cost_percent|number_format(1, ',', ' ') }} %</div>
         </td>
     </tr>
     <tr>
@@ -223,11 +223,11 @@
         </td>
         <td class="kpi-cell">
             <div class="kpi-label">Ratio matière</div>
-            <div class="kpi-value">{{ totals.material_ratio_percent|number_format(1) }} %</div>
+            <div class="kpi-value">{{ totals.material_ratio_percent|number_format(1, ',', ' ') }} %</div>
         </td>
         <td class="kpi-cell">
             <div class="kpi-label">TVA produit</div>
-            <div class="kpi-value">{{ recipe.productVatRate|number_format(1) }} %</div>
+            <div class="kpi-value">{{ recipe.productVatRate|number_format(1, ',', ' ') }} %</div>
         </td>
     </tr>
 </table>

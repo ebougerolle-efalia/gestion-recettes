@@ -79,8 +79,8 @@
 <table class="meta-table">
     <tr>
         <td>Sortie cible : <strong>{{ (totals.output_target * f)|number_format(3, ',', ' ') }} {{ recipe.outputUnitLabel }}</strong></td>
-        <td>Perte : <strong>{{ recipe.lossPercent|number_format(1) }}%</strong></td>
-        <td>Rendement : <strong>{{ recipe.yieldPercent|number_format(1) }}%</strong></td>
+        <td>Perte : <strong>{{ recipe.lossPercent|number_format(1, ',', ' ') }}%</strong></td>
+        <td>Rendement : <strong>{{ recipe.yieldPercent|number_format(1, ',', ' ') }}%</strong></td>
         <td>Sortie effective : <strong>{{ (totals.output_effective * f)|number_format(3, ',', ' ') }} {{ recipe.outputUnitLabel }}</strong></td>
     </tr>
 </table>

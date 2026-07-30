@@ -17,7 +17,9 @@ security:
             form_login:
                 login_path: app_login
                 check_path: app_login
-                default_target_path: app_recipe_index
+                # app_home arbitre selon le rôle : tableau de bord pour un
+                # éditeur, liste des recettes pour un lecteur.
+                default_target_path: app_home
                 enable_csrf: true
             logout:
                 path: app_logout

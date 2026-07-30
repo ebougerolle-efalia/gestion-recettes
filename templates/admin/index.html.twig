@@ -14,7 +14,7 @@
         <div class="rounded-2xl border border-gray-200 bg-white px-5 py-4">
             <p class="text-[10px] font-semibold uppercase tracking-wider text-gray-400">Marque réelle médiane</p>
             <p class="text-3xl font-bold mt-1 {{ kpis.median_markup is null ? 'text-gray-300' : (kpis.median_markup >= 40 ? 'text-emerald-600' : (kpis.median_markup >= 25 ? 'text-amber-500' : 'text-red-500')) }}">
-                {{ kpis.median_markup is null ? '—' : kpis.median_markup|number_format(1) ~ ' %' }}
+                {{ kpis.median_markup is null ? '—' : kpis.median_markup|number_format(1, ',', ' ') ~ ' %' }}
             </p>
             <p class="text-[10px] text-gray-400 mt-2">sur {{ kpis.priced_count }} recette(s) tarifée(s)</p>
         </div>
@@ -94,7 +94,7 @@
                             <span class="font-bold text-red-600 text-sm">{{ r.priceGapPercent|number_format(1, ',', ' ') }} %</span>
                         </div>
                         <div class="text-right w-32 flex-shrink-0 text-xs text-gray-500">
-                            marque <strong class="{{ r.realMarkupPercent < 15 ? 'text-red-600' : 'text-gray-700' }}">{{ r.realMarkupPercent|number_format(1) }} %</strong>
+                            marque <strong class="{{ r.realMarkupPercent < 15 ? 'text-red-600' : 'text-gray-700' }}">{{ r.realMarkupPercent|number_format(1, ',', ' ') }} %</strong>
                         </div>
                     </div>
                 {% endfor %}
@@ -153,13 +153,13 @@
             <p class="text-[10px] text-gray-400 mt-2">théorique · {{ kpis.recipes_with_cost }} recettes calculées</p>
         </div>
 
-        {# Base de données #}
+        {# Apprentissage du rapprochement de factures : le seul chiffre
+           « technique » qui dise quelque chose d'utile — plus il monte, moins
+           l'utilisateur a de lignes à trier à chaque facture. #}
         <div class="rounded-2xl border border-gray-200 bg-white px-5 py-4">
-            <p class="text-[10px] font-semibold uppercase tracking-wider text-gray-400">Base de données</p>
-            <p class="text-2xl font-bold text-[#1c2434] mt-1">{{ db_size }}</p>
-            <p class="text-[10px] text-gray-400 mt-2">
-                PostgreSQL · {{ mapping_count }} libellé{{ mapping_count > 1 ? 's' : '' }} fournisseur mémorisé{{ mapping_count > 1 ? 's' : '' }}
-            </p>
+            <p class="text-[10px] font-semibold uppercase tracking-wider text-gray-400">Libellés fournisseurs appris</p>
+            <p class="text-3xl font-bold text-[#1c2434] mt-1">{{ mapping_count }}</p>
+            <p class="text-[10px] text-gray-400 mt-2">reconnus automatiquement à l'import</p>
         </div>
 
     </div>
@@ -240,152 +240,34 @@
         </div>
     {% endif %}
 
-    {# ═══════════════════════════════════════════════════════
-   GRILLE PRINCIPALE
-═══════════════════════════════════════════════════════ #}
-    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
-
-        {# ── Derniers prix importés ── #}
-        <div class="rounded-2xl border border-gray-200 bg-white">
-            <div class="px-5 py-4 border-b border-gray-100 flex items-center justify-between">
-                <div class="flex items-center gap-2">
-                    <div class="w-2 h-2 rounded-full bg-blue-500"></div>
-                    <h3 class="font-semibold text-[15px] text-[#1c2434]">Derniers prix renseignés</h3>
-                </div>
-                <a href="{{ path('app_invoice_import') }}" class="text-xs text-blue-500 hover:text-blue-600">
-                    <i class="fas fa-file-import mr-1"></i>Importer
-                </a>
-            </div>
-            {% if last_prices|length > 0 %}
-                <div class="divide-y divide-gray-50">
-                    {% for p in last_prices %}
-                        <div class="px-5 py-3 flex items-center justify-between gap-3">
-                            <div class="flex-1 min-w-0">
-                                <a href="{{ path('app_ingredient_show', {id: p.ing_id}) }}"
-                                   class="text-sm font-medium text-[#1c2434] hover:text-blue-600 truncate block">
-                                    {{ p.ingredient }}
-                                </a>
-                                <p class="text-[11px] text-gray-400 mt-0.5">
-                                    {{ p.supplier ?: 'Fournisseur inconnu' }} · {{ p.effective_date }}
-                                </p>
-                            </div>
-                            <span class="flex-shrink-0 font-semibold text-sm text-[#1c2434]">
-                    {{ p.price_ht|number_format(2, ',', ' ') }} €/{{ p.base_unit }}
-                </span>
-                        </div>
-                    {% endfor %}
-                </div>
-            {% else %}
-                <div class="px-5 py-8 text-center text-sm text-gray-400">
-                    <i class="fas fa-tags text-2xl mb-2 block text-gray-200"></i>
-                    Aucun prix enregistré
-                </div>
-            {% endif %}
-        </div>
-
-        {# ── Répartition par famille ── #}
-        <div class="rounded-2xl border border-gray-200 bg-white">
-            <div class="px-5 py-4 border-b border-gray-100">
-                <div class="flex items-center gap-2">
-                    <div class="w-2 h-2 rounded-full bg-violet-500"></div>
-                    <h3 class="font-semibold text-[15px] text-[#1c2434]">Répartition par famille</h3>
-                </div>
+    {# ── Ingrédients en hausse : le pendant amont de la dérive des recettes.
+          Répond à « où renégocier », là où les anciennes cartes « ingrédients
+          les plus chers » ne disaient rien d'actionnable : un ingrédient cher
+          n'est pas un problème, un ingrédient qui grimpe en est un. ── #}
+    {% if ingredient_rises|length %}
+        <div class="rounded-2xl border border-gray-200 bg-white mb-6 overflow-hidden">
+            <div class="px-5 py-4 border-b border-gray-100 flex items-center gap-2">
+                <div class="w-2 h-2 rounded-full bg-amber-500"></div>
+                <h3 class="font-semibold text-[15px] text-[#1c2434]">Ingrédients en hausse sur 30 jours</h3>
+                <span class="text-[11px] text-gray-400 ml-auto">à renégocier ou substituer</span>
             </div>
             <div class="divide-y divide-gray-50">
-                {% for row in by_family %}
-                    <div class="px-5 py-3 flex items-center gap-3">
-                        <div class="flex-1">
-                            <p class="text-sm font-medium text-[#1c2434]">{{ row.family }}</p>
-                            <div class="mt-1.5 w-full bg-gray-100 rounded-full h-1.5">
-                                {% set pct = kpis.total_recipes > 0 ? (row.nb / kpis.total_recipes * 100)|round : 0 %}
-                                <div class="bg-violet-400 h-1.5 rounded-full" style="width: {{ pct }}%"></div>
-                            </div>
+                {% for ing in ingredient_rises %}
+                    <div class="flex items-center gap-4 px-5 py-3">
+                        <a href="{{ path('app_ingredient_show', {id: ing.id}) }}" class="flex-1 min-w-0 font-medium text-sm text-blue-600 hover:text-blue-800">{{ ing.name }}</a>
+                        <div class="text-right text-xs text-gray-500 w-52 flex-shrink-0">
+                            {{ ing.old_price|number_format(4, ',', ' ') }} €
+                            <i class="fas fa-arrow-right text-[9px] text-gray-300 mx-1"></i>
+                            <strong class="text-gray-700">{{ ing.new_price|number_format(4, ',', ' ') }} €</strong>
+                            / {{ ing.base_unit }}
                         </div>
-                        <div class="flex-shrink-0 text-right">
-                            <p class="text-sm font-semibold text-[#1c2434]">{{ row.nb }} recette{{ row.nb > 1 ? 's' : '' }}</p>
-                            {% if row.avg_margin %}
-                                <p class="text-[11px] {{ row.avg_margin >= 60 ? 'text-emerald-600' : 'text-amber-600' }}">
-                                    {{ row.avg_margin }} % marge
-                                </p>
-                            {% else %}
-                                <p class="text-[11px] text-gray-400">coût non calculé</p>
-                            {% endif %}
+                        <div class="text-right w-20 flex-shrink-0">
+                            <span class="font-bold text-sm {{ ing.delta >= 10 ? 'text-red-600' : 'text-amber-600' }}">+{{ ing.delta|number_format(1, ',', ' ') }} %</span>
                         </div>
                     </div>
                 {% endfor %}
             </div>
         </div>
-
-    </div>
-
-    {# ── Ligne basse : top ingrédients + top recettes ── #}
-    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-
-        {# Top ingrédients les plus chers #}
-        <div class="rounded-2xl border border-gray-200 bg-white">
-            <div class="px-5 py-4 border-b border-gray-100">
-                <div class="flex items-center gap-2">
-                    <div class="w-2 h-2 rounded-full bg-red-400"></div>
-                    <h3 class="font-semibold text-[15px] text-[#1c2434]">Ingrédients les plus chers</h3>
-                </div>
-            </div>
-            {% if top_ingredients|length > 0 %}
-                <div class="divide-y divide-gray-50">
-                    {% for ing in top_ingredients %}
-                        <div class="px-5 py-3 flex items-center justify-between gap-3">
-                            <div class="flex-1 min-w-0">
-                                <a href="{{ path('app_ingredient_show', {id: ing.id}) }}"
-                                   class="text-sm font-medium text-[#1c2434] hover:text-blue-600 truncate block">
-                                    {{ ing.name }}
-                                </a>
-                                <p class="text-[11px] text-gray-400">{{ ing.supplier ?: '—' }}</p>
-                            </div>
-                            <span class="flex-shrink-0 font-bold text-sm text-red-600">
-                    {{ ing.price_ht|number_format(2, ',', ' ') }} €/{{ ing.base_unit }}
-                </span>
-                        </div>
-                    {% endfor %}
-                </div>
-            {% else %}
-                <p class="px-5 py-6 text-sm text-gray-400 text-center">Aucun prix enregistré</p>
-            {% endif %}
-        </div>
-
-        {# Top recettes par coût de revient #}
-        <div class="rounded-2xl border border-gray-200 bg-white">
-            <div class="px-5 py-4 border-b border-gray-100">
-                <div class="flex items-center gap-2">
-                    <div class="w-2 h-2 rounded-full bg-amber-500"></div>
-                    <h3 class="font-semibold text-[15px] text-[#1c2434]">Recettes les plus coûteuses</h3>
-                </div>
-            </div>
-            {% if top_recipes|length > 0 %}
-                <div class="divide-y divide-gray-50">
-                    {% for r in top_recipes %}
-                        <div class="px-5 py-3 flex items-center justify-between gap-3">
-                            <div class="flex-1 min-w-0">
-                                <a href="{{ path('app_recipe_show', {id: r.id}) }}"
-                                   class="text-sm font-medium text-[#1c2434] hover:text-blue-600 truncate block">
-                                    {{ r.name }}
-                                </a>
-                                <p class="text-[11px] text-gray-400">{{ r.family }} · {{ r.output_type == 'weight' ? 'kg' : 'portion' }}</p>
-                            </div>
-                            <div class="flex-shrink-0 text-right">
-                                <p class="font-bold text-sm text-amber-600">{{ r.cost_per_output_ht|number_format(2, ',', ' ') }} €</p>
-                                {% if r.margin_percent > 0 %}
-                                    <p class="text-[11px] {{ r.margin_percent >= 60 ? 'text-emerald-600' : 'text-amber-600' }}">
-                                        {{ r.margin_percent }} %
-                                    </p>
-                                {% endif %}
-                            </div>
-                        </div>
-                    {% endfor %}
-                </div>
-            {% else %}
-                <p class="px-5 py-6 text-sm text-gray-400 text-center">Aucun coût calculé</p>
-            {% endif %}
-        </div>
-
-    </div>
+    {% endif %}
 
 {% endblock %}

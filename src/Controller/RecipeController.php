@@ -17,10 +17,19 @@ use Symfony\Component\Security\Http\Attribute\IsGranted;
 
 class RecipeController extends AbstractController
 {
+    /**
+     * Page d'accueil, et cible de la redirection après connexion.
+     *
+     * Le tableau de bord porte des montants et des marges : un profil lecteur,
+     * qui n'a jamais accès aux données financières, est envoyé sur la liste des
+     * recettes. Sans cette distinction, il obtiendrait un 403 en se connectant.
+     */
     #[Route('/', name: 'app_home')]
     public function home(): Response
     {
-        return $this->redirectToRoute('app_recipe_index');
+        return $this->redirectToRoute(
+            $this->isGranted('ROLE_EDITOR') ? 'app_dashboard' : 'app_recipe_index'
+        );
     }
 
     #[Route('/recettes', name: 'app_recipe_index')]

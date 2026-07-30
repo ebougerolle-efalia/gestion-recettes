@@ -2,11 +2,8 @@
 namespace App\Controller;
 
 use App\Entity\{IngredientCategory, Recipe, RecipeFamily, User};
-use App\Repository\{IngredientCategoryRepository, RecipeFamilyRepository, UserRepository, RecipeRepository, IngredientRepository, PurchaseInvoiceRepository};
-use App\Service\CostCalculator;
+use App\Repository\{IngredientCategoryRepository, RecipeFamilyRepository, UserRepository, RecipeRepository, IngredientRepository};
 use Doctrine\ORM\EntityManagerInterface;
-use Symfony\Contracts\Cache\CacheInterface;
-use Symfony\Contracts\Cache\ItemInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\{Request, Response};
 use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
@@ -17,209 +14,6 @@ use Symfony\Component\Security\Http\Attribute\IsGranted;
 #[IsGranted('ROLE_ADMIN')]
 class AdminController extends AbstractController
 {
-    // ==================== DASHBOARD ====================
-
-    #[Route('', name: 'app_admin_index')]
-    public function index(
-        EntityManagerInterface $em,
-        RecipeRepository $recipeRepo,
-        PurchaseInvoiceRepository $invoiceRepo,
-        CostCalculator $calc,
-        CacheInterface $cache,
-    ): Response {
-        $conn = $em->getConnection();
-
-        // ── Argent : ce qui se pilote ────────────────────────────────────────
-        $recipes = $recipeRepo->findBy([], ['name' => 'ASC']);
-
-        $underpriced = array_filter($recipes, fn (Recipe $r) => $r->isUnderpriced());
-        usort($underpriced, fn (Recipe $a, Recipe $b) => $a->getPriceGapPercent() <=> $b->getPriceGapPercent());
-
-        $priced  = array_filter($recipes, fn (Recipe $r) => $r->getRealMarkupPercent() !== null);
-        $markups = array_map(fn (Recipe $r) => $r->getRealMarkupPercent(), $priced);
-
-        // Dérive des coûts sur 30 jours : l'indicateur que seule l'alimentation
-        // automatique des prix rend possible.
-        //
-        // Chaque recette concernée est calculée deux fois, aujourd'hui et à la
-        // date de départ : deux secondes sur un catalogue de démonstration, bien
-        // plus sur plusieurs centaines de fiches. Le résultat est donc mis en
-        // cache, avec une clé qui contient le dernier identifiant de prix connu :
-        // toute facture validée renouvelle la clé et rafraîchit l'affichage, sans
-        // qu'aucune invalidation explicite ne soit nécessaire.
-        $lastPriceId = (int) $conn->fetchOne('SELECT COALESCE(MAX(id), 0) FROM ingredient_prices');
-        $costDrift   = $cache->get(
-            sprintf('dashboard.cost_drift.30.%d.%s', $lastPriceId, date('Y-m-d')),
-            function (ItemInterface $item) use ($calc) {
-                $item->expiresAfter(3600);
-                return $calc->costDrift(30, 5);
-            }
-        );
-
-        // ── KPIs principaux ──────────────────────────────────────────────────
-        $totalRecipes       = (int) $conn->fetchOne('SELECT COUNT(*) FROM recipes');
-        $recipesWithCost    = (int) $conn->fetchOne('SELECT COUNT(*) FROM recipe_cost_cache');
-        $recipesNoCost      = $totalRecipes - $recipesWithCost;
-        $totalIngredients   = (int) $conn->fetchOne('SELECT COUNT(*) FROM ingredients');
-        $ingsWithPrice      = (int) $conn->fetchOne('SELECT COUNT(DISTINCT ingredient_id) FROM ingredient_prices');
-        $ingsWithoutPrice   = $totalIngredients - $ingsWithPrice;
-        $avgMargin          = (float) ($conn->fetchOne(
-            'SELECT ROUND(AVG(margin_percent), 1) FROM recipe_cost_cache WHERE margin_percent > 0'
-        ) ?: 0);
-
-        // ── Alertes : ingrédients sans aucun prix ────────────────────────────
-        $ingsNoPrice = $conn->fetchAllAssociative('
-            SELECT i.id, i.name, ic.name AS category
-            FROM ingredients i
-            LEFT JOIN ingredient_categories ic ON ic.id = i.category_id
-            LEFT JOIN ingredient_prices ip     ON ip.ingredient_id = i.id
-            WHERE ip.id IS NULL
-            ORDER BY i.name
-        ');
-
-        // ── Alertes : recettes sans lignes (vides) ───────────────────────────
-        $recipesEmpty = $conn->fetchAllAssociative('
-            SELECT r.id, r.name, r.family
-            FROM recipes r
-            LEFT JOIN recipe_lines rl ON rl.recipe_id = r.id
-            WHERE rl.id IS NULL
-            ORDER BY r.name
-        ');
-
-        // ── Alertes : prix anciens (> 90 jours) ──────────────────────────────
-        // La soustraction de deux dates donne un nombre de jours entier sous
-        // PostgreSQL. L'ancienne version utilisait julianday(), propre à SQLite,
-        // et référençait l'alias days_old dans le HAVING — que PostgreSQL
-        // n'accepte pas : l'expression doit y être répétée.
-        $oldPrices = $conn->fetchAllAssociative('
-            SELECT i.id, i.name, MAX(ip.effective_date) AS last_date,
-                   (CURRENT_DATE - MAX(ip.effective_date)) AS days_old
-            FROM ingredients i
-            JOIN ingredient_prices ip ON ip.ingredient_id = i.id
-            GROUP BY i.id, i.name
-            HAVING (CURRENT_DATE - MAX(ip.effective_date)) > 90
-            ORDER BY days_old DESC
-            LIMIT 10
-        ');
-
-        // ── Derniers prix importés ────────────────────────────────────────────
-        $lastPrices = $conn->fetchAllAssociative('
-            SELECT ip.id, i.id AS ing_id, i.name AS ingredient,
-                   ip.price_ht, ip.supplier, ip.effective_date, i.base_unit
-            FROM ingredient_prices ip
-            JOIN ingredients i ON i.id = ip.ingredient_id
-            ORDER BY ip.id DESC
-            LIMIT 8
-        ');
-
-        // ── Top 6 ingrédients les plus chers (dernier prix connu) ────────────
-        $topIngredients = $conn->fetchAllAssociative('
-            SELECT i.id, i.name, i.base_unit, ip.price_ht, ip.supplier
-            FROM ingredients i
-            JOIN ingredient_prices ip ON ip.ingredient_id = i.id
-            WHERE ip.id = (
-                SELECT id FROM ingredient_prices
-                WHERE ingredient_id = i.id
-                ORDER BY effective_date DESC, id DESC LIMIT 1
-            )
-            ORDER BY ip.price_ht DESC
-            LIMIT 6
-        ');
-
-        // ── Top 6 recettes les plus coûteuses ────────────────────────────────
-        $topRecipes = $conn->fetchAllAssociative('
-            SELECT r.id, r.name, r.family, r.output_type,
-                   rcc.cost_per_output_ht, rcc.advised_sell_ttc, rcc.margin_percent
-            FROM recipe_cost_cache rcc
-            JOIN recipes r ON r.id = rcc.recipe_id
-            ORDER BY rcc.cost_per_output_ht DESC
-            LIMIT 6
-        ');
-
-        // ── Répartition par famille ───────────────────────────────────────────
-        $byFamily = $conn->fetchAllAssociative("
-            SELECT
-                COALESCE(r.family, 'Sans famille') AS family,
-                COUNT(r.id) AS nb,
-                COUNT(rcc.recipe_id) AS nb_cost,
-                ROUND(AVG(CASE WHEN rcc.margin_percent > 0 THEN rcc.margin_percent END), 1) AS avg_margin
-            FROM recipes r
-            LEFT JOIN recipe_cost_cache rcc ON rcc.recipe_id = r.id
-            GROUP BY r.family
-            ORDER BY nb DESC
-        ");
-
-        // ── Taille de la base ────────────────────────────────────────────────
-        // Lisait auparavant la taille du fichier var/data/recettes.db, qui
-        // n'existe plus depuis le passage à PostgreSQL : l'indicateur affichait
-        // 0 Ko en silence.
-        try {
-            $dbBytes = (int) $conn->fetchOne('SELECT pg_database_size(current_database())');
-        } catch (\Throwable) {
-            $dbBytes = 0;
-        }
-        $dbSize = $dbBytes > 1_048_576
-            ? round($dbBytes / 1_048_576, 1) . ' Mo'
-            : round($dbBytes / 1024) . ' Ko';
-
-        // Mappings factures mémorisés (si la table existe)
-        try {
-            $mappingCount = (int) $conn->fetchOne('SELECT COUNT(*) FROM invoice_ingredient_mappings');
-        } catch (\Throwable) {
-            $mappingCount = 0;
-        }
-
-        return $this->render('admin/index.html.twig', [
-            'kpis' => [
-                'total_recipes'     => $totalRecipes,
-                'recipes_with_cost' => $recipesWithCost,
-                'recipes_no_cost'   => $recipesNoCost,
-                'total_ingredients' => $totalIngredients,
-                'ings_with_price'   => $ingsWithPrice,
-                'ings_no_price'     => $ingsWithoutPrice,
-                'avg_margin'        => $avgMargin,
-                'priced_count'      => count($priced),
-                'median_markup'     => $this->median($markups),
-                'pending_invoices'  => $invoiceRepo->countPending(),
-            ],
-            'underpriced' => array_values($underpriced),
-            'cost_drift'  => $costDrift,
-            'alerts' => [
-                'no_price'  => $ingsNoPrice,
-                'empty'     => $recipesEmpty,
-                'old_prices'=> $oldPrices,
-            ],
-            'last_prices'    => $lastPrices,
-            'top_ingredients'=> $topIngredients,
-            'top_recipes'    => $topRecipes,
-            'by_family'      => $byFamily,
-            'db_size'        => $dbSize,
-            'mapping_count'  => $mappingCount,
-        ]);
-    }
-
-    /**
-     * Médiane et non moyenne : sans volumes de vente, une moyenne se laisse
-     * tirer par un produit d'appel confidentiel et ne décrit plus rien.
-     *
-     * @param float[] $values
-     */
-    private function median(array $values): ?float
-    {
-        if (!$values) {
-            return null;
-        }
-
-        sort($values);
-        $count  = count($values);
-        $middle = intdiv($count, 2);
-
-        return $count % 2 === 1
-            ? $values[$middle]
-            : round(($values[$middle - 1] + $values[$middle]) / 2, 1);
-    }
-
-    // ==================== CATEGORIES ====================
 
     #[Route('/categories', name: 'app_admin_categories')]
     public function categories(IngredientCategoryRepository $repo): Response
@@ -409,7 +203,7 @@ class AdminController extends AbstractController
         }
         $em->flush();
         $this->addFlash('success', 'Données initiales créées.');
-        return $this->redirectToRoute('app_admin_index');
+        return $this->redirectToRoute('app_admin_categories');
     }
 
     // ==================== PARAMETRES ====================

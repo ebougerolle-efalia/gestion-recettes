@@ -50,7 +50,7 @@
                             {% if r.hasSellPrice %}
                                 <span class="font-semibold text-[#1c2434]">{{ r.sellPriceTtc|number_format(2, ',', ' ') }} €</span>
                                 {% if r.priceGapPercent is not null and r.priceGapPercent < -2 %}
-                                    <span class="block text-[10px] font-semibold text-red-600">{{ r.priceGapPercent|number_format(1) }} %</span>
+                                    <span class="block text-[10px] font-semibold text-red-600">{{ r.priceGapPercent|number_format(1, ',', ' ') }} %</span>
                                 {% endif %}
                             {% else %}
                                 <span class="text-gray-300">—</span>
@@ -61,7 +61,7 @@
                         <td class="py-3 px-3 text-right">
                             {% set markup = r.realMarkupPercent is not null ? r.realMarkupPercent : (r.costCache ? r.costCache.marginPercent : null) %}
                             {% if markup is not null %}
-                                <span class="font-semibold {{ markup >= 30 ? 'text-emerald-600' : (markup >= 15 ? 'text-amber-600' : 'text-red-600') }}">{{ markup|number_format(1) }}%</span>
+                                <span class="font-semibold {{ markup >= 30 ? 'text-emerald-600' : (markup >= 15 ? 'text-amber-600' : 'text-red-600') }}">{{ markup|number_format(1, ',', ' ') }}%</span>
                                 {% if r.realMarkupPercent is null %}
                                     <span class="block text-[10px] text-gray-400">théorique</span>
                                 {% endif %}

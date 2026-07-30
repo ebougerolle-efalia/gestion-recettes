@@ -39,22 +39,33 @@
         </div>
     {% endif %}
 
-    {# Ruban d'indicateurs #}
+    {# ── Ruban d'indicateurs ────────────────────────────────────────────────
+       Six tuiles au lieu de dix : la marge et la marque étaient affichées deux
+       fois, une fois réelles une fois théoriques, sans que rien ne les
+       distingue. Quand le prix pratiqué est connu, ce sont les valeurs RÉELLES
+       qui priment ; les trois lectures (marque, marge sur coût, coefficient)
+       sont regroupées dans une seule tuile de repères.
+       Tous les nombres passent par des séparateurs français explicites : sans
+       eux, number_format rend « 61.5 % » à côté de « 1,67 € ». ── #}
+    {% set hasReal = t.real_markup_percent is not null %}
     <div class="rounded-2xl border border-gray-200 bg-white px-2 py-3 mb-6 flex flex-wrap">
-        <div class="flex-1 min-w-[90px] px-4 py-1">
+
+        {# Coût de revient #}
+        <div class="flex-1 min-w-[120px] px-4 py-1">
             <p class="text-[11px] text-gray-400">Coût / {{ unitLabel }} HT</p>
             <p class="text-[17px] font-bold text-blue-600">{{ t.cost_per_output_ht|number_format(2, ',', ' ') }} €</p>
+            <p class="text-[10px] text-gray-400">dont matière {{ t.material_per_output_ht|number_format(2, ',', ' ') }} €</p>
         </div>
-        <div class="flex-1 min-w-[90px] px-4 py-1 border-l border-gray-100">
-            <p class="text-[11px] text-gray-400">PV / {{ unitLabel }} HT</p>
-            <p class="text-[17px] font-bold text-[#1c2434]">{{ t.advised_sell_ht|number_format(2, ',', ' ') }} €</p>
-        </div>
-        <div class="flex-1 min-w-[90px] px-4 py-1 border-l border-gray-100">
+
+        {# Prix conseillé : HT et TTC dans une seule tuile #}
+        <div class="flex-1 min-w-[120px] px-4 py-1 border-l border-gray-100">
             <p class="text-[11px] text-gray-400">PV conseillé TTC</p>
             <p class="text-[17px] font-bold text-blue-600">{{ t.advised_sell_ttc|number_format(2, ',', ' ') }} €</p>
+            <p class="text-[10px] text-gray-400">{{ t.advised_sell_ht|number_format(2, ',', ' ') }} € HT</p>
         </div>
+
         {# Prix pratiqué : la colonne qui donne la marge opposable #}
-        <div class="flex-1 min-w-[110px] px-4 py-1 border-l border-gray-100 {{ t.price_gap_percent is not null and t.price_gap_percent < -2 ? 'bg-red-50/60 rounded-lg' : '' }}">
+        <div class="flex-1 min-w-[130px] px-4 py-1 border-l border-gray-100 {{ t.price_gap_percent is not null and t.price_gap_percent < -2 ? 'bg-red-50/60 rounded-lg' : '' }}">
             <p class="text-[11px] text-gray-400">PV pratiqué TTC</p>
             {% if t.real_sell_ttc is null %}
                 <p class="text-[17px] font-bold text-gray-300">—</p>
@@ -66,32 +77,32 @@
                 </p>
             {% endif %}
         </div>
-        {% if t.real_markup_percent is not null %}
-            <div class="flex-1 min-w-[100px] px-4 py-1 border-l border-gray-100">
-                <p class="text-[11px] text-gray-400">Marge réelle</p>
-                <p class="text-[17px] font-bold {{ t.real_margin_ht > 0 ? 'text-emerald-600' : 'text-red-600' }}">{{ t.real_margin_ht|number_format(2, ',', ' ') }} €</p>
-                <p class="text-[10px] text-gray-400">marque {{ t.real_markup_percent|number_format(1) }} %</p>
+
+        {# Marge : réelle si le prix pratiqué est connu, conseillée sinon #}
+        <div class="flex-1 min-w-[130px] px-4 py-1 border-l border-gray-100">
+            <p class="text-[11px] text-gray-400">Marge / {{ unitLabel }} {{ hasReal ? 'réelle' : 'conseillée' }}</p>
+            {% set marginValue = hasReal ? t.real_margin_ht : t.margin_ht %}
+            <p class="text-[17px] font-bold {{ marginValue > 0 ? 'text-emerald-600' : 'text-red-600' }}">{{ marginValue|number_format(2, ',', ' ') }} €</p>
+            <p class="text-[10px] text-gray-400">
+                marque {{ (hasReal ? t.real_markup_percent : t.markup_percent)|number_format(1, ',', ' ') }} %
+            </p>
+        </div>
+
+        {# Les trois lectures de la même marge, regroupées #}
+        <div class="flex-1 min-w-[150px] px-4 py-1 border-l border-gray-100">
+            <p class="text-[11px] text-gray-400">Repères {{ hasReal ? 'conseillés' : '' }}</p>
+            <div class="flex items-baseline gap-3 mt-0.5">
+                <span class="text-[13px] font-bold text-emerald-700">{{ t.markup_percent|number_format(1, ',', ' ') }} %<span class="text-[9px] font-normal text-gray-400 ml-0.5">marque</span></span>
+                <span class="text-[13px] font-bold text-[#1c2434]">{{ t.margin_on_cost_percent|number_format(1, ',', ' ') }} %<span class="text-[9px] font-normal text-gray-400 ml-0.5">marge</span></span>
+                <span class="text-[13px] font-bold text-[#1c2434]">×{{ t.coefficient|number_format(2, ',', ' ') }}</span>
             </div>
-        {% endif %}
-        <div class="flex-1 min-w-[90px] px-4 py-1 border-l border-gray-100">
-            <p class="text-[11px] text-gray-400">Marge / {{ unitLabel }}</p>
-            <p class="text-[17px] font-bold text-emerald-600">{{ t.margin_ht|number_format(2, ',', ' ') }} €</p>
         </div>
-        <div class="flex-1 min-w-[80px] px-4 py-1 border-l border-gray-100">
-            <p class="text-[11px] text-gray-400">Marque</p>
-            <p class="text-[17px] font-bold text-emerald-700">{{ t.markup_percent|number_format(1) }} %</p>
-        </div>
-        <div class="flex-1 min-w-[80px] px-4 py-1 border-l border-gray-100">
-            <p class="text-[11px] text-gray-400">Marge</p>
-            <p class="text-[17px] font-bold text-[#1c2434]">{{ t.margin_on_cost_percent|number_format(1) }} %</p>
-        </div>
-        <div class="flex-1 min-w-[70px] px-4 py-1 border-l border-gray-100">
-            <p class="text-[11px] text-gray-400">Coef</p>
-            <p class="text-[17px] font-bold text-[#1c2434]">× {{ t.coefficient|number_format(2, ',', ' ') }}</p>
-        </div>
-        <div class="flex-1 min-w-[90px] px-4 py-1 border-l border-gray-100">
+
+        {# Ratio matière — le food cost de la recette #}
+        <div class="flex-1 min-w-[100px] px-4 py-1 border-l border-gray-100">
             <p class="text-[11px] text-gray-400">Ratio matière</p>
-            <p class="text-[17px] font-bold {{ t.material_ratio_percent > 40 ? 'text-amber-600' : 'text-[#1c2434]' }}">{{ t.material_ratio_percent|number_format(1) }} %</p>
+            <p class="text-[17px] font-bold {{ t.material_ratio_percent > 40 ? 'text-amber-600' : 'text-[#1c2434]' }}">{{ t.material_ratio_percent|number_format(1, ',', ' ') }} %</p>
+            <p class="text-[10px] text-gray-400">cible &lt; 40 %</p>
         </div>
     </div>
 
@@ -106,17 +117,17 @@
                 <i class="fas fa-sliders text-gray-400 text-xs mr-0.5"></i>
                 <span>{{ recipe.outputType == 'weight' ? 'Poids' : 'Portions' }} · sortie <strong class="font-semibold text-gray-800">{{ recipe.outputValue }} {{ unitLabel }}</strong></span>
                 <span class="text-gray-300">|</span>
-                <span>perte <strong class="font-semibold text-gray-800">{{ recipe.lossPercent|number_format(1) }} %</strong></span>
+                <span>perte <strong class="font-semibold text-gray-800">{{ recipe.lossPercent|number_format(1, ',', ' ') }} %</strong></span>
                 <span class="text-gray-300">|</span>
-                <span>rdt <strong class="font-semibold text-gray-800">{{ recipe.yieldPercent|number_format(1) }} %</strong></span>
+                <span>rdt <strong class="font-semibold text-gray-800">{{ recipe.yieldPercent|number_format(1, ',', ' ') }} %</strong></span>
                 <span class="text-gray-300">|</span>
-                <span>TVA <strong class="font-semibold text-gray-800">{{ recipe.productVatRate|number_format(1) }} %</strong></span>
+                <span>TVA <strong class="font-semibold text-gray-800">{{ recipe.productVatRate|number_format(1, ',', ' ') }} %</strong></span>
                 <span class="text-gray-300">|</span>
                 <span>MO <strong class="font-semibold text-gray-800">{{ t.labor_cost_ht|number_format(2, ',', ' ') }} €</strong> ({{ recipe.laborMinutes }} min)</span>
                 <span class="text-gray-300">|</span>
                 <span>emballage <strong class="font-semibold text-gray-800">{{ recipe.packagingCostHt|number_format(2, ',', ' ') }} €</strong></span>
                 <span class="text-gray-300">|</span>
-                <span>{{ recipe.pricingMode == 'coef' ? 'coef cible' : 'marque cible' }} <strong class="font-semibold text-gray-800">{{ recipe.pricingMode == 'coef' ? '× ' ~ (recipe.pricingValue|number_format(2, ',', ' ')) : (recipe.pricingValue|number_format(1)) ~ ' %' }}</strong></span>
+                <span>{{ recipe.pricingMode == 'coef' ? 'coef cible' : 'marque cible' }} <strong class="font-semibold text-gray-800">{{ recipe.pricingMode == 'coef' ? '× ' ~ (recipe.pricingValue|number_format(2, ',', ' ')) : (recipe.pricingValue|number_format(1, ',', ' ')) ~ ' %' }}</strong></span>
             </div>
 
             {# Carte à onglets : Composition / Analyse des coûts #}
@@ -153,7 +164,7 @@
                                             {% if 'unit_mismatch' in l.warnings %}<span class="ml-1 inline-flex items-center rounded-full bg-red-50 px-1.5 py-px text-[10px] font-medium text-red-600" title="Unité incompatible : ligne comptée à 0 €"><i class="fas fa-triangle-exclamation mr-0.5 text-[8px]"></i>unité ?</span>{% endif %}
                                             {% if 'approx_density' in l.warnings %}<span class="ml-1 inline-flex items-center rounded-full bg-amber-50 px-1.5 py-px text-[10px] font-medium text-amber-600" title="Conversion litre↔kg approximative (densité = 1)">≈ densité</span>{% endif %}
                                         </div>
-                                        <div class="text-xs text-gray-400 mt-0.5">perte {{ l.loss_percent|number_format(1) }}%<span class="text-gray-300 mx-1">·</span>rdt {{ l.yield_percent|number_format(1) }}%{% if l.note %}<span class="text-gray-300 mx-1">·</span><span class="text-amber-600 italic">{{ l.note }}</span>{% endif %}</div>
+                                        <div class="text-xs text-gray-400 mt-0.5">perte {{ l.loss_percent|number_format(1, ',', ' ') }}%<span class="text-gray-300 mx-1">·</span>rdt {{ l.yield_percent|number_format(1, ',', ' ') }}%{% if l.note %}<span class="text-gray-300 mx-1">·</span><span class="text-amber-600 italic">{{ l.note }}</span>{% endif %}</div>
                                     </div>
                                     <div class="text-right text-sm text-gray-500">{{ l.qty_brute }} {{ l.unit }}</div>
                                     <div class="text-right text-sm font-semibold text-gray-900">{{ l.line_cost_ht|number_format(2, ',', ' ') }} €</div>
@@ -224,7 +235,7 @@
                                 <hr class="border-gray-100">
                                 <div class="flex justify-between items-center bg-emerald-50/70 rounded-xl px-4 py-3">
                                     <span class="text-sm font-semibold text-gray-700">Marge brute</span>
-                                    <span class="font-bold text-emerald-700">{{ t.margin_ht|number_format(2,',',' ') }} € <span class="font-normal text-emerald-500 text-sm">(marque {{ t.markup_percent|number_format(1) }} %)</span></span>
+                                    <span class="font-bold text-emerald-700">{{ t.margin_ht|number_format(2,',',' ') }} € <span class="font-normal text-emerald-500 text-sm">(marque {{ t.markup_percent|number_format(1, ',', ' ') }} %)</span></span>
                                 </div>
                             </div>
                         </div>

@@ -28,6 +28,15 @@
         <nav class="flex-1 overflow-y-auto px-5 py-5 space-y-1.5">
             <p class="text-[11px] font-semibold uppercase tracking-wider text-gray-500 px-3 mb-2">Production</p>
 
+            {# Le tableau de bord ouvre le menu : c'est la page d'accueil et le
+               point de départ d'une journée — ce qui a bougé, ce qui attend. #}
+            {% if is_granted('ROLE_EDITOR') %}
+                <a href="{{ path('app_dashboard') }}" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors
+                    {{ app.request.attributes.get('_route') == 'app_dashboard' ? 'bg-white/[.08] text-white' : 'text-gray-400 hover:text-white hover:bg-white/[.04]' }}">
+                    <i class="fas fa-chart-line w-5 text-center text-[13px]"></i> Tableau de bord
+                </a>
+            {% endif %}
+
             <a href="{{ path('app_recipe_index') }}" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors
                 {{ app.request.attributes.get('_route') starts with 'app_recipe' ? 'bg-white/[.08] text-white' : 'text-gray-400 hover:text-white hover:bg-white/[.04]' }}">
                 <i class="fas fa-clipboard-list w-5 text-center text-[13px]"></i> Recettes
@@ -60,10 +69,6 @@
             {% if is_granted('ROLE_ADMIN') %}
                 <p class="text-[11px] font-semibold uppercase tracking-wider text-gray-500 px-3 mt-5 mb-2">Administration</p>
 
-                <a href="{{ path('app_admin_index') }}" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors
-                {{ app.request.attributes.get('_route') == 'app_admin_index' ? 'bg-white/[.08] text-white' : 'text-gray-400 hover:text-white hover:bg-white/[.04]' }}">
-                    <i class="fas fa-chart-bar w-5 text-center text-[13px]"></i> Tableau de bord
-                </a>
                 <a href="{{ path('app_admin_categories') }}" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors
                 {{ app.request.attributes.get('_route') == 'app_admin_categories' ? 'bg-white/[.08] text-white' : 'text-gray-400 hover:text-white hover:bg-white/[.04]' }}">
                     <i class="fas fa-tags w-5 text-center text-[13px]"></i> Catégories
