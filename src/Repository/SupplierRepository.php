@@ -32,7 +32,7 @@ class SupplierRepository extends ServiceEntityRepository
                 COUNT(DISTINCT pil.ingredient_id) AS ingredient_count,
                 ROUND(SUM(COALESCE(pi.total_ht, 0)), 2) AS total_ht_all,
                 ROUND(SUM(CASE
-                    WHEN pi.invoice_date >= date('now', '-12 months')
+                    WHEN pi.invoice_date >= CURRENT_DATE - INTERVAL '12 months'
                     THEN COALESCE(pi.total_ht, 0) ELSE 0 END), 2) AS total_ht_12m,
                 MAX(pi.invoice_date) AS last_invoice_date_computed
             FROM suppliers s

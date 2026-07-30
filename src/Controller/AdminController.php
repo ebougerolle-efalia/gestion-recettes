@@ -52,16 +52,20 @@ class AdminController extends AbstractController
         ');
 
         // ── Alertes : prix anciens (> 90 jours) ──────────────────────────────
-        $oldPrices = $conn->fetchAllAssociative("
+        // La soustraction de deux dates donne un nombre de jours entier sous
+        // PostgreSQL. L'ancienne version utilisait julianday(), propre à SQLite,
+        // et référençait l'alias days_old dans le HAVING — que PostgreSQL
+        // n'accepte pas : l'expression doit y être répétée.
+        $oldPrices = $conn->fetchAllAssociative('
             SELECT i.id, i.name, MAX(ip.effective_date) AS last_date,
-                   CAST(julianday('now') - julianday(MAX(ip.effective_date)) AS INTEGER) AS days_old
+                   (CURRENT_DATE - MAX(ip.effective_date)) AS days_old
             FROM ingredients i
             JOIN ingredient_prices ip ON ip.ingredient_id = i.id
             GROUP BY i.id, i.name
-            HAVING days_old > 90
+            HAVING (CURRENT_DATE - MAX(ip.effective_date)) > 90
             ORDER BY days_old DESC
             LIMIT 10
-        ");
+        ');
 
         // ── Derniers prix importés ────────────────────────────────────────────
         $lastPrices = $conn->fetchAllAssociative('
