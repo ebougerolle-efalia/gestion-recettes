@@ -76,6 +76,20 @@ log "Composer install..."
 "$COMPOSER_BIN" config allow-plugins.symfony/runtime true --no-interaction >/dev/null 2>&1 || true
 "$COMPOSER_BIN" install --no-dev --optimize-autoloader --no-interaction
 
+# --- .env.local lisible par l'utilisateur web ------------------------------
+# La console tourne sous $WEB_USER : un .env.local en root:root la fait echouer
+# sur « Unable to read the .env.local environment file ». Le controle vit ici et
+# pas seulement dans setup-server.sh, parce que deploy.sh est livre par le clone
+# a chaque nouvelle instance : il est donc toujours a jour, meme quand la copie
+# locale du script de provisionnement est perimee — ce qui est deja arrive.
+if [ -f ".env.local" ] && [ "$(id -u)" = "0" ] && id "$WEB_USER" &>/dev/null; then
+    if ! sudo -u "$WEB_USER" test -r .env.local 2>/dev/null; then
+        warn ".env.local illisible par $WEB_USER - droits corriges."
+        chown "root:$WEB_USER" .env.local
+        chmod 640 .env.local
+    fi
+fi
+
 # --- Dossiers inscriptibles AVANT tout appel a la console ------------------
 # La console est executee sous $WEB_USER : sans ces droits, la premiere
 # commande echoue sur « Unable to create the cache directory ». Le bloc
