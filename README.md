@@ -9,7 +9,8 @@ sous-domaine : `client.<BASE_DOMAIN>`.
 ## Technologies
 
 - **Backend** : PHP 8.2+ / Symfony 7 / Doctrine ORM 3
-- **Base de données** : SQLite (une base isolée par client)
+- **Base de données** : PostgreSQL (un rôle et une base isolés par client),
+  schéma géré par migrations versionnées
 - **Frontend** : Twig + Tailwind CSS (CDN) + JavaScript vanilla
 - **Design** : style TailAdmin — sidebar sombre, cards arrondies, DataTables
 - **Auth** : Symfony Security — form login, rôles (reader/editor/admin), bcrypt
@@ -24,6 +25,12 @@ sous-domaine : `client.<BASE_DOMAIN>`.
 - **Sous-recettes** : une recette peut inclure une autre recette (récursif,
   avec détection de cycles)
 - **Historique de prix daté** des ingrédients (suivi de l'inflation)
+- **Mercuriale alimentée par les factures Factur-X** : dépôt d'un PDF ou d'un
+  XML CII, rapprochement automatique des lignes avec le catalogue, file
+  d'attente de validation, création des prix et recalcul en cascade
+- **Prix de vente pratiqué** par recette : marge réelle, écart au prix conseillé,
+  alerte sur les recettes vendues sous l'objectif
+- **Valeurs nutritionnelles Ciqual** avec rattachement assisté des ingrédients
 - **Fiches techniques PDF** (composition, coûts, marge)
 - **Paramètres de l'établissement** : nom, coordonnées, logo, valeurs par défaut
   — l'application est entièrement dépersonnalisée et se configure par client
@@ -68,80 +75,106 @@ pour renseigner le nom de l'établissement.
 
 ## Déploiement d'un client en production
 
-Toute la configuration vit dans **`setup.conf`** (le seul fichier à personnaliser).
+Toute la configuration vit dans **`setup.conf`**, seul fichier à personnaliser.
+Il n'est pas versionné : on part du modèle `setup.conf.example`.
 
-### 1. Renseigner `setup.conf`
+Les commandes ci-dessous sont à lancer **en root** (le script refuse de démarrer
+autrement) ; inutile de les préfixer de `sudo` si vous êtes déjà root.
+
+### 1. Récupérer les scripts sur le serveur
 
 ```bash
-BASE_DOMAIN="<BASE_DOMAIN>"            # ex: tarify.app
-ADMIN_EMAIL="contact@<BASE_DOMAIN>"    # pour Let's Encrypt
-REPO_URL="<REPO_URL>"
-GIT_BRANCH="master"
-APP_NAME="gestion-recettes"
-INSTALL_ROOT="/var/www/clients"
-GOTENBERG_PORT="3000"
+apt update && apt install -y git
+git clone <REPO_URL> /root/gr-setup && chmod 700 /root/gr-setup
 ```
 
-### 2. Pointer le DNS
+`/root` plutôt que `/tmp` : le script se relance à chaque nouveau client, et
+`setup.conf` ne doit pas disparaître au redémarrage ni être lisible par tous.
 
-Crée un enregistrement `A` (ou un wildcard `*.<BASE_DOMAIN>`) pointant vers l'IP
-du serveur. Pour un client précis : `dupont.<BASE_DOMAIN>` → IP du VPS.
-
-> ⚠️ Le TLD `.app` impose le **HTTPS** sur tous les sous-domaines (liste HSTS
-> preload). Certbot s'en charge automatiquement à l'étape suivante.
-
-### 3. Lancer le déploiement
+### 2. Renseigner `setup.conf`
 
 ```bash
-sudo ./setup-server.sh dupont
+cd /root/gr-setup && cp setup.conf.example setup.conf && nano setup.conf
+```
+
+Seuls `BASE_DOMAIN` et `ADMIN_EMAIL` sont à remplir, le reste a des valeurs
+saines. Vérification avant de lancer quoi que ce soit :
+
+```bash
+bash -c 'source setup.conf && echo "$BASE_DOMAIN | $INSTALL_ROOT | $GOTENBERG_PORT"'
+```
+
+> ⚠️ Si vous éditez ce fichier depuis Windows, enregistrez-le en **fins de ligne
+> Unix (LF)**. Un fichier CRLF colle un retour chariot invisible à chaque valeur
+> et fabrique un domaine `demo.exemple.fr\r` : vhost nginx cassé et certbot en
+> échec. Le script s'arrête désormais avec un message explicite dans ce cas.
+
+### 3. Pointer le DNS
+
+Créez un enregistrement `A` (ou un wildcard `*.<BASE_DOMAIN>`) vers l'IP du
+serveur, **avant** de lancer le script : certbot valide le domaine en HTTP et
+échoue si la propagation n'est pas faite.
+
+### 4. Lancer le déploiement
+
+```bash
+cd /root/gr-setup && ./setup-server.sh dupont master
 ```
 
 Ce qui se passe :
 
-- **Au premier lancement seulement** : installation de nginx, PHP, Docker +
-  Gotenberg, Composer et Certbot (mémorisé via `/etc/gestion-recettes-bootstrap.done`)
-- Clonage de l'instance dans `/var/www/clients/dupont`
-- Génération d'un `.env.local` avec une base SQLite **isolée** et des secrets uniques
-- Création du vhost nginx pour `dupont.<BASE_DOMAIN>`
-- Obtention du certificat HTTPS (Let's Encrypt)
-- Configuration du webhook de déploiement automatique
+- **Au premier lancement seulement** : installation de nginx, PHP (+ `php-pgsql`),
+  PostgreSQL et `postgresql-contrib`, Docker + Gotenberg, Composer et Certbot.
+  Les versions de PHP et PostgreSQL sont détectées et mémorisées dans
+  `/etc/gestion-recettes-bootstrap.done`
+- Clonage de l'instance dans `/srv/gestion-recettes/dupont`
+- Création d'un **rôle et d'une base PostgreSQL dédiés** au client
+- Génération d'un `.env.local` (mot de passe de base aléatoire, `root:www-data`,
+  non lisible par tous)
+- Appel de `deploy.sh` : Composer, migrations versionnées, seed initial si la
+  base est vide, reconstruction du cache
+- Vhost nginx, certificat HTTPS, webhook de déploiement
+- **Sauvegarde `pg_dump` quotidienne** dans `var/backups`, rétention 14 jours
 
 Résultat : l'instance est en ligne sur **https://dupont.<BASE_DOMAIN>**
-(admin / admin123 — **à changer immédiatement**).
+(admin / admin123 — **à changer immédiatement**, il apparaît en clair dans la
+sortie du script).
 
-### 4. Ajouter d'autres clients
+### 5. Ajouter d'autres clients
 
 ```bash
-sudo ./setup-server.sh martin
-sudo ./setup-server.sh boulangerie-durand
+cd /root/gr-setup && git pull && ./setup-server.sh martin production
 ```
 
-L'étape système est ignorée, seule la nouvelle instance est créée. Chaque client
-est totalement isolé (dossier, base, certificat, secrets).
+Le `git pull` garantit de provisionner avec la version à jour des scripts.
+L'étape système est ignorée, seule la nouvelle instance est créée : dossier,
+base, rôle, certificat et secrets lui sont propres.
 
 ---
 
 ## Structure d'un déploiement
 
 ```
-/var/www/clients/
+/srv/gestion-recettes/
 ├── dupont/
-│   ├── .env.local              # secrets + base propres à dupont
+│   ├── .env.local              # secrets + URL de base propres à dupont
 │   ├── public/uploads/boutique # logo de dupont
-│   └── var/data/recettes.db    # base SQLite isolée
+│   └── var/backups/            # dumps PostgreSQL (avant déploiement + quotidiens)
 ├── martin/
 │   └── ...
 └── boulangerie-durand/
     └── ...
 ```
 
+Les données vivent dans PostgreSQL, une base par client (`recettes_dupont`), et
+non plus dans un fichier de l'arborescence. **Sauvegarder revient donc à faire un
+`pg_dump`** : copier `/srv` à chaud ne suffit plus.
+
 ## Fichiers de référence
 
-- `setup.conf` — configuration centralisée (à personnaliser)
-- `setup-server.sh` — déploiement d'une instance client
-- `deploy.sh` — mise à jour d'une instance (voir **MISE-A-JOUR.md**)
+- `setup.conf.example` — modèle versionné, à copier en `setup.conf`
+- `setup.conf` — configuration du serveur (jamais versionnée)
+- `setup-server.sh` — provisionnement d'une instance client
+- `deploy.sh` — mise à jour d'une instance (appelé aussi par le webhook)
 - `.env` — valeurs par défaut (dev) ; **ne jamais mettre de secret ici**
 - `.env.local` — secrets de production (généré, jamais committé)
-
-> Pense à exclure du dépôt : `var/`, `.env.local`, `public/uploads/`, et
-> `setup.conf` s'il contient des valeurs sensibles.
