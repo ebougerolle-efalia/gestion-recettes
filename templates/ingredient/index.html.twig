@@ -3,7 +3,13 @@
 {% block page_title %}Ingrédients <span class="ml-2 text-sm font-normal text-gray-400">({{ ingredients|length }})</span>{% endblock %}
 {% block page_actions %}
     {% if is_granted('ROLE_EDITOR') %}
-        <button onclick="document.getElementById('addModal').classList.remove('hidden');document.getElementById('addModal').classList.add('flex')" class="inline-flex items-center gap-2 rounded-lg bg-blue-500 hover:bg-blue-600 px-4 py-2.5 text-sm font-medium text-white transition-colors"><i class="fas fa-plus text-[11px]"></i> Ajouter</button>
+        <div class="flex items-center gap-2">
+            <a href="{{ path('app_ingredient_mercuriale_pdf') }}" target="_blank"
+               class="inline-flex items-center gap-2 rounded-lg border border-gray-200 px-4 py-2.5 text-sm font-medium text-gray-600 hover:bg-gray-50 transition-colors">
+                <i class="fas fa-file-pdf text-[11px]"></i> Mercuriale PDF
+            </a>
+            <button onclick="document.getElementById('addModal').classList.remove('hidden');document.getElementById('addModal').classList.add('flex')" class="inline-flex items-center gap-2 rounded-lg bg-blue-500 hover:bg-blue-600 px-4 py-2.5 text-sm font-medium text-white transition-colors"><i class="fas fa-plus text-[11px]"></i> Ajouter</button>
+        </div>
     {% endif %}
 {% endblock %}
 

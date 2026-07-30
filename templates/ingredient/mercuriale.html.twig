@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <title>Mercuriale — {{ boutique().nomEtablissement }}</title>
+    <style>
+        body { font-family: Arial, Helvetica, sans-serif; font-size: 9.5pt; color: #333; margin: 0; padding: 0; }
+
+        .header-table { width: 100%; border-bottom: 3px solid #1c2434; padding-bottom: 10px; margin-bottom: 16px; }
+        .header-table td { vertical-align: bottom; padding: 0; }
+        .header-title { font-size: 22pt; font-weight: bold; color: #1c2434; letter-spacing: 1px; }
+        .header-subtitle { font-size: 10pt; color: #555; margin-top: 4px; }
+        .header-company { font-size: 9pt; color: #999; text-align: right; }
+
+        .summary { width: 100%; margin-bottom: 16px; border-spacing: 8px; border-collapse: separate; }
+        .summary-cell { border: 1px solid #e2e8f0; border-radius: 4px; padding: 7px 12px; background: #fff; width: 25%; }
+        .summary-label { font-size: 7pt; text-transform: uppercase; letter-spacing: 0.8px; color: #94a3b8; font-weight: bold; }
+        .summary-value { font-size: 14pt; font-weight: bold; color: #1c2434; margin-top: 2px; }
+        .summary-red { color: #dc2626; }
+
+        table.data { width: 100%; border-collapse: collapse; margin-bottom: 4px; }
+        table.data th {
+            background: #f1f5f9; font-size: 7.5pt; text-transform: uppercase; letter-spacing: 0.5px;
+            color: #64748b; text-align: left; padding: 5px 8px; border-bottom: 1px solid #cbd5e1;
+        }
+        table.data td { padding: 5px 8px; border-bottom: 1px solid #f1f5f9; font-size: 9pt; }
+        table.data tr:nth-child(even) td { background: #fafbfc; }
+
+        .cat-title {
+            font-size: 10pt; font-weight: bold; color: #1c2434; background: #e2e8f0;
+            padding: 5px 8px; margin-top: 12px; border-left: 3px solid #1c2434;
+        }
+
+        .num { text-align: right; white-space: nowrap; }
+        .supplier { font-size: 8pt; white-space: nowrap; }
+        .price { font-weight: bold; color: #1c2434; }
+        .up { color: #dc2626; font-weight: bold; }
+        .down { color: #16a34a; }
+        .muted { color: #94a3b8; }
+        .missing { color: #b45309; font-style: italic; }
+
+        /* Une catégorie ne doit pas être coupée juste après son titre. */
+        .cat-block { page-break-inside: auto; }
+        .cat-title { page-break-after: avoid; }
+        table.data thead { display: table-header-group; }
+
+        .footer { margin-top: 18px; padding-top: 8px; border-top: 1px solid #e2e8f0; font-size: 7.5pt; color: #94a3b8; }
+    </style>
+</head>
+<body>
+
+{% set withPrice = rows|filter(r => r.price_ht is not null)|length %}
+{% set rises = rows|filter(r => r.delta is not null and r.delta > 0)|length %}
+{% set missing = rows|length - withPrice %}
+
+<table class="header-table">
+    <tr>
+        <td>
+            <div class="header-title">MERCURIALE</div>
+            <div class="header-subtitle">Prix d'achat en vigueur · évolution sur {{ days }} jours</div>
+        </td>
+        <td class="header-company">
+            <strong>{{ boutique().nomEtablissement }}</strong><br>
+            {% if boutique().ville %}{{ boutique().codePostal }} {{ boutique().ville }}<br>{% endif %}
+            Éditée le {{ "now"|date("d/m/Y") }}
+        </td>
+    </tr>
+</table>
+
+<table class="summary">
+    <tr>
+        <td class="summary-cell">
+            <div class="summary-label">Ingrédients</div>
+            <div class="summary-value">{{ rows|length }}</div>
+        </td>
+        <td class="summary-cell">
+            <div class="summary-label">Avec un prix</div>
+            <div class="summary-value">{{ withPrice }}</div>
+        </td>
+        <td class="summary-cell">
+            <div class="summary-label">En hausse sur {{ days }} j</div>
+            <div class="summary-value {{ rises ? 'summary-red' : '' }}">{{ rises }}</div>
+        </td>
+        <td class="summary-cell">
+            <div class="summary-label">Sans prix connu</div>
+            <div class="summary-value">{{ missing }}</div>
+        </td>
+    </tr>
+</table>
+
+{% for category, items in byCategory %}
+    <div class="cat-block">
+        <div class="cat-title">{{ category }} <span style="font-weight:normal;color:#64748b;">— {{ items|length }} ingrédient{{ items|length > 1 ? 's' : '' }}</span></div>
+        <table class="data">
+            <thead>
+            <tr>
+                <th style="width:34%">Ingrédient</th>
+                <th style="width:10%">Unité</th>
+                <th style="width:14%" class="num">Prix HT</th>
+                <th style="width:12%" class="num">Évolution</th>
+                <th style="width:20%">Fournisseur</th>
+                <th style="width:10%" class="num">Depuis le</th>
+            </tr>
+            </thead>
+            <tbody>
+            {% for r in items %}
+                <tr>
+                    <td>{{ r.name }}</td>
+                    <td class="muted">{{ r.base_unit }}</td>
+                    <td class="num">
+                        {% if r.price_ht is null %}
+                            <span class="missing">à renseigner</span>
+                        {% else %}
+                            <span class="price">{{ r.price_ht|number_format(4, ',', ' ') }} €</span>
+                        {% endif %}
+                    </td>
+                    <td class="num">
+                        {% if r.delta is null %}
+                            <span class="muted">—</span>
+                        {% elseif r.delta > 0 %}
+                            <span class="up">+{{ r.delta|number_format(1, ',', ' ') }} %</span>
+                        {% elseif r.delta < 0 %}
+                            <span class="down">{{ r.delta|number_format(1, ',', ' ') }} %</span>
+                        {% else %}
+                            <span class="muted">stable</span>
+                        {% endif %}
+                    </td>
+                    {# Tronqué : « Maison Berthaud — Viandes & Salaisons » sur une
+                       colonne étroite casse la ligne et désaligne tout le tableau.
+                       Le début suffit à identifier le fournisseur. #}
+                    <td class="muted supplier">
+                        {{ r.supplier is null ? '—' : (r.supplier|length > 26 ? r.supplier|slice(0, 25) ~ '…' : r.supplier) }}
+                    </td>
+                    <td class="num muted">{{ r.effective_date ? r.effective_date|date('d/m/Y') : '—' }}</td>
+                </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
+{% endfor %}
+
+<div class="footer">
+    Prix hors taxes, à l'unité de base de chaque ingrédient. L'évolution compare le prix en vigueur
+    au prix connu il y a {{ days }} jours ; « — » signale qu'aucun prix antérieur n'existe sur la période.
+    {% if missing %}<br>{{ missing }} ingrédient{{ missing > 1 ? 's' : '' }} sans prix : leur coût est compté à 0 € dans les recettes.{% endif %}
+</div>
+
+</body>
+</html>

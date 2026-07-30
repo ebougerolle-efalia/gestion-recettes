@@ -8,6 +8,7 @@ use App\Repository\IngredientCategoryRepository;
 use App\Repository\CiqualFoodRepository;
 use App\Service\CiqualMatcher;
 use App\Service\CostCalculator;
+use Sensiolabs\GotenbergBundle\GotenbergPdfInterface;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\{Request, Response, JsonResponse};
@@ -16,6 +17,47 @@ use Symfony\Component\Security\Http\Attribute\IsGranted;
 
 class IngredientController extends AbstractController
 {
+    /**
+     * Mercuriale au format PDF : la liste des ingrédients avec leur dernier prix,
+     * son fournisseur, sa date et son évolution.
+     *
+     * Destinée à être emportée en rendez-vous fournisseur ou chez le comptable —
+     * d'où le tri par catégorie et la mise en évidence des hausses, qui donnent
+     * l'ordre du jour de la négociation.
+     *
+     * Réservée aux éditeurs : elle ne contient que des prix d'achat.
+     */
+    // Pas d'extension .pdf dans l'URL : le serveur de développement PHP
+    // intercepterait la requête pour chercher un fichier sur disque. Le nom du
+    // fichier téléchargé est porté par l'en-tête Content-Disposition.
+    #[Route('/ingredients/mercuriale', name: 'app_ingredient_mercuriale_pdf')]
+    #[IsGranted('ROLE_EDITOR')]
+    public function mercurialePdf(IngredientRepository $repo, GotenbergPdfInterface $gotenberg): Response
+    {
+        $rows = $repo->findMercuriale(30);
+
+        // Regroupement par catégorie fait ici plutôt qu'en Twig : le gabarit
+        // reste une mise en page, sans logique de tri.
+        $byCategory = [];
+        foreach ($rows as $row) {
+            $byCategory[$row['category']][] = $row;
+        }
+
+        return $gotenberg->html()
+            ->content('ingredient/mercuriale.html.twig', [
+                'byCategory' => $byCategory,
+                'rows'       => $rows,
+                'days'       => 30,
+            ])
+            ->paperSize(8.27, 11.69)
+            ->margins(0.55, 0.55, 0.55, 0.55)
+            ->printBackground(true)
+            ->preferCssPageSize(false)
+            ->fileName('mercuriale-' . date('Y-m-d') . '.pdf')
+            ->generate()
+            ->stream();
+    }
+
     #[Route('/ingredients', name: 'app_ingredient_index')]
     public function index(IngredientRepository $repo, IngredientCategoryRepository $catRepo): Response
     {
