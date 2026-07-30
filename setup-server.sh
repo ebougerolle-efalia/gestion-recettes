@@ -43,6 +43,26 @@ source "$SCRIPT_DIR/setup.conf"
 [ -z "$BASE_DOMAIN" ] && err "BASE_DOMAIN est vide. Renseigne-le dans setup.conf (ex: tarify.app)."
 [ -z "$ADMIN_EMAIL" ] && err "ADMIN_EMAIL est vide. Renseigne-le dans setup.conf."
 
+# --- Auto-mise à jour des scripts --------------------------------------------
+# Provisionner avec une copie périmée fabrique des instances cassées, sans que
+# rien ne le signale : c'est arrivé, deux fois. Le script se met à jour puis se
+# relance, une seule fois (garde-fou anti-boucle).
+if [ -z "${SETUP_SELF_UPDATED:-}" ] && [ -d "$SCRIPT_DIR/.git" ] && command -v git >/dev/null 2>&1; then
+    if git -C "$SCRIPT_DIR" fetch --quiet origin 2>/dev/null; then
+        LOCAL_REV="$(git -C "$SCRIPT_DIR" rev-parse HEAD 2>/dev/null || echo x)"
+        REMOTE_REV="$(git -C "$SCRIPT_DIR" rev-parse '@{u}' 2>/dev/null || echo "$LOCAL_REV")"
+        if [ "$LOCAL_REV" != "$REMOTE_REV" ]; then
+            log "Scripts de provisionnement obsolètes — mise à jour puis relance…"
+            git -C "$SCRIPT_DIR" pull --ff-only --quiet \
+                || err "Mise à jour impossible dans $SCRIPT_DIR. Corrigez à la main : git -C $SCRIPT_DIR pull"
+            export SETUP_SELF_UPDATED=1
+            exec "$SCRIPT_DIR/setup-server.sh" "$@"
+        fi
+    else
+        warn "Dépôt injoignable : impossible de vérifier que les scripts sont à jour."
+    fi
+fi
+
 CLIENT_SLUG="${1:-}"
 [ -z "$CLIENT_SLUG" ] && err "Usage : sudo ./setup-server.sh <slug-client> [branche]   (ex: dupont production)"
 echo "$CLIENT_SLUG" | grep -qE '^[a-z0-9][a-z0-9-]*$' || err "Slug invalide. Utilise minuscules, chiffres et tirets (ex: ma-boutique)."
@@ -171,6 +191,15 @@ EOF
     # par tous. Mais deploy.sh exécute la console sous www-data, qui doit
     # pouvoir le lire — d'où le groupe. Sans ce chown, le déploiement échoue
     # sur « Unable to read the .env.local environment file ».
+    chown root:www-data .env.local
+    chmod 640 .env.local
+fi
+
+# Droits réaffirmés à chaque passage, et pas seulement à la création : une
+# instance provisionnée par une version antérieure du script peut porter un
+# .env.local en root:root, que www-data ne peut pas lire. Relancer le script
+# répare alors l'instance au lieu d'échouer à nouveau.
+if [ -f ".env.local" ]; then
     chown root:www-data .env.local
     chmod 640 .env.local
 fi
