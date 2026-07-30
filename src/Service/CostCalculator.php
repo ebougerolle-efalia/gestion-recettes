@@ -465,6 +465,83 @@ class CostCalculator
     }
 
     /**
+     * Recettes dont le coût a le plus dérivé sur une période, en comparant le
+     * coût actuel au coût recalculé avec les prix en vigueur à la date de début.
+     *
+     * Aucun historique de coût n'est stocké : le calcul rejoue simplement les
+     * prix datés. C'est ce que permet l'alimentation automatique de la
+     * mercuriale — sans factures qui entrent seules, cette page resterait vide.
+     *
+     * Seules les recettes touchées par un changement de prix sur la période sont
+     * recalculées : sur un catalogue de plusieurs centaines de fiches, en
+     * recalculer deux fois la totalité à chaque affichage serait intenable.
+     *
+     * Renvoie des valeurs scalaires et non des entités : le résultat est mis en
+     * cache par l'appelant, et mettre des entités Doctrine en cache donnerait
+     * des objets détachés au prochain chargement.
+     *
+     * @return array<int,array{recipe_id:int,recipe_name:string,output_unit:string,cost_now:float,cost_then:float,delta:float,delta_percent:float}>
+     */
+    public function costDrift(int $days = 30, int $limit = 5, int $maxRecipes = 60): array
+    {
+        $conn  = $this->em->getConnection();
+        $since = (new \DateTimeImmutable())->modify("-$days days")->format('Y-m-d');
+
+        $ingredientIds = array_column($conn->fetchAllAssociative(
+            'SELECT DISTINCT ingredient_id FROM ingredient_prices WHERE effective_date > ?',
+            [$since]
+        ), 'ingredient_id');
+
+        if (!$ingredientIds) {
+            return [];
+        }
+
+        $placeholders = implode(',', array_fill(0, count($ingredientIds), '?'));
+        $recipeIds = array_map('intval', array_column($conn->fetchAllAssociative(
+            "SELECT DISTINCT recipe_id FROM recipe_lines WHERE ingredient_id IN ($placeholders)",
+            $ingredientIds
+        ), 'recipe_id'));
+
+        // Une terrine dérive quand sa farce dérive, sans citer l'ingrédient.
+        $recipeIds = array_slice($this->withParentRecipes($recipeIds), 0, $maxRecipes);
+
+        $drifts = [];
+        foreach ($recipeIds as $recipeId) {
+            try {
+                $now  = $this->compute($recipeId);
+                $then = $this->compute($recipeId, $since);
+            } catch (\Throwable) {
+                continue; // cycle ou données incohérentes : on n'en fait pas une erreur d'affichage
+            }
+            if (!$now || !$then) {
+                continue;
+            }
+
+            $costNow  = $now['totals']['cost_per_output_ht'];
+            $costThen = $then['totals']['cost_per_output_ht'];
+
+            // Une hausse seulement : une baisse n'appelle aucune décision urgente.
+            if ($costThen <= 0 || $costNow <= $costThen) {
+                continue;
+            }
+
+            $drifts[] = [
+                'recipe_id'     => $recipeId,
+                'recipe_name'   => $now['recipe']->getName(),
+                'output_unit'   => $now['recipe']->getOutputUnitLabel(),
+                'cost_now'      => $costNow,
+                'cost_then'     => $costThen,
+                'delta'         => $this->r2($costNow - $costThen),
+                'delta_percent' => $this->r2((($costNow - $costThen) / $costThen) * 100),
+            ];
+        }
+
+        usort($drifts, fn ($a, $b) => $b['delta_percent'] <=> $a['delta_percent']);
+
+        return array_slice($drifts, 0, $limit);
+    }
+
+    /**
      * Complète une liste de recettes par toutes celles qui les utilisent comme
      * sous-recette, de façon transitive (farce → terrine → plateau).
      *

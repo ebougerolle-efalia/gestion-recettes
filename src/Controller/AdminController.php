@@ -1,9 +1,12 @@
 <?php
 namespace App\Controller;
 
-use App\Entity\{IngredientCategory, RecipeFamily, User};
-use App\Repository\{IngredientCategoryRepository, RecipeFamilyRepository, UserRepository, RecipeRepository, IngredientRepository};
+use App\Entity\{IngredientCategory, Recipe, RecipeFamily, User};
+use App\Repository\{IngredientCategoryRepository, RecipeFamilyRepository, UserRepository, RecipeRepository, IngredientRepository, PurchaseInvoiceRepository};
+use App\Service\CostCalculator;
 use Doctrine\ORM\EntityManagerInterface;
+use Symfony\Contracts\Cache\CacheInterface;
+use Symfony\Contracts\Cache\ItemInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\{Request, Response};
 use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
@@ -17,9 +20,41 @@ class AdminController extends AbstractController
     // ==================== DASHBOARD ====================
 
     #[Route('', name: 'app_admin_index')]
-    public function index(EntityManagerInterface $em): Response
-    {
+    public function index(
+        EntityManagerInterface $em,
+        RecipeRepository $recipeRepo,
+        PurchaseInvoiceRepository $invoiceRepo,
+        CostCalculator $calc,
+        CacheInterface $cache,
+    ): Response {
         $conn = $em->getConnection();
+
+        // ── Argent : ce qui se pilote ────────────────────────────────────────
+        $recipes = $recipeRepo->findBy([], ['name' => 'ASC']);
+
+        $underpriced = array_filter($recipes, fn (Recipe $r) => $r->isUnderpriced());
+        usort($underpriced, fn (Recipe $a, Recipe $b) => $a->getPriceGapPercent() <=> $b->getPriceGapPercent());
+
+        $priced  = array_filter($recipes, fn (Recipe $r) => $r->getRealMarkupPercent() !== null);
+        $markups = array_map(fn (Recipe $r) => $r->getRealMarkupPercent(), $priced);
+
+        // Dérive des coûts sur 30 jours : l'indicateur que seule l'alimentation
+        // automatique des prix rend possible.
+        //
+        // Chaque recette concernée est calculée deux fois, aujourd'hui et à la
+        // date de départ : deux secondes sur un catalogue de démonstration, bien
+        // plus sur plusieurs centaines de fiches. Le résultat est donc mis en
+        // cache, avec une clé qui contient le dernier identifiant de prix connu :
+        // toute facture validée renouvelle la clé et rafraîchit l'affichage, sans
+        // qu'aucune invalidation explicite ne soit nécessaire.
+        $lastPriceId = (int) $conn->fetchOne('SELECT COALESCE(MAX(id), 0) FROM ingredient_prices');
+        $costDrift   = $cache->get(
+            sprintf('dashboard.cost_drift.30.%d.%s', $lastPriceId, date('Y-m-d')),
+            function (ItemInterface $item) use ($calc) {
+                $item->expiresAfter(3600);
+                return $calc->costDrift(30, 5);
+            }
+        );
 
         // ── KPIs principaux ──────────────────────────────────────────────────
         $totalRecipes       = (int) $conn->fetchOne('SELECT COUNT(*) FROM recipes');
@@ -114,10 +149,16 @@ class AdminController extends AbstractController
             ORDER BY nb DESC
         ");
 
-        // ── Infos base SQLite ─────────────────────────────────────────────────
-        $dbPath  = $this->getParameter('kernel.project_dir') . '/var/data/recettes.db';
-        $dbBytes = file_exists($dbPath) ? filesize($dbPath) : 0;
-        $dbSize  = $dbBytes > 1_048_576
+        // ── Taille de la base ────────────────────────────────────────────────
+        // Lisait auparavant la taille du fichier var/data/recettes.db, qui
+        // n'existe plus depuis le passage à PostgreSQL : l'indicateur affichait
+        // 0 Ko en silence.
+        try {
+            $dbBytes = (int) $conn->fetchOne('SELECT pg_database_size(current_database())');
+        } catch (\Throwable) {
+            $dbBytes = 0;
+        }
+        $dbSize = $dbBytes > 1_048_576
             ? round($dbBytes / 1_048_576, 1) . ' Mo'
             : round($dbBytes / 1024) . ' Ko';
 
@@ -137,7 +178,12 @@ class AdminController extends AbstractController
                 'ings_with_price'   => $ingsWithPrice,
                 'ings_no_price'     => $ingsWithoutPrice,
                 'avg_margin'        => $avgMargin,
+                'priced_count'      => count($priced),
+                'median_markup'     => $this->median($markups),
+                'pending_invoices'  => $invoiceRepo->countPending(),
             ],
+            'underpriced' => array_values($underpriced),
+            'cost_drift'  => $costDrift,
             'alerts' => [
                 'no_price'  => $ingsNoPrice,
                 'empty'     => $recipesEmpty,
@@ -150,6 +196,27 @@ class AdminController extends AbstractController
             'db_size'        => $dbSize,
             'mapping_count'  => $mappingCount,
         ]);
+    }
+
+    /**
+     * Médiane et non moyenne : sans volumes de vente, une moyenne se laisse
+     * tirer par un produit d'appel confidentiel et ne décrit plus rien.
+     *
+     * @param float[] $values
+     */
+    private function median(array $values): ?float
+    {
+        if (!$values) {
+            return null;
+        }
+
+        sort($values);
+        $count  = count($values);
+        $middle = intdiv($count, 2);
+
+        return $count % 2 === 1
+            ? $values[$middle]
+            : round(($values[$middle - 1] + $values[$middle]) / 2, 1);
     }
 
     // ==================== CATEGORIES ====================

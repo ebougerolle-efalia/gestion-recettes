@@ -26,44 +26,12 @@ class RecipeController extends AbstractController
     #[Route('/recettes', name: 'app_recipe_index')]
     public function index(RecipeRepository $repo, RecipeFamilyRepository $familyRepo): Response
     {
-        $recipes = $repo->findBy([], ['name' => 'ASC']);
-
-        // Recettes vendues sous leur objectif : la plus mauvaise en premier,
-        // c'est celle sur laquelle il y a de l'argent à récupérer aujourd'hui.
-        $underpriced = array_filter($recipes, fn (Recipe $r) => $r->isUnderpriced());
-        usort($underpriced, fn (Recipe $a, Recipe $b) => $a->getPriceGapPercent() <=> $b->getPriceGapPercent());
-
-        $priced  = array_filter($recipes, fn (Recipe $r) => $r->getRealMarkupPercent() !== null);
-        $markups = array_map(fn (Recipe $r) => $r->getRealMarkupPercent(), $priced);
-
+        // Liste seule : les indicateurs et alertes vivent sur le tableau de bord,
+        // pour ne pas entretenir deux tableaux de bord concurrents.
         return $this->render('recipe/index.html.twig', [
-            'recipes'      => $recipes,
-            'families'     => $familyRepo->findBy([], ['sortOrder' => 'ASC', 'name' => 'ASC']),
-            'underpriced'  => array_values($underpriced),
-            'pricedCount'  => count($priced),
-            'medianMarkup' => $this->median($markups),
+            'recipes'  => $repo->findBy([], ['name' => 'ASC']),
+            'families' => $familyRepo->findBy([], ['sortOrder' => 'ASC', 'name' => 'ASC']),
         ]);
-    }
-
-    /**
-     * Médiane et non moyenne : sans volumes de vente, une moyenne se laisse
-     * tirer par un produit d'appel confidentiel et ne décrit plus rien.
-     *
-     * @param float[] $values
-     */
-    private function median(array $values): ?float
-    {
-        if (!$values) {
-            return null;
-        }
-
-        sort($values);
-        $count  = count($values);
-        $middle = intdiv($count, 2);
-
-        return $count % 2 === 1
-            ? $values[$middle]
-            : round(($values[$middle - 1] + $values[$middle]) / 2, 1);
     }
 
     #[Route('/recettes/{id}', name: 'app_recipe_show', requirements: ['id' => '\d+'])]

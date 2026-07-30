@@ -22,6 +22,8 @@ Un outil **simple et précis** de fiches techniques et de pilotage de la rentabi
 - Prix conseillé HT **et** TTC, marge par unité, gestion fine HT/TVA.
 - **Recalcul automatique en cascade** : un changement de prix d'achat ou de taux de main d'œuvre répercute immédiatement toutes les recettes et sous-recettes concernées, y compris les recettes parentes qui n'utilisent l'ingrédient qu'à travers une sous-recette.
 - **Prix de vente pratiqué** : un champ par recette, le prix de l'étiquette. Il donne la **marge réelle** (et non seulement théorique), l'écart avec le prix conseillé, et alimente l'alerte du tableau de bord. Saisi une fois, modifié rarement — aucune saisie récurrente, aucun relevé de ventes.
+- **Tableau de bord unique** organisé par décision : l'argent d'abord (marque réelle médiane, recettes sous l'objectif, coûts en hausse, factures à valider), puis l'état du catalogue, puis les références. Les alertes sont muettes quand tout va bien.
+- **Dérive des coûts sur 30 jours** : les recettes dont le coût de revient a le plus augmenté, en rejouant les prix datés à la date de départ — y compris celles qui ne dérivent qu'à travers une sous-recette. Aucun historique de coût n'est stocké, et **aucun concurrent ne peut afficher cet écran sans recevoir les factures automatiquement**.
 
 ### Garde-fous / fiabilité (rare sur le marché)
 Avertissements explicites quand un chiffre n'est pas fiable, au lieu d'afficher un coût faussement précis :
