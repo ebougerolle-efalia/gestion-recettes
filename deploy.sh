@@ -75,6 +75,16 @@ log "Composer install..."
 "$COMPOSER_BIN" config allow-plugins.symfony/runtime true --no-interaction >/dev/null 2>&1 || true
 "$COMPOSER_BIN" install --no-dev --optimize-autoloader --no-interaction
 
+# --- Dossiers inscriptibles AVANT tout appel a la console ------------------
+# La console est executee sous $WEB_USER : sans ces droits, la premiere
+# commande echoue sur « Unable to create the cache directory ». Le bloc
+# Permissions en fin de script arrive trop tard pour ce premier appel.
+log "Preparation des dossiers var/..."
+mkdir -p var/cache var/log var/data var/backups public/uploads/boutique
+if id "$WEB_USER" &>/dev/null; then
+    chown -R "$WEB_USER:$WEB_USER" var/ public/uploads/ 2>/dev/null || warn "chown initial impossible."
+fi
+
 # --- Base de donnees -------------------------------------------------------
 # Migrations versionnees : rejouables, reversibles, et tracees dans la table
 # doctrine_migration_versions. schema:update est proscrit ici, il peut

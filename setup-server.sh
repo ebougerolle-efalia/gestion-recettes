@@ -138,7 +138,9 @@ cd "$APP_DIR"
 # --- Base PostgreSQL propre à ce client --------------------------------------
 # Un rôle et une base par instance : les clients restent isolés, et une
 # restauration n'affecte qu'un seul d'entre eux.
-DB_NAME="$(echo "recettes_${CLIENT_SLUG}" | tr -c '[:alnum:]_' '_')"
+# printf et non echo : echo ajoute un saut de ligne, que tr — qui remplace tout
+# caractere non alphanumerique — convertirait en underscore final.
+DB_NAME="$(printf '%s' "recettes_${CLIENT_SLUG}" | tr -c '[:alnum:]_' '_')"
 DB_USER="$DB_NAME"
 DB_PASS="$(openssl rand -hex 16)"
 
