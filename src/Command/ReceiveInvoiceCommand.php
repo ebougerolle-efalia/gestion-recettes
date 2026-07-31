@@ -85,7 +85,12 @@ class ReceiveInvoiceCommand extends Command
     private function receiveOne(string $path, string $source, SymfonyStyle $io): int
     {
         $mime = str_ends_with(strtolower($path), '.pdf') ? 'application/pdf' : 'application/xml';
-        $result = $this->inbox->receive((string) file_get_contents($path), $mime, $source);
+        $result = $this->inbox->receive(
+            (string) file_get_contents($path),
+            $mime,
+            $source,
+            ['filename' => basename($path)]
+        );
 
         if ($result['error']) {
             $io->error($result['error']);
@@ -97,11 +102,23 @@ class ReceiveInvoiceCommand extends Command
         if ($result['duplicate']) {
             $io->warning(sprintf(
                 'Facture %s de %s déjà reçue le %s (statut : %s). Rien créé.',
-                $invoice->getInvoiceId(),
-                $invoice->getSupplier()->getName(),
+                $invoice->getDisplayReference(),
+                $invoice->getSupplier()?->getName() ?? 'fournisseur inconnu',
                 $invoice->getImportedAt()->format('d/m/Y H:i'),
                 $invoice->getStatus()
             ));
+            return Command::SUCCESS;
+        }
+
+        if ($result['captured']) {
+            $io->warning(sprintf(
+                'Fichier reçu et conservé, mais illisible pour le moteur (#%d) : %s. Lignes à saisir.',
+                $invoice->getId(),
+                $invoice->getSupplier()
+                    ? 'rattaché à ' . $invoice->getSupplier()->getName()
+                    : 'fournisseur à rattacher'
+            ));
+
             return Command::SUCCESS;
         }
 

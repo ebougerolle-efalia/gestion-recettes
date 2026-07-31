@@ -186,6 +186,7 @@ APP_SECRET=$(openssl rand -hex 16)
 DATABASE_URL="postgresql://${DB_USER}:${DB_PASS}@127.0.0.1:5432/${DB_NAME}?serverVersion=${PG_V}&charset=utf8"
 GOTENBERG_DSN=http://localhost:${GOTENBERG_PORT}
 WEBHOOK_SECRET=$(openssl rand -hex 20)
+INVOICE_MAILBOX_DSN="${INVOICE_MAILBOX_DSN:-}"
 EOF
     # Le fichier porte le mot de passe de la base : il ne doit pas être lisible
     # par tous. Mais deploy.sh exécute la console sous www-data, qui doit
@@ -236,6 +237,31 @@ find "\$DIR" -name 'daily_*.dump' -mtime +14 -delete
 CRON
     chmod 750 "$BACKUP_CRON"
 fi
+
+# --- Relève de la boîte de réception des factures ----------------------------
+# Installée même quand aucune boîte n'est configurée : la commande le détecte et
+# ne fait rien. Le jour où le client renseigne INVOICE_MAILBOX_DSN dans son
+# .env.local, la réception démarre sans qu'on ait à repasser sur le serveur.
+FETCH_CRON="/etc/cron.d/${APP_NAME}-factures-${CLIENT_SLUG}"
+if [ ! -f "$FETCH_CRON" ]; then
+    log "Installation de la relève des factures (toutes les 15 min)…"
+    cat > "$FETCH_CRON" <<CRON
+# Relève de la boîte de réception des factures — ${CLIENT_SLUG}
+# Sous www-data : la commande écrit dans var/ et dans la base, exactement comme
+# l'application. La lancer sous root laisserait des fichiers que l'application
+# ne pourrait plus réécrire.
+SHELL=/bin/bash
+PATH=/usr/local/bin:/usr/bin:/bin
+*/15 * * * * www-data cd ${APP_DIR} && php bin/console app:invoice-fetch --env=prod >> ${APP_DIR}/var/log/invoice-fetch.log 2>&1
+CRON
+    # cron ignore silencieusement un fichier de /etc/cron.d exécutable ou
+    # inscriptible par un autre que root : ces droits ne sont pas cosmétiques.
+    chmod 644 "$FETCH_CRON"
+fi
+
+mkdir -p var/log
+touch var/log/invoice-fetch.log
+chown www-data:www-data var/log/invoice-fetch.log
 
 # --- Vhost nginx pour ce sous-domaine ----------------------------------------
 log "Configuration Nginx pour $DOMAIN…"

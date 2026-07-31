@@ -59,6 +59,9 @@ Avertissements explicites quand un chiffre n'est pas fiable, au lieu d'afficher 
 - **Import de facture électronique** : dépôt d'un PDF Factur-X ou d'un XML CII/EN 16931, extraction du fournisseur (SIRET) et des lignes, **rapprochement automatique** avec les ingrédients (correspondances mémorisées d'un import sur l'autre, puis similarité de libellé), écran de validation, puis création des prix datés et **recalcul en cascade** des recettes concernées.
 - **File d'attente des factures** : une facture est enregistrée dès sa réception, avec ses correspondances proposées, et attend l'arbitrage humain — elle peut donc arriver sans personne devant l'écran, et une validation interrompue se reprend intacte. Doublons écartés d'office (même fournisseur, même numéro).
 - **Écart de prix affiché à la validation** : chaque ligne montre son écart avec le dernier prix connu, signalé au-delà de 15 %. C'est ce qui permet de repérer un changement de conditionnement — un lot de 5 kg facturé à la pièce — avant qu'il ne contamine vingt fiches techniques.
+- **Réception par courriel, sans aucun geste** : une adresse dédiée est donnée aux fournisseurs, relevée toutes les quinze minutes. Les factures entrent seules dans la file d'attente. Le fournisseur est reconnu à l'adresse d'expédition ; le premier rattachement fait à la main est mémorisé, et les suivants se font seuls.
+- **Les pièces illisibles ne sont pas refusées** : un PDF ordinaire ou un scan — le cas majoritaire jusqu'à l'obligation d'émission de septembre 2027 — est conservé et placé en **attente de saisie**, avec son fichier consultable à côté du formulaire. Rien n'est perdu, et rien n'est deviné : aucun montant n'est extrapolé d'un document non structuré. Une fois saisies, ses lignes passent par le même rapprochement que celles d'un Factur-X.
+- **Déduplication sur l'empreinte du fichier** : une boîte relevée deux fois, un message renvoyé, un retour de sauvegarde ne créent pas de doublon — y compris pour une pièce sans numéro de facture lisible.
 
 ### Déploiement / exploitation (SaaS multi-instances)
 - **Une instance isolée par client** (base de données séparée), déployée par script en une commande, avec sous-domaine, **HTTPS automatique** et **mise à jour par webhook** (git push → déploiement).
@@ -74,11 +77,13 @@ L'axe unique de l'application est de **faire entrer les prix tout seuls** à par
 
 **Vent réglementaire favorable, et imminent** : la réforme française de la facturation électronique rend la **réception** de factures électroniques **obligatoire pour toutes les entreprises au 1ᵉʳ septembre 2026** (émission étendue aux TPE/PME au 1ᵉʳ septembre 2027) — soit dans **cinq semaines**. Dès la rentrée, les charcutiers-traiteurs **recevront leurs factures fournisseurs en Factur-X** : exactement l'intrant dont la mercuriale automatique a besoin.
 
-**Statut : livré.** Recalcul en cascade et import Factur-X (parsing, rapprochement des lignes, création des prix datés) sont en production. Restent à consolider : le volume de formats fournisseurs réellement rencontrés, et la récupération des factures **sans dépôt manuel**.
+**Statut : livré.** Recalcul en cascade, import Factur-X (parsing, rapprochement des lignes, création des prix datés) et **réception par adresse dédiée** sont en production. Reste à consolider : le volume de formats fournisseurs réellement rencontrés.
 
 **Point à instruire** : le flux ne passera pas par un fichier que l'artisan télécharge puis dépose. Le portail public (PPF) a été recentré en octobre 2024 sur l'annuaire et l'e-reporting ; **tout l'échange de factures passe par des plateformes agréées** (ex-PDP), dont **137 sont déjà immatriculées**. Chaque client aura donc la sienne — le plus souvent celle de son expert-comptable (Pennylane, Tiime, Evoliz sont immatriculées et exposent des API).
 
 Devenir plateforme agréée n'est pas la bonne réponse : immatriculation lourde, 137 acteurs en place, et notre valeur est **en aval** du transport de facture. Ce qu'il faut, c'est récupérer les factures sans geste manuel — adresse de réception dédiée d'abord (pont universel, indépendant de toute API), connecteur vers une plateforme agréée ensuite, choisie d'après celles réellement utilisées par les premiers clients. *Calendrier à revérifier : ce dispositif a déjà été décalé et remanié plusieurs fois.*
+
+**L'adresse dédiée est livrée.** Elle vaut pont universel : elle marche avec les fournisseurs d'aujourd'hui, qui envoient un PDF par courriel, et continuera de marcher avec ceux qui enverront du Factur-X à la rentrée — c'est le même canal, seul le contenu de la pièce jointe change. Aucune API tierce, aucun contrat, rien à demander aux fournisseurs qu'un changement d'adresse d'envoi.
 
 ---
 
@@ -101,7 +106,7 @@ Légende : ✅ livré / solide · ◐ partiel · ⭕ prévu (roadmap) · ❌ abs
 | Marque / marge / coef + food cost | ✅ (les 4) | ◐ | ◐ | ◐ | ◐ |
 | Recalcul auto en cascade sur prix | ✅ | ❌ (statique) — source concurrente, non vérifié | ✅ (annoncé) | ◐ | ◐ |
 | **Mercuriale alimentée par Factur-X** | ✅ (axe unique) | ❌ | ❌ | ❌ | ❌ |
-| Réception des factures sans dépôt manuel | ⭕ | ❌ | ❌ | ❌ | ❌ |
+| Réception des factures sans dépôt manuel | ✅ (adresse dédiée) | ❌ | ❌ | ❌ | ❌ |
 | Garde-fous / alertes de fiabilité | ✅ | ❌ | ◐ | ◐ | ◐ |
 | Allergènes (14 INCO) **+ traces distinctes** | ✅ | ✅ | ◐ | ◐ | ◐ |
 | Valeurs nutritionnelles | ✅ (Ciqual / Anses) | ◐ (base **USDA** ; sorties INCO annoncées) | ◐ | ❌ | ◐ |
@@ -135,7 +140,7 @@ RestoPilot est le concurrent le plus proche de nous, et plus proche que ce table
 
 ## 6. Pistes (roadmap)
 
-1. **Réception des factures sans geste manuel** : se brancher sur une PDP, ou offrir une adresse de réception dédiée, pour que la mercuriale se mette à jour sans dépôt de fichier. L'import Factur-X étant livré, c'est là que se joue la suite du différenciateur — et l'échéance du 1ᵉʳ septembre 2026 en fait le bon moment.
+1. **Connecteur vers une plateforme agréée** : l'adresse de réception dédiée est livrée et couvre le besoin sans dépendre de personne. Le connecteur ne se justifiera que si les premiers clients reçoivent effectivement leurs factures par une plateforme plutôt que par courriel — à instruire avec eux, pas avant.
 2. **Alerte de dérive de marge par e-mail** : « cette semaine, 3 recettes ont perdu plus de 2 points de marque réelle, le poivre noir a pris 8 % ». Le prix pratiqué et l'écart au conseillé sont livrés ; il reste à en faire un envoi périodique. C'est le vrai produit de l'alimentation automatique des prix — aucun concurrent ne peut l'écrire sans les factures qui entrent seules.
 3. **Mode opératoire et barème de cuisson sur la fiche** : étapes numérotées, temps et températures, pour que la fiche labo soit utilisable au poste de travail et porte la traçabilité attendue en contrôle. Priorité à arbitrer selon le retour des relecteurs métier — c'est la première chose qu'un professionnel cherche sur une fiche.
 4. **Repérage par famille de recettes**, en distribution (nombre, marque minimale, médiane, maximale) et non en moyenne : sans volumes de vente, une moyenne se laisse tirer par un produit confidentiel. Presque gratuit, les familles existent déjà.

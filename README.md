@@ -28,6 +28,10 @@ sous-domaine : `client.<BASE_DOMAIN>`.
 - **Mercuriale alimentée par les factures Factur-X** : dépôt d'un PDF ou d'un
   XML CII, rapprochement automatique des lignes avec le catalogue, file
   d'attente de validation, création des prix et recalcul en cascade
+- **Réception des factures par courriel** : une boîte dédiée relevée toutes les
+  15 minutes, sans aucun geste. Les pièces sans Factur-X — le cas majoritaire
+  jusqu'en 2027 — sont conservées et mises en attente de saisie plutôt que
+  refusées
 - **Prix de vente pratiqué** par recette : marge réelle, écart au prix conseillé,
   alerte sur les recettes vendues sous l'objectif
 - **Valeurs nutritionnelles Ciqual** avec rattachement assisté des ingrédients
@@ -70,6 +74,55 @@ symfony serve
 
 Connexion : **admin** / **admin123** → puis **Administration → Paramètres**
 pour renseigner le nom de l'établissement.
+
+---
+
+## Réception des factures par courriel
+
+Le client crée une adresse dédiée — `factures@son-domaine.fr` — et la donne à
+ses fournisseurs. Le serveur la relève toutes les quinze minutes et les factures
+entrent seules dans la file d'attente.
+
+Le DSN vit dans le `.env.local` du client, ou dans `setup.conf` à l'installation :
+
+```
+INVOICE_MAILBOX_DSN="imap://factures%40client.fr:motdepasse@imap.hebergeur.fr:993?encryption=ssl&folder=INBOX&archive=Traitees"
+```
+
+`encryption` vaut `ssl` (port 993, le cas courant) ou `tls` (STARTTLS, port 143).
+`archive` est facultatif : sans lui les messages restent dans la boîte, marqués
+lus. Les caractères `@`, `:` et `/` présents dans l'identifiant ou le mot de
+passe doivent être encodés (`%40`, `%3A`, `%2F`).
+
+Vérifier la configuration sans rien enregistrer ni marquer lu :
+
+```bash
+php bin/console app:invoice-fetch --dry-run -v
+```
+
+Le cron est installé par `setup-server.sh` **même quand aucune boîte n'est
+configurée** : la commande le détecte et ne fait rien. Ouvrir le canal plus tard
+ne demande donc que d'éditer le `.env.local`.
+
+**Ce qui arrive à une pièce jointe.** Le fichier est conservé sous
+`var/invoices/`, son empreinte SHA-256 sert de clé de déduplication — une boîte
+relevée deux fois ou un fournisseur qui renvoie son message ne créent pas de
+doublon. Puis :
+
+| Contenu de la pièce | Résultat |
+|---|---|
+| PDF Factur-X ou XML CII | Lignes rapprochées, facture **à valider** |
+| PDF ordinaire, scan | Facture **à saisir** : fichier conservé, lignes à taper |
+| Lu, mais sans ligne exploitable | **À saisir**, en-tête déjà rempli |
+
+Le fournisseur est reconnu à l'adresse d'expédition — d'abord l'adresse exacte,
+puis le domaine. Les domaines grand public (gmail, orange, free…) n'identifient
+personne et sont écartés. Quand un humain rattache une première facture, l'adresse
+est mémorisée : les suivantes se rattachent seules.
+
+> **Sauvegarde.** La sauvegarde quotidienne ne couvre que la base. `var/invoices/`
+> contient l'unique exemplaire des factures reçues : il doit entrer dans la
+> sauvegarde de la machine.
 
 ---
 

@@ -95,7 +95,7 @@ fi
 # commande echoue sur « Unable to create the cache directory ». Le bloc
 # Permissions en fin de script arrive trop tard pour ce premier appel.
 log "Preparation des dossiers var/..."
-mkdir -p var/cache var/log var/data var/backups public/uploads/boutique
+mkdir -p var/cache var/log var/data var/backups var/invoices public/uploads/boutique
 if id "$WEB_USER" &>/dev/null; then
     chown -R "$WEB_USER:$WEB_USER" var/ public/uploads/ 2>/dev/null || warn "chown initial impossible."
 fi
@@ -138,7 +138,7 @@ run_php bin/console cache:warmup --env=prod --no-interaction
 
 # --- Permissions (filet de securite) ---------------------------------------
 log "Permissions..."
-mkdir -p var/cache var/log var/data
+mkdir -p var/cache var/log var/data var/invoices
 if id "$WEB_USER" &>/dev/null; then
     chown -R "$WEB_USER:$WEB_USER" var/ 2>/dev/null || warn "chown impossible."
 fi

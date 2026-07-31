@@ -40,6 +40,17 @@ class Supplier
     #[ORM\Column(length: 5, nullable: true)]
     private ?string $country = null;
 
+    /**
+     * Adresse d'expédition des factures.
+     *
+     * Sert à rattacher automatiquement une facture reçue par courriel à son
+     * fournisseur, y compris quand la pièce jointe est un PDF illisible pour le
+     * moteur. Renseignée à la main, ou mémorisée le jour où un humain rattache
+     * une première facture venue de cette adresse.
+     */
+    #[ORM\Column(length: 200, nullable: true)]
+    private ?string $email = null;
+
     #[ORM\Column(name: 'created_at')]
     private \DateTimeImmutable $createdAt;
 
@@ -78,6 +89,17 @@ class Supplier
 
     public function getCountry(): ?string { return $this->country; }
     public function setCountry(?string $v): static { $this->country = $v; return $this; }
+
+    public function getEmail(): ?string { return $this->email; }
+    public function setEmail(?string $v): static { $this->email = $v ? strtolower(trim($v)) : null; return $this; }
+
+    /** Domaine de l'adresse d'expédition, pour un rattachement plus large. */
+    public function getEmailDomain(): ?string
+    {
+        return $this->email && str_contains($this->email, '@')
+            ? substr($this->email, strpos($this->email, '@') + 1)
+            : null;
+    }
 
     public function getCreatedAt(): \DateTimeImmutable { return $this->createdAt; }
 

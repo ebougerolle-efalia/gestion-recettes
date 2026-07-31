@@ -12,6 +12,10 @@
                 <p class="text-2xl font-bold {{ pending|length ? 'text-amber-600' : 'text-[#1c2434]' }} mt-0.5">{{ pending|length }}</p>
             </div>
             <div class="rounded-2xl border border-gray-200 bg-white px-5 py-3">
+                <p class="text-[10px] font-semibold uppercase tracking-wider text-gray-400">À saisir</p>
+                <p class="text-2xl font-bold {{ to_capture|length ? 'text-orange-600' : 'text-[#1c2434]' }} mt-0.5">{{ to_capture|length }}</p>
+            </div>
+            <div class="rounded-2xl border border-gray-200 bg-white px-5 py-3">
                 <p class="text-[10px] font-semibold uppercase tracking-wider text-gray-400">Traitées</p>
                 <p class="text-2xl font-bold text-[#1c2434] mt-0.5">{{ processed|length }}</p>
             </div>
@@ -21,6 +25,54 @@
             <i class="fas fa-file-import text-[11px]"></i> Importer une facture
         </a>
     </div>
+
+    {% if mailbox %}
+        <p class="mb-6 text-[11px] text-gray-400">
+            <i class="fas fa-inbox mr-1"></i>
+            Réception automatique active sur <span class="font-mono">{{ mailbox }}</span>.
+            Les factures envoyées à cette adresse arrivent seules dans cette page.
+        </p>
+    {% endif %}
+
+    {# ── Quarantaine : reçues mais illisibles pour le moteur ── #}
+    {% if to_capture is not empty %}
+        <div class="rounded-2xl border border-orange-200 bg-white mb-6">
+            <div class="px-6 py-4 border-b border-orange-100 flex items-center gap-2">
+                <div class="w-2 h-2 rounded-full bg-orange-500"></div>
+                <h3 class="font-semibold text-[15px] text-[#1c2434]">Reçues, à saisir</h3>
+                <span class="text-[11px] text-gray-400">
+                    — pièces conservées, mais sans données Factur-X exploitables
+                </span>
+            </div>
+
+            <div class="divide-y divide-gray-50">
+                {% for invoice in to_capture %}
+                    <div class="flex items-center gap-4 px-6 py-4 hover:bg-orange-50/30 transition-colors">
+                        <div class="flex-1 min-w-0">
+                            <p class="font-medium text-sm text-gray-800">
+                                {{ invoice.supplier ? invoice.supplier.name : 'Fournisseur à rattacher' }}
+                            </p>
+                            <p class="text-[11px] text-gray-400 mt-0.5 truncate">
+                                {{ invoice.displayReference }}
+                                · reçue le {{ invoice.importedAt|date('d/m/Y') }}
+                                {% if invoice.senderEmail %} · de {{ invoice.senderEmail }}{% endif %}
+                            </p>
+                        </div>
+                        {% if invoice.hasAttachment %}
+                            <a href="{{ path('app_invoice_attachment', {id: invoice.id}) }}" target="_blank"
+                               class="text-[11px] text-blue-600 hover:underline flex-shrink-0">
+                                <i class="fas fa-file-pdf mr-1"></i>Voir la pièce
+                            </a>
+                        {% endif %}
+                        <a href="{{ path('app_invoice_capture', {id: invoice.id}) }}"
+                           class="inline-flex items-center rounded-full bg-orange-50 px-3 py-1 text-[10px] font-semibold text-orange-700 hover:bg-orange-100 flex-shrink-0">
+                            Saisir les lignes
+                        </a>
+                    </div>
+                {% endfor %}
+            </div>
+        </div>
+    {% endif %}
 
     {# ── File d'attente ── #}
     <div class="rounded-2xl border border-gray-200 bg-white mb-6">
@@ -39,7 +91,7 @@
                     <a href="{{ path('app_invoice_review', {id: invoice.id}) }}"
                        class="flex items-center gap-4 px-6 py-4 hover:bg-blue-50/40 transition-colors">
                         <div class="flex-1 min-w-0">
-                            <p class="font-medium text-sm text-gray-800">{{ invoice.supplier.name }}</p>
+                            <p class="font-medium text-sm text-gray-800">{{ invoice.supplier ? invoice.supplier.name : 'Fournisseur inconnu' }}</p>
                             <p class="text-[11px] text-gray-400 mt-0.5">
                                 {{ invoice.invoiceId }} · {{ invoice.invoiceDate|date('d/m/Y') }}
                                 {% if invoice.source != 'manual' %}
@@ -87,8 +139,8 @@
                     <tbody class="divide-y divide-gray-50">
                         {% for invoice in processed %}
                             <tr class="hover:bg-gray-50/50">
-                                <td class="px-6 py-3 font-medium text-gray-800">{{ invoice.supplier.name }}</td>
-                                <td class="px-4 py-3 text-gray-500 font-mono text-xs">{{ invoice.invoiceId }}</td>
+                                <td class="px-6 py-3 font-medium text-gray-800">{{ invoice.supplier ? invoice.supplier.name : 'Fournisseur inconnu' }}</td>
+                                <td class="px-4 py-3 text-gray-500 font-mono text-xs">{{ invoice.displayReference }}</td>
                                 <td class="px-4 py-3 text-gray-500">{{ invoice.invoiceDate|date('d/m/Y') }}</td>
                                 <td class="px-4 py-3 text-right text-gray-700">
                                     {{ invoice.totalHt ? invoice.totalHt|number_format(2, ',', ' ') ~ ' €' : '—' }}

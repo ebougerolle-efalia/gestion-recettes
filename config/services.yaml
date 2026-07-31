@@ -4,4 +4,18 @@ services:
         autoconfigure: true
     App\:
         resource: '../src/'
-        exclude: '../src/{Entity,Kernel.php}'
+        # ImapClient est construit à la volée par MailboxReader avec les
+        # paramètres du DSN : l'enregistrer ici reviendrait à demander au
+        # conteneur d'autocâbler un hôte et un mot de passe.
+        exclude: '../src/{Entity,Kernel.php,Service/ImapClient.php}'
+
+    # Archive des fichiers de facture reçus, sous var/invoices.
+    App\Service\InvoiceArchive:
+        arguments:
+            $projectDir: '%kernel.project_dir%'
+
+    # Boîte de réception des factures. Vide : le canal courriel est inactif et
+    # la commande de relève le dit au lieu d'échouer.
+    App\Service\MailboxReader:
+        arguments:
+            $dsn: '%env(INVOICE_MAILBOX_DSN)%'

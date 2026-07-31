@@ -22,6 +22,66 @@ class SupplierRepository extends ServiceEntityRepository
         return $this->findOneBy(['name' => $name]);
     }
 
+    /**
+     * Retrouve un fournisseur à partir de l'adresse qui a expédié la facture.
+     *
+     * L'adresse exacte fait foi. À défaut, le domaine : les factures partent
+     * souvent d'une adresse de service (facturation@, compta@, no-reply@) qui
+     * change au gré des outils du fournisseur, alors que le domaine, lui, tient.
+     * Un domaine partagé — gmail.com, orange.fr — ne peut évidemment rien
+     * identifier et n'est jamais utilisé pour ce rapprochement.
+     */
+    public function findByEmail(?string $email): ?Supplier
+    {
+        $email = strtolower(trim((string) $email));
+
+        if ($email === '' || !str_contains($email, '@')) {
+            return null;
+        }
+
+        if ($found = $this->findOneBy(['email' => $email])) {
+            return $found;
+        }
+
+        $domain = substr($email, strpos($email, '@') + 1);
+
+        if (in_array($domain, self::SHARED_DOMAINS, true)) {
+            return null;
+        }
+
+        return $this->createQueryBuilder('s')
+            ->andWhere('LOWER(s.email) LIKE :domain')
+            ->setParameter('domain', '%@' . $domain)
+            ->setMaxResults(1)
+            ->getQuery()
+            ->getOneOrNullResult();
+    }
+
+    /**
+     * Une adresse dont le domaine désigne réellement une entreprise.
+     *
+     * Sert avant de mémoriser une adresse d'expédition : retenir « @gmail.com »
+     * rattacherait ensuite n'importe quel courriel personnel à ce fournisseur.
+     */
+    public function isIdentifyingAddress(?string $email): bool
+    {
+        $email = strtolower(trim((string) $email));
+
+        if ($email === '' || !str_contains($email, '@')) {
+            return false;
+        }
+
+        return !in_array(substr($email, strpos($email, '@') + 1), self::SHARED_DOMAINS, true);
+    }
+
+    /** Domaines de messagerie grand public : ne désignent aucun fournisseur. */
+    private const SHARED_DOMAINS = [
+        'gmail.com', 'googlemail.com', 'orange.fr', 'wanadoo.fr', 'free.fr',
+        'sfr.fr', 'laposte.net', 'outlook.com', 'outlook.fr', 'hotmail.com',
+        'hotmail.fr', 'live.fr', 'yahoo.fr', 'yahoo.com', 'icloud.com',
+        'bbox.fr', 'numericable.fr', 'aol.com', 'protonmail.com', 'proton.me',
+    ];
+
     public function findAllWithStats(): array
     {
         $conn = $this->getEntityManager()->getConnection();

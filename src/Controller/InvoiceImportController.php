@@ -7,10 +7,13 @@ use App\Repository\IngredientCategoryRepository;
 use App\Repository\IngredientPriceRepository;
 use App\Repository\IngredientRepository;
 use App\Repository\PurchaseInvoiceRepository;
+use App\Repository\SupplierRepository;
+use App\Service\InvoiceArchive;
 use App\Service\InvoiceInbox;
+use App\Service\MailboxReader;
 use App\Service\UnitConverter;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
-use Symfony\Component\HttpFoundation\{Request, Response};
+use Symfony\Component\HttpFoundation\{BinaryFileResponse, Request, Response, ResponseHeaderBag};
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
 
@@ -27,11 +30,13 @@ class InvoiceImportController extends AbstractController
     // ─── File d'attente ──────────────────────────────────────────────────────
 
     #[Route('/factures', name: 'app_invoice_index', methods: ['GET'])]
-    public function index(PurchaseInvoiceRepository $invoices): Response
+    public function index(PurchaseInvoiceRepository $invoices, MailboxReader $mailbox): Response
     {
         return $this->render('invoice/index.html.twig', [
-            'pending'   => $invoices->findPending(),
-            'processed' => $invoices->findProcessed(),
+            'pending'    => $invoices->findPending(),
+            'to_capture' => $invoices->findToCapture(),
+            'processed'  => $invoices->findProcessed(),
+            'mailbox'    => $mailbox->isConfigured() ? $mailbox->describe() : null,
         ]);
     }
 
@@ -57,7 +62,12 @@ class InvoiceImportController extends AbstractController
             default => $file->getMimeType() ?? '',
         };
 
-        $result = $inbox->receive(file_get_contents($file->getPathname()), $mime);
+        $result = $inbox->receive(
+            file_get_contents($file->getPathname()),
+            $mime,
+            PurchaseInvoice::SOURCE_MANUAL,
+            ['filename' => $file->getClientOriginalName()]
+        );
 
         if ($result['error']) {
             $this->addFlash('danger', $result['error']);
@@ -69,15 +79,21 @@ class InvoiceImportController extends AbstractController
         if ($result['duplicate']) {
             $this->addFlash('warning', sprintf(
                 'Facture %s de %s déjà reçue le %s — aucun doublon créé.',
-                $invoice->getInvoiceId(),
-                $invoice->getSupplier()->getName(),
+                $invoice->getDisplayReference(),
+                $invoice->getSupplier()?->getName() ?? 'fournisseur inconnu',
                 $invoice->getImportedAt()->format('d/m/Y')
             ));
 
             return $this->redirectToRoute(
-                $invoice->isPending() ? 'app_invoice_review' : 'app_invoice_index',
-                $invoice->isPending() ? ['id' => $invoice->getId()] : []
+                $invoice->isOpen() ? $this->reviewRoute($invoice) : 'app_invoice_index',
+                $invoice->isOpen() ? ['id' => $invoice->getId()] : []
             );
+        }
+
+        if ($result['captured']) {
+            $this->addFlash('warning', 'Fichier conservé, mais aucune donnée Factur-X à l\'intérieur : les lignes sont à saisir.');
+
+            return $this->redirectToRoute('app_invoice_capture', ['id' => $invoice->getId()]);
         }
 
         $this->addFlash('info', sprintf(
@@ -88,6 +104,97 @@ class InvoiceImportController extends AbstractController
         ));
 
         return $this->redirectToRoute('app_invoice_review', ['id' => $invoice->getId()]);
+    }
+
+    // ─── Quarantaine : saisie manuelle d'une facture illisible ───────────────
+
+    #[Route('/factures/{id}/saisir', name: 'app_invoice_capture', requirements: ['id' => '\d+'], methods: ['GET', 'POST'])]
+    public function capture(
+        PurchaseInvoice $invoice,
+        Request $request,
+        InvoiceInbox $inbox,
+        SupplierRepository $supplierRepo,
+    ): Response {
+        if (!$invoice->isToCapture()) {
+            return $this->redirectToRoute($this->reviewRoute($invoice), ['id' => $invoice->getId()]);
+        }
+
+        if ($request->isMethod('GET')) {
+            return $this->render('invoice/capture.html.twig', [
+                'purchaseInvoice' => $invoice,
+                'suppliers'       => $supplierRepo->findBy([], ['name' => 'ASC']),
+            ]);
+        }
+
+        // Le fournisseur peut manquer : il est demandé dans le même formulaire,
+        // et l'adresse d'expédition est retenue pour les factures suivantes.
+        $supplierId = (int) $request->request->get('supplier_id');
+        if ($supplierId && $supplier = $supplierRepo->find($supplierId)) {
+            $conflict = $inbox->assignSupplier($invoice, $supplier, $request->request->get('invoice_id'));
+
+            if ($conflict) {
+                $this->addFlash('danger', sprintf(
+                    'La facture %s de %s est déjà enregistrée (reçue le %s). Cette pièce en est un double : écarte-la, ou saisis le bon numéro.',
+                    $conflict->getInvoiceId(),
+                    $supplier->getName(),
+                    $conflict->getImportedAt()->format('d/m/Y')
+                ));
+
+                return $this->redirectToRoute('app_invoice_capture', ['id' => $invoice->getId()]);
+            }
+        }
+
+        if (!$invoice->getSupplier()) {
+            $this->addFlash('danger', 'Choisis le fournisseur : sans lui, les prix ne peuvent être rattachés à personne.');
+            return $this->redirectToRoute('app_invoice_capture', ['id' => $invoice->getId()]);
+        }
+
+        if ($date = $request->request->get('invoice_date')) {
+            $invoice->setInvoiceDate(new \DateTime($date));
+        }
+
+        $count = $inbox->capture($invoice, $request->request->all('lines'));
+
+        if ($count === 0) {
+            $this->addFlash('warning', 'Aucune ligne saisie : il faut au moins un libellé et un prix.');
+            return $this->redirectToRoute('app_invoice_capture', ['id' => $invoice->getId()]);
+        }
+
+        $this->addFlash('info', sprintf('%d ligne(s) saisie(s) — à confirmer comme une facture lue.', $count));
+
+        return $this->redirectToRoute('app_invoice_review', ['id' => $invoice->getId()]);
+    }
+
+    /**
+     * Fichier d'origine de la facture.
+     *
+     * Servi par le contrôleur et non depuis la racine web : une facture
+     * fournisseur ne doit pas être atteignable par une URL devinée.
+     */
+    #[Route('/factures/{id}/piece', name: 'app_invoice_attachment', requirements: ['id' => '\d+'], methods: ['GET'])]
+    public function attachment(PurchaseInvoice $invoice, InvoiceArchive $archive): Response
+    {
+        $path = $invoice->getAttachmentPath();
+
+        if (!$path || !$archive->exists($path)) {
+            throw $this->createNotFoundException('Le fichier d\'origine de cette facture n\'a pas été conservé.');
+        }
+
+        return new BinaryFileResponse(
+            $archive->absolutePath($path),
+            Response::HTTP_OK,
+            ['Content-Type' => $invoice->getAttachmentMime() ?? 'application/octet-stream'],
+            false,
+            // En ligne : on la lit à côté du formulaire de saisie, on ne la
+            // télécharge pas pour la ranger dans un dossier.
+            ResponseHeaderBag::DISPOSITION_INLINE
+        );
+    }
+
+    /** Une facture en quarantaine se saisit ; une facture lue se valide. */
+    private function reviewRoute(PurchaseInvoice $invoice): string
+    {
+        return $invoice->isToCapture() ? 'app_invoice_capture' : 'app_invoice_review';
     }
 
     // ─── Validation ──────────────────────────────────────────────────────────
