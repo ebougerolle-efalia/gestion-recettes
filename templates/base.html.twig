@@ -3,7 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{% block title %}Gestion Recettes{% endblock %}</title>
+    <title>{% block title %}Gestion des recettes{% endblock %}</title>
+    <link rel="icon" href="{{ asset('favicon.svg') }}" type="image/svg+xml">
     <script src="https://cdn.tailwindcss.com?plugins=forms"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
@@ -19,9 +20,17 @@
 
     <aside id="sidebar" class="fixed inset-y-0 left-0 z-50 w-[280px] bg-[#1c2434] text-white flex flex-col transform -translate-x-full lg:translate-x-0 transition-transform duration-300">
         <div class="px-7 py-6 border-b border-white/[.06]">
-            <a href="{{ path('app_recipe_index') }}" class="block">
-                <h1 class="text-xl font-bold tracking-tight">{{ boutique().nomEtablissement ?: 'Gestion Recettes' }}</h1>
-                <p class="text-[11px] text-gray-400 mt-0.5">{{ boutique().sousTitre ?: 'Gestion des recettes & coûts' }}</p>
+            <a href="{{ path('app_home') }}" class="flex items-start gap-3">
+                <span class="text-[#E3B558] shrink-0 mt-0.5">{% include 'partials/logo.html.twig' with {size: 30} %}</span>
+                <span class="min-w-0">
+                    <span class="flex items-center gap-2">
+                        <h1 class="text-xl font-bold tracking-tight truncate">{{ boutique().nomEtablissement ?: 'Mon établissement' }}</h1>
+                        {# Mention de version : visible sur chaque écran tant que le produit
+                           est en évaluation, pour qu'un testeur sache ce qu'il manipule. #}
+                        <span class="shrink-0 rounded-full bg-[#E3B558]/15 text-[#E3B558] text-[9px] font-bold uppercase tracking-wider px-2 py-0.5 border border-[#E3B558]/30">Alpha</span>
+                    </span>
+                    <p class="text-[11px] text-gray-400 mt-0.5">{{ boutique().sousTitre ?: 'Gestion des recettes & coûts' }}</p>
+                </span>
             </a>
         </div>
 

@@ -1,0 +1,22 @@
+{#
+  Marque visuelle : balance à deux plateaux (dite balance Roberval).
+
+  Volontairement SANS nom : le nom commercial n'est pas arrêté, et ce tracé
+  restera valable quel que soit celui retenu. La couleur suit `currentColor`,
+  ce qui le rend lisible aussi bien sur la barre latérale sombre que sur le
+  fond clair de la page de connexion.
+
+  Usage : {% include 'partials/logo.html.twig' with {size: 32} %}
+#}
+{% set size = size|default(32) %}
+<svg viewBox="0 0 32 32" width="{{ size }}" height="{{ size }}" aria-hidden="true" focusable="false"
+     fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M7 11h18"/>
+    <path d="M16 11v11"/>
+    <path d="M11.5 24h9"/>
+    <path d="M9.5 11v1.5"/>
+    <path d="M22.5 11v1.5"/>
+    <path d="M6 13h7l-3.5 4.5z"/>
+    <path d="M19 13h7l-3.5 4.5z"/>
+    <circle cx="16" cy="9.4" r="1.5" fill="currentColor" stroke="none"/>
+</svg>
