@@ -120,9 +120,17 @@ puis le domaine. Les domaines grand public (gmail, orange, free…) n'identifien
 personne et sont écartés. Quand un humain rattache une première facture, l'adresse
 est mémorisée : les suivantes se rattachent seules.
 
-> **Sauvegarde.** La sauvegarde quotidienne ne couvre que la base. `var/invoices/`
-> contient l'unique exemplaire des factures reçues : il doit entrer dans la
-> sauvegarde de la machine.
+**Sauvegarde.** La base ne contient que les données extraites d'une facture ; le
+fichier reçu, lui, est une pièce comptable dont `var/invoices/` détient l'unique
+exemplaire. La sauvegarde quotidienne en fait donc un miroir sous
+`var/backups/invoices/`, par liens physiques : le nom d'un fichier étant son
+empreinte SHA-256, son contenu ne change jamais, le lien ne coûte aucun espace
+disque et survit à la suppression de l'original.
+
+Deux régimes de rétention, à ne pas confondre : les dumps de base sont des
+instantanés redondants, purgés à 14 jours ; les factures ne le sont **jamais** —
+purger ce miroir détruirait les seules copies. Emporter `var/backups/` suffit à
+restaurer un client complet.
 
 ---
 

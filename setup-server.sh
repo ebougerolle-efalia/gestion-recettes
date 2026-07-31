@@ -216,13 +216,17 @@ GIT_BRANCH="$GIT_BRANCH" ./deploy.sh
 chown -R www-data:www-data var/ public/uploads/
 chmod -R 775 var/ public/uploads/
 
-# --- Sauvegarde quotidienne de la base ---------------------------------------
+# --- Sauvegarde quotidienne ---------------------------------------------------
 # Indispensable depuis le passage à PostgreSQL : il n'y a plus de fichier à
 # copier, et une copie à chaud du répertoire de données serait inexploitable.
+#
+# Réécrit à chaque passage, et non créé une seule fois : un client provisionné
+# par une version antérieure du script doit recevoir les corrections en
+# relançant setup-server.sh. C'est un fichier entièrement engendré, personne
+# n'est censé l'éditer à la main.
 BACKUP_CRON="/etc/cron.daily/${APP_NAME}-backup-${CLIENT_SLUG}"
-if [ ! -f "$BACKUP_CRON" ]; then
-    log "Installation de la sauvegarde quotidienne…"
-    cat > "$BACKUP_CRON" <<CRON
+log "Installation de la sauvegarde quotidienne…"
+cat > "$BACKUP_CRON" <<CRON
 #!/bin/bash
 set -euo pipefail
 DIR="${APP_DIR}/var/backups"
@@ -232,20 +236,42 @@ URL="\$(grep -E '^DATABASE_URL=' ${APP_DIR}/.env.local | tail -1 | cut -d= -f2- 
 # « invalid URI query parameter ». On coupe tout ce qui suit le point d'interrogation.
 URL="\${URL%%\\?*}"
 pg_dump --format=custom --file="\$DIR/daily_\$(date +%Y%m%d).dump" "\$URL"
-# Rétention : 14 jours.
+# Rétention : 14 jours. Ne vise que les dumps — surtout pas les factures.
 find "\$DIR" -name 'daily_*.dump' -mtime +14 -delete
-CRON
-    chmod 750 "$BACKUP_CRON"
+
+# --- Factures reçues ---------------------------------------------------------
+# La base ne contient que les données extraites : le fichier reçu, lui, est une
+# pièce comptable dont var/invoices détient l'unique exemplaire. Une sauvegarde
+# qui n'emporterait que le dump laisserait un client restauré sans ses factures.
+#
+# Miroir par liens physiques : le nom d'un fichier est son empreinte SHA-256,
+# donc son contenu ne change jamais. Un lien ne coûte aucun espace disque, reste
+# valide indéfiniment, et survit à la suppression de l'original — c'est
+# exactement ce qu'on protège. « -n » rend le passage idempotent en ignorant ce
+# qui est déjà lié.
+#
+# AUCUNE rétention ici : purger ce miroir détruirait les seules copies.
+if [ -d "${APP_DIR}/var/invoices" ]; then
+    mkdir -p "\$DIR/invoices"
+    if ! cp -aln "${APP_DIR}/var/invoices/." "\$DIR/invoices/" 2>/dev/null; then
+        # Lien impossible (systèmes de fichiers distincts) : copie réelle.
+        if ! cp -an "${APP_DIR}/var/invoices/." "\$DIR/invoices/" 2>/dev/null; then
+            # Ni l'un ni l'autre : le dump est déjà écrit, on ne fait pas échouer
+            # la sauvegarde entière — mais cron poste ce message à root.
+            echo "ATTENTION : les factures de ${CLIENT_SLUG} n'ont pas pu être copiées dans \$DIR/invoices" >&2
+        fi
+    fi
 fi
+CRON
+chmod 750 "$BACKUP_CRON"
 
 # --- Relève de la boîte de réception des factures ----------------------------
 # Installée même quand aucune boîte n'est configurée : la commande le détecte et
 # ne fait rien. Le jour où le client renseigne INVOICE_MAILBOX_DSN dans son
 # .env.local, la réception démarre sans qu'on ait à repasser sur le serveur.
 FETCH_CRON="/etc/cron.d/${APP_NAME}-factures-${CLIENT_SLUG}"
-if [ ! -f "$FETCH_CRON" ]; then
-    log "Installation de la relève des factures (toutes les 15 min)…"
-    cat > "$FETCH_CRON" <<CRON
+log "Installation de la relève des factures (toutes les 15 min)…"
+cat > "$FETCH_CRON" <<CRON
 # Relève de la boîte de réception des factures — ${CLIENT_SLUG}
 # Sous www-data : la commande écrit dans var/ et dans la base, exactement comme
 # l'application. La lancer sous root laisserait des fichiers que l'application
@@ -254,10 +280,9 @@ SHELL=/bin/bash
 PATH=/usr/local/bin:/usr/bin:/bin
 */15 * * * * www-data cd ${APP_DIR} && php bin/console app:invoice-fetch --env=prod >> ${APP_DIR}/var/log/invoice-fetch.log 2>&1
 CRON
-    # cron ignore silencieusement un fichier de /etc/cron.d exécutable ou
-    # inscriptible par un autre que root : ces droits ne sont pas cosmétiques.
-    chmod 644 "$FETCH_CRON"
-fi
+# cron ignore silencieusement un fichier de /etc/cron.d exécutable ou
+# inscriptible par un autre que root : ces droits ne sont pas cosmétiques.
+chmod 644 "$FETCH_CRON"
 
 mkdir -p var/log
 touch var/log/invoice-fetch.log
