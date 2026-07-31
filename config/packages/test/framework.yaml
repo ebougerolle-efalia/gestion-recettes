@@ -1,0 +1,7 @@
+framework:
+    # Active le client de test (BrowserKit) utilisé par les tests fonctionnels.
+    test: true
+    session:
+        # Sessions en fichier simulé : pas de session native, donc pas d'état
+        # partagé entre deux tests.
+        storage_factory_id: session.storage.factory.mock_file

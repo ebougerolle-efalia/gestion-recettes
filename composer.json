@@ -30,5 +30,8 @@
             "symfony/flex": false,
             "symfony/runtime": true
         }
+    },
+    "require-dev": {
+        "symfony/test-pack": "^1.2"
     }
 }

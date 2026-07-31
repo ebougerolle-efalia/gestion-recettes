@@ -73,6 +73,39 @@ pour renseigner le nom de l'établissement.
 
 ---
 
+## Tests
+
+Deux suites, séparées parce qu'elles n'ont pas les mêmes exigences.
+
+**`unit`** — moteur de conversion d'unités et rapprochement de libellés. Aucune
+base, aucun réseau : exécutable partout, y compris en intégration continue.
+
+```bash
+php vendor/bin/phpunit --testsuite unit
+```
+
+**`fonctionnel`** — parcours de toutes les pages en tant qu'éditeur. Vérifie
+qu'aucune ne renvoie 500. C'est le filet qui manquait : deux requêtes SQLite
+oubliées lors du passage à PostgreSQL (`julianday()` et `date('now', '-12 months')`)
+avaient mis le tableau de bord et la page fournisseurs en erreur en production,
+sans que rien ne le signale avant qu'un humain ne clique.
+
+Elle demande une base de test **distincte de celle de développement**, peuplée
+une fois pour toutes :
+
+```bash
+docker compose exec database createdb -U recettes recettes_test
+APP_ENV=test php bin/console doctrine:migrations:migrate --no-interaction
+APP_ENV=test php bin/console app:seed
+APP_ENV=test php bin/console app:demo-data
+php vendor/bin/phpunit
+```
+
+Sans cette base, les tests fonctionnels se marquent *skipped* au lieu d'échouer :
+l'absence d'environnement n'est pas une régression.
+
+---
+
 ## Déploiement d'un client en production
 
 Toute la configuration vit dans **`setup.conf`**, seul fichier à personnaliser.

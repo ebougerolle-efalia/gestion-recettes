@@ -16,6 +16,9 @@
 # === Uploads clients (logos, etc. — régénérés au déploiement) ===
 /public/uploads/
 
+# === Tests ===
+/.phpunit.cache/
+
 # === IDE / éditeurs ===
 /.idea/
 /.vscode/
