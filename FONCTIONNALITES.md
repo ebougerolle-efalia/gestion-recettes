@@ -47,7 +47,9 @@ Avertissements explicites quand un chiffre n'est pas fiable, au lieu d'afficher 
 
 ### Impression / documents
 - **Fiche technique complète** (avec coûts, marges, traçabilité prix) — réservée aux profils éditeurs.
-- **Fiche labo** (process, quantités nettes, allergènes, nutrition — **sans aucune donnée financière**) — accessible aussi aux lecteurs.
+- **Fiche labo** (composition, quantités brutes et nettes, pertes et rendements, allergènes, nutrition — **sans aucune donnée financière**) — accessible aussi aux lecteurs.
+- **Mise à l'échelle à l'impression** : on saisit la quantité réellement produite et toutes les quantités sont recalculées, sans toucher à la recette de référence.
+- **Mercuriale PDF** : tous les ingrédients par catégorie, dernier prix, fournisseur, date et évolution sur 30 jours — à emporter en rendez-vous fournisseur.
 
 ### Multi-utilisateurs & rôles
 - Rôles **éditeur** / **lecteur**. Le lecteur consulte mais ne modifie rien et **ne peut imprimer que la fiche labo** (protégé côté serveur, pas seulement masqué).
@@ -127,6 +129,7 @@ RestoPilot est le concurrent le plus proche de nous, et plus proche que ce table
 - **Pas d'ingénierie de menu, pas de saisie des ventes.** La méthode Omnès classe des plats les uns contre les autres sur une carte fermée ; un charcutier-traiteur n'a pas de carte mais une production quotidienne variable, vendue au poids. Le cadre ne transpose pas. Et la donnée qui manquait n'était pas le volume des ventes, c'était le **prix pratiqué** : un champ, saisi une fois, contre un relevé permanent. Ne pas avoir de saisie des ventes est ce qui rend l'outil installable en une heure.
 - Nutrition : limite connue sur l'égouttage des graisses à la cuisson (légère surestimation) — correction manuelle prévue en v2.
 - Rattachement Ciqual : les suggestions automatiques restent **à confirmer par un humain**. L'état cru/cuit change fortement les valeurs, et elles finissent en déclaration INCO : on préfère laisser un ingrédient non rattaché qu'associer un aliment faux.
+- **Pas de mode opératoire** : ni étapes, ni temps, ni températures, ni barème de cuisson. Seule une note libre existe par ligne. La fiche labo est donc une fiche de *composition*, pas une fiche de *procédé* — limite à lever si les relecteurs métier la jugent bloquante (voir roadmap).
 
 ---
 
@@ -134,9 +137,10 @@ RestoPilot est le concurrent le plus proche de nous, et plus proche que ce table
 
 1. **Réception des factures sans geste manuel** : se brancher sur une PDP, ou offrir une adresse de réception dédiée, pour que la mercuriale se mette à jour sans dépôt de fichier. L'import Factur-X étant livré, c'est là que se joue la suite du différenciateur — et l'échéance du 1ᵉʳ septembre 2026 en fait le bon moment.
 2. **Alerte de dérive de marge par e-mail** : « cette semaine, 3 recettes ont perdu plus de 2 points de marque réelle, le poivre noir a pris 8 % ». Le prix pratiqué et l'écart au conseillé sont livrés ; il reste à en faire un envoi périodique. C'est le vrai produit de l'alimentation automatique des prix — aucun concurrent ne peut l'écrire sans les factures qui entrent seules.
-3. **Repérage par famille de recettes**, en distribution (nombre, marque minimale, médiane, maximale) et non en moyenne : sans volumes de vente, une moyenne se laisse tirer par un produit confidentiel. Presque gratuit, les familles existent déjà.
-4. Si un besoin de pondération apparaît : un champ **importance A/B/C** par recette, coché une fois, pour trier les alertes — plutôt qu'un relevé de ventes récurrent.
-5. Surcharge manuelle des valeurs nutritionnelles (cuisson) ; étiquettes produit prêtes pour la vente préemballée et les appels d'offres B2B.
+3. **Mode opératoire et barème de cuisson sur la fiche** : étapes numérotées, temps et températures, pour que la fiche labo soit utilisable au poste de travail et porte la traçabilité attendue en contrôle. Priorité à arbitrer selon le retour des relecteurs métier — c'est la première chose qu'un professionnel cherche sur une fiche.
+4. **Repérage par famille de recettes**, en distribution (nombre, marque minimale, médiane, maximale) et non en moyenne : sans volumes de vente, une moyenne se laisse tirer par un produit confidentiel. Presque gratuit, les familles existent déjà.
+5. Si un besoin de pondération apparaît : un champ **importance A/B/C** par recette, coché une fois, pour trier les alertes — plutôt qu'un relevé de ventes récurrent.
+6. Surcharge manuelle des valeurs nutritionnelles (cuisson) ; étiquettes produit prêtes pour la vente préemballée et les appels d'offres B2B.
 
 ---
 
