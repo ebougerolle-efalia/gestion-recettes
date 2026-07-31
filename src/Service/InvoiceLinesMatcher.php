@@ -11,7 +11,7 @@ use Doctrine\ORM\EntityManagerInterface;
  * aux ingrédients du catalogue, par ordre de priorité :
  *
  *  1. Correspondance exacte dans les mappings mémorisés (score 100)
- *  2. similar_text() sur libellés normalisés (score 0-100)
+ *  2. Rapprochement par mots communs, normalisés (score 0-100)
  *  3. Aucune correspondance (score 0)
  *
  * Les associations confirmées par l'utilisateur sont sauvegardées
@@ -19,8 +19,26 @@ use Doctrine\ORM\EntityManagerInterface;
  */
 class InvoiceLinesMatcher
 {
-    /** Seuil minimum de similarité pour proposer une correspondance automatique */
-    private const MATCH_THRESHOLD = 55.0;
+    /** Score minimal, de 0 à 1, pour proposer une correspondance. */
+    private const MATCH_THRESHOLD = 0.55;
+
+    /**
+     * Mots vides des libellés fournisseurs : conditionnement, mentions
+     * commerciales et unités. « Crème liquide 35% MG - colis de 6 x 1 L » doit
+     * se réduire à « creme liquide » pour être comparable au catalogue.
+     */
+    private const STOPWORDS = [
+        'de', 'du', 'des', 'd', 'a', 'au', 'aux', 'en', 'et', 'ou', 'le', 'la', 'les', 'l',
+        'sans', 'avec', 'pour', 'par', 'sur', 'type', 'sorte', 'ref', 'reference',
+        'frais', 'fraiche', 'fraiches', 'surgele', 'surgelee', 'refrigere', 'refrig',
+        'qualite', 'choix', '1er', '2eme', 'extra', 'premium', 'select', 'superieur', 'sup',
+        'bio', 'aop', 'aoc', 'igp', 'label', 'rouge', 'francais', 'francaise', 'france',
+        'sac', 'sachet', 'colis', 'carton', 'caisse', 'bidon', 'boite', 'barquette', 'seau',
+        'pot', 'bocal', 'plaquette', 'bobine', 'lot', 'palette', 'unite', 'piece', 'pieces',
+        'kg', 'g', 'gr', 'mg', 'l', 'cl', 'ml', 'litre', 'litres', 'net', 'poids',
+        'decoupe', 'decoupage', 'industriel', 'usage', 'alimentaire', 'culinaire',
+        'professionnel', 'nature', 'naturelle', 'maison', 'artisanal', 'artisanale',
+    ];
 
     public function __construct(
         private IngredientRepository $ingredientRepo,
@@ -69,26 +87,36 @@ class InvoiceLinesMatcher
             ];
         }
 
-        // ── 2. Correspondance fuzzy ──────────────────────────────────────────
+        // ── 2. Rapprochement par mots ────────────────────────────────────────
+        // similar_text() comparait des caractères sans comprendre les mots :
+        // « Epaule porc desossee 1er choix » y ressemblait davantage à « Foie de
+        // porc » qu'à « Épaule de porc désossée », et « Participation frais de
+        // port » devenait de la poitrine de porc. Le comptage de mots communs
+        // supprime cette famille d'erreurs.
+        $labelTokens = TextMatching::tokenize($label, self::STOPWORDS);
+        if (!$labelTokens) {
+            return ['ingredient' => null, 'score' => 0, 'source' => 'none'];
+        }
+
         $best      = null;
         $bestScore = 0.0;
-        $candidates = [];
 
         foreach ($ingredients as $ing) {
-            $ingNorm = $this->normalize($ing->getName());
-            similar_text($normalized, $ingNorm, $score);
-            $candidates[] = ['ing' => $ing, 'score' => $score];
+            $score = TextMatching::score(
+                $labelTokens,
+                TextMatching::tokenize($ing->getName(), self::STOPWORDS)
+            );
 
             if ($score > $bestScore) {
                 $bestScore = $score;
-                $best = $ing;
+                $best      = $ing;
             }
         }
 
-        if ($bestScore >= self::MATCH_THRESHOLD) {
+        if ($best && $bestScore >= self::MATCH_THRESHOLD) {
             return [
                 'ingredient' => $best,
-                'score'      => (int) round($bestScore),
+                'score'      => (int) round($bestScore * 100),
                 'source'     => 'fuzzy',
             ];
         }
