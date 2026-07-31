@@ -141,6 +141,7 @@ RestoPilot est le concurrent le plus proche de nous, et plus proche que ce table
 4. **Repérage par famille de recettes**, en distribution (nombre, marque minimale, médiane, maximale) et non en moyenne : sans volumes de vente, une moyenne se laisse tirer par un produit confidentiel. Presque gratuit, les familles existent déjà.
 5. Si un besoin de pondération apparaît : un champ **importance A/B/C** par recette, coché une fois, pour trier les alertes — plutôt qu'un relevé de ventes récurrent.
 6. Surcharge manuelle des valeurs nutritionnelles (cuisson) ; étiquettes produit prêtes pour la vente préemballée et les appels d'offres B2B.
+7. **Nutri-Score** — repoussé, mais cadré. Deux données manquent : les **fibres**, présentes dans la table Ciqual mais absentes de notre extrait, et le **pourcentage de fruits, légumes et légumineuses**, qui ne se déduit d'aucun nutriment — en revanche il se calcule depuis la composition, ce qu'aucune base d'étiquetage partant du produit fini ne sait faire. Rappel : marque collective de Santé publique France, usage soumis à enregistrement, et conçue pour le préemballé. À traiter comme un outil de transparence et de reformulation, pas comme un argument commercial : sur de la charcuterie, les scores tombent mécaniquement en D et E.
 
 ---
 
