@@ -1,0 +1,610 @@
+/*
+  Vitrine — feuille de style unique, sans dépendance externe.
+
+  Aucune requête sortante : ni police distante, ni framework CDN, ni icône
+  tierce. Une page qui collecte des données personnelles en France et qui
+  appellerait Google Fonts transmettrait l'adresse IP du visiteur aux
+  États-Unis avant tout consentement — c'est le motif exact de la condamnation
+  prononcée par le tribunal de Munich en janvier 2022. Le coût de l'évitement
+  est faible : une pile de polices système et des tracés SVG.
+
+  La palette n'est pas inventée : elle sort de la marque déjà dessinée, une
+  balance à deux plateaux en laiton sur fond d'encre.
+*/
+
+:root {
+    --encre:      #131b29;  /* fond des moments sombres — l'encre de l'application */
+    --encre-clair:#1f2a3d;
+    --laiton:     #e3b558;  /* la balance, et la seule chose vive de la page */
+    --laiton-mat: #b8892e;
+    --papier:     #f0eee8;
+    --papier-pur: #fbfaf7;
+    --trait:      #ddd8cc;
+    --texte:      #1a2130;
+    --texte-doux: #5c6472;
+    --texte-pale: #8d94a1;
+    --hausse:     #b4402e;  /* réservé aux prix qui montent. Nulle part ailleurs. */
+
+    --large:      1120px;
+    --etroit:     720px;
+
+    /* Les chiffres d'argent sont alignés comme sur une mercuriale imprimée :
+       c'est la convention du métier, pas un effet de style. */
+    --chiffres:   ui-monospace, "SF Mono", "Cascadia Mono", "JetBrains Mono",
+                  Menlo, Consolas, "Liberation Mono", monospace;
+    --texte-face: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+                  "Helvetica Neue", Arial, sans-serif;
+}
+
+/* ─── Fondations ─────────────────────────────────────────────────────────── */
+
+*, *::before, *::after { box-sizing: border-box; }
+
+html { -webkit-text-size-adjust: 100%; scroll-behavior: smooth; }
+
+body {
+    margin: 0;
+    background: var(--papier);
+    color: var(--texte);
+    font-family: var(--texte-face);
+    font-size: 17px;
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+}
+
+img, svg { max-width: 100%; }
+
+a { color: inherit; }
+
+h1, h2, h3 {
+    margin: 0;
+    letter-spacing: -0.028em;
+    line-height: 1.08;
+    font-weight: 800;
+}
+
+h1 { font-size: clamp(2.4rem, 6.2vw, 4.1rem); }
+h2 { font-size: clamp(1.8rem, 4vw, 2.7rem); }
+h3 { font-size: 1.15rem; letter-spacing: -0.015em; }
+
+p { margin: 0; }
+
+/* Le chapeau de section : petites capitales très espacées, comme l'en-tête
+   d'un bon de livraison. */
+.eyebrow {
+    font-size: 0.72rem;
+    font-weight: 700;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--laiton-mat);
+    margin-bottom: 1.1rem;
+}
+
+.sombre .eyebrow { color: var(--laiton); }
+
+.somme { font-family: var(--chiffres); font-variant-numeric: tabular-nums; }
+
+.enveloppe {
+    max-width: var(--large);
+    margin: 0 auto;
+    padding: 0 1.5rem;
+}
+
+.enveloppe-etroite {
+    max-width: var(--etroit);
+    margin: 0 auto;
+    padding: 0 1.5rem;
+}
+
+/* ─── Bandeaux ───────────────────────────────────────────────────────────── */
+
+.bandeau { padding: 5.5rem 0; }
+.bandeau-sombre { background: var(--encre); color: var(--papier); }
+.bandeau-papier { background: var(--papier-pur); }
+
+.sombre .texte-doux, .bandeau-sombre .texte-doux { color: #98a3b5; }
+.texte-doux { color: var(--texte-doux); }
+
+/* ─── En-tête ────────────────────────────────────────────────────────────── */
+
+.entete {
+    position: sticky;
+    top: 0;
+    z-index: 20;
+    background: rgba(19, 27, 41, 0.92);
+    backdrop-filter: saturate(140%) blur(8px);
+    border-bottom: 1px solid rgba(227, 181, 88, 0.16);
+    color: var(--papier);
+}
+
+.entete .enveloppe {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    height: 66px;
+}
+
+.marque {
+    display: flex;
+    align-items: center;
+    gap: 0.65rem;
+    font-weight: 800;
+    letter-spacing: -0.02em;
+    font-size: 1.05rem;
+    text-decoration: none;
+    color: var(--laiton);
+}
+
+.marque span { color: var(--papier); }
+
+.jeton-alpha {
+    font-size: 0.6rem;
+    font-weight: 700;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--laiton);
+    border: 1px solid rgba(227, 181, 88, 0.42);
+    background: rgba(227, 181, 88, 0.12);
+    border-radius: 999px;
+    padding: 0.16rem 0.5rem;
+}
+
+.entete nav {
+    margin-left: auto;
+    display: flex;
+    align-items: center;
+    gap: 1.5rem;
+    font-size: 0.9rem;
+}
+
+.entete nav a { color: #b9c2d1; text-decoration: none; }
+.entete nav a:hover { color: var(--papier); }
+
+/* ─── Boutons ────────────────────────────────────────────────────────────── */
+
+.bouton {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    border: 0;
+    border-radius: 10px;
+    padding: 0.85rem 1.4rem;
+    font-family: inherit;
+    font-size: 0.98rem;
+    font-weight: 700;
+    letter-spacing: -0.01em;
+    text-decoration: none;
+    cursor: pointer;
+    background: var(--laiton);
+    color: var(--encre);
+    transition: transform 0.14s ease, background 0.14s ease;
+}
+
+.bouton:hover { background: #eec46f; transform: translateY(-1px); }
+.bouton-discret {
+    background: transparent;
+    color: var(--papier);
+    border: 1px solid rgba(240, 238, 232, 0.3);
+}
+.bouton-discret:hover { background: rgba(240, 238, 232, 0.08); }
+.bouton-large { width: 100%; justify-content: center; padding: 1rem 1.4rem; }
+
+.entete .bouton { padding: 0.55rem 1rem; font-size: 0.88rem; }
+
+:focus-visible {
+    outline: 3px solid var(--laiton);
+    outline-offset: 2px;
+    border-radius: 4px;
+}
+
+/* ─── Ouverture ──────────────────────────────────────────────────────────── */
+
+.ouverture {
+    background: var(--encre);
+    color: var(--papier);
+    padding: 5rem 0 4.5rem;
+    overflow: hidden;
+}
+
+.ouverture .enveloppe {
+    display: grid;
+    grid-template-columns: 1.05fr 0.95fr;
+    gap: 4rem;
+    align-items: center;
+}
+
+.ouverture h1 { max-width: 12ch; }
+.ouverture h1 em { font-style: normal; color: var(--laiton); }
+
+.chapeau {
+    margin-top: 1.6rem;
+    font-size: 1.14rem;
+    line-height: 1.55;
+    color: #b9c2d1;
+    max-width: 46ch;
+}
+
+.actions {
+    margin-top: 2.2rem;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.85rem;
+    align-items: center;
+}
+
+.mention-actions {
+    margin-top: 1.1rem;
+    font-size: 0.83rem;
+    color: #7f8a9c;
+}
+
+/* ─── La balance : l'élément signature ───────────────────────────────────── */
+
+/*
+  La marque est une balance à deux plateaux. Plutôt que de la poser en
+  décoration, on lui fait faire son travail : le plateau du coût s'alourdit
+  quand une facture arrive, et la marge qui s'affiche dessous suit le
+  mouvement. C'est la thèse du produit en un geste.
+*/
+.balance-cadre {
+    background: var(--encre-clair);
+    border: 1px solid rgba(227, 181, 88, 0.18);
+    border-radius: 18px;
+    padding: 1.6rem 1.6rem 1.3rem;
+}
+
+.balance { display: block; width: 100%; height: auto; }
+
+.balance .fleau {
+    transform-origin: 200px 70px;
+    transform: rotate(0deg);
+    transition: transform 1.5s cubic-bezier(0.34, 1.12, 0.5, 1);
+}
+
+.balance .plateau-gauche,
+.balance .plateau-droit {
+    transition: transform 1.5s cubic-bezier(0.34, 1.12, 0.5, 1);
+}
+
+.balance .facture {
+    opacity: 0;
+    transform: translate(0, -46px);
+    transition: opacity 0.5s ease 0.15s, transform 0.9s cubic-bezier(0.3, 0.9, 0.4, 1) 0.15s;
+}
+
+/* Rotation négative : en SVG l'axe Y descend, donc un angle positif ferait
+   MONTER le bras gauche — l'inverse de ce qu'on raconte. Le déplacement des
+   plateaux, ±12,5 px, est le sinus de 6° appliqué au demi-fléau (120 px) :
+   les plateaux restent ainsi accrochés à leurs suspentes. */
+.balance.penchee .fleau         { transform: rotate(-6deg); }
+.balance.penchee .plateau-gauche { transform: translateY(12.5px); }
+.balance.penchee .plateau-droit  { transform: translateY(-12.5px); }
+.balance.penchee .facture        { opacity: 1; transform: translate(0, 0); }
+
+.releve {
+    margin-top: 1.3rem;
+    padding-top: 1.1rem;
+    border-top: 1px solid rgba(240, 238, 232, 0.12);
+    display: flex;
+    align-items: baseline;
+    gap: 0.6rem;
+    flex-wrap: wrap;
+}
+
+.releve-libelle {
+    font-size: 0.72rem;
+    font-weight: 700;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: #7f8a9c;
+}
+
+.releve-valeur {
+    font-family: var(--chiffres);
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--papier);
+    font-variant-numeric: tabular-nums;
+}
+
+.releve-delta {
+    font-family: var(--chiffres);
+    font-size: 0.9rem;
+    font-weight: 700;
+    color: #e5705c;
+}
+
+.releve-note {
+    width: 100%;
+    font-size: 0.83rem;
+    color: #7f8a9c;
+    margin-top: 0.35rem;
+}
+
+/* ─── Les trois temps ────────────────────────────────────────────────────── */
+
+/*
+  Numérotés parce que c'est réellement une suite : rien ne se recalcule avant
+  que les prix ne soient entrés, et les prix n'entrent pas avant que la facture
+  n'arrive. L'ordre porte l'information.
+*/
+.temps {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 2.5rem;
+    margin-top: 3rem;
+    counter-reset: temps;
+}
+
+.temps > li { list-style: none; counter-increment: temps; }
+
+.temps > li::before {
+    content: counter(temps, decimal-leading-zero);
+    display: block;
+    font-family: var(--chiffres);
+    font-size: 0.95rem;
+    font-weight: 700;
+    color: var(--laiton-mat);
+    padding-bottom: 0.9rem;
+    margin-bottom: 1.1rem;
+    border-bottom: 2px solid var(--laiton);
+}
+
+.temps h3 { margin-bottom: 0.6rem; }
+.temps p { color: var(--texte-doux); font-size: 0.97rem; }
+
+/* ─── Écrans / capacités ─────────────────────────────────────────────────── */
+
+.grille-capacites {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(255px, 1fr));
+    gap: 1.6rem;
+    margin-top: 3rem;
+}
+
+.capacite {
+    background: var(--papier-pur);
+    border: 1px solid var(--trait);
+    border-radius: 14px;
+    padding: 1.5rem;
+}
+
+.bandeau-papier .capacite { background: var(--papier); }
+
+.capacite h3 { margin-bottom: 0.5rem; }
+.capacite p { color: var(--texte-doux); font-size: 0.95rem; }
+
+/* ─── Ce que l'outil ne fait pas ─────────────────────────────────────────── */
+
+.exclusions {
+    margin: 2.2rem 0 0;
+    padding: 0;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.6rem;
+}
+
+.exclusions li {
+    list-style: none;
+    font-size: 0.93rem;
+    color: var(--texte-doux);
+    border: 1px dashed var(--trait);
+    border-radius: 999px;
+    padding: 0.4rem 0.95rem;
+}
+
+/* ─── Offres ─────────────────────────────────────────────────────────────── */
+
+.offres {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1.6rem;
+    margin-top: 3rem;
+    align-items: start;
+}
+
+.offre {
+    border: 1px solid var(--trait);
+    border-radius: 16px;
+    padding: 1.9rem;
+    background: var(--papier-pur);
+}
+
+.offre-mise-en-avant {
+    border: 2px solid var(--encre);
+    background: var(--encre);
+    color: var(--papier);
+    position: relative;
+}
+
+.offre-etiquette {
+    position: absolute;
+    top: -0.75rem;
+    left: 1.9rem;
+    background: var(--laiton);
+    color: var(--encre);
+    font-size: 0.65rem;
+    font-weight: 800;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    border-radius: 999px;
+    padding: 0.28rem 0.7rem;
+}
+
+.offre-nom {
+    font-size: 1.25rem;
+    font-weight: 800;
+    letter-spacing: -0.02em;
+}
+
+.offre-promesse {
+    margin-top: 0.3rem;
+    font-size: 0.95rem;
+    color: var(--texte-doux);
+}
+
+.offre-mise-en-avant .offre-promesse { color: #b9c2d1; }
+
+.offre-prix {
+    margin: 1.4rem 0 0.2rem;
+    font-family: var(--chiffres);
+    font-size: 2.6rem;
+    font-weight: 700;
+    letter-spacing: -0.03em;
+}
+
+.offre-prix small {
+    font-family: var(--texte-face);
+    font-size: 0.95rem;
+    font-weight: 500;
+    letter-spacing: 0;
+    color: var(--texte-doux);
+}
+
+.offre-mise-en-avant .offre-prix small { color: #b9c2d1; }
+
+.offre-base {
+    font-size: 0.83rem;
+    color: var(--texte-pale);
+    margin-bottom: 1.6rem;
+}
+
+.offre-mise-en-avant .offre-base { color: #7f8a9c; }
+
+.offre ul { margin: 0 0 1.7rem; padding: 0; }
+
+.offre li {
+    list-style: none;
+    display: flex;
+    gap: 0.65rem;
+    align-items: flex-start;
+    font-size: 0.95rem;
+    padding: 0.42rem 0;
+    border-top: 1px solid var(--trait);
+}
+
+.offre li:first-child { border-top: 0; }
+.offre-mise-en-avant li { border-color: rgba(240, 238, 232, 0.12); }
+
+.offre li svg { flex: 0 0 auto; margin-top: 0.28rem; color: var(--laiton-mat); }
+.offre-mise-en-avant li svg { color: var(--laiton); }
+
+.offre-note {
+    margin-top: 2rem;
+    font-size: 0.86rem;
+    color: var(--texte-doux);
+    text-align: center;
+}
+
+/* ─── Formulaire ─────────────────────────────────────────────────────────── */
+
+.formulaire { margin-top: 2.6rem; display: grid; gap: 1.1rem; }
+
+.duo { display: grid; grid-template-columns: 1fr 1fr; gap: 1.1rem; }
+
+.champ { display: grid; gap: 0.4rem; }
+
+.champ label {
+    font-size: 0.78rem;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--texte-doux);
+}
+
+.champ input,
+.champ select,
+.champ textarea {
+    font-family: inherit;
+    font-size: 1rem;
+    color: var(--texte);
+    background: var(--papier-pur);
+    border: 1px solid var(--trait);
+    border-radius: 10px;
+    padding: 0.75rem 0.9rem;
+    width: 100%;
+}
+
+.champ textarea { min-height: 110px; resize: vertical; }
+
+.champ input:focus,
+.champ select:focus,
+.champ textarea:focus {
+    border-color: var(--laiton-mat);
+    outline: 2px solid rgba(227, 181, 88, 0.35);
+    outline-offset: 0;
+}
+
+/* Piège à robot : jamais affiché, jamais annoncé aux lecteurs d'écran, et
+   sorti du parcours au clavier. Un humain ne peut pas le remplir. */
+.piege {
+    position: absolute;
+    left: -9999px;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+}
+
+.mention-donnees {
+    font-size: 0.84rem;
+    color: var(--texte-doux);
+    line-height: 1.5;
+}
+
+.message {
+    border-radius: 12px;
+    padding: 1rem 1.2rem;
+    font-size: 0.95rem;
+    margin-bottom: 1.5rem;
+}
+
+.message-succes { background: #e7f1ea; border: 1px solid #b6d3c2; color: #1f5138; }
+.message-erreur { background: #fbeae7; border: 1px solid #eec3bb; color: #8c2f20; }
+
+/* ─── Pied ───────────────────────────────────────────────────────────────── */
+
+.pied {
+    background: var(--encre);
+    color: #7f8a9c;
+    padding: 3rem 0;
+    font-size: 0.88rem;
+}
+
+.pied .enveloppe { display: flex; flex-wrap: wrap; gap: 1.2rem; align-items: center; }
+.pied a { color: #b9c2d1; text-decoration: none; }
+.pied a:hover { color: var(--papier); text-decoration: underline; }
+.pied .droite { margin-left: auto; display: flex; gap: 1.4rem; flex-wrap: wrap; }
+
+/* ─── Adaptation aux petits écrans ───────────────────────────────────────── */
+
+@media (max-width: 900px) {
+    .ouverture .enveloppe { grid-template-columns: 1fr; gap: 2.8rem; }
+    .temps { grid-template-columns: 1fr; gap: 2rem; }
+    .offres { grid-template-columns: 1fr; }
+    .entete nav a:not(.bouton) { display: none; }
+}
+
+@media (max-width: 560px) {
+    body { font-size: 16px; }
+    .bandeau { padding: 3.8rem 0; }
+    .duo { grid-template-columns: 1fr; }
+    .pied .droite { margin-left: 0; }
+}
+
+/* ─── Mouvement réduit ───────────────────────────────────────────────────── */
+
+/*
+  Le mouvement porte du sens ici : sans lui, la balance doit s'afficher
+  directement dans son état final, penchée, sinon la démonstration disparaît.
+*/
+@media (prefers-reduced-motion: reduce) {
+    html { scroll-behavior: auto; }
+
+    .balance .fleau,
+    .balance .plateau-gauche,
+    .balance .plateau-droit,
+    .balance .facture,
+    .bouton {
+        transition: none !important;
+    }
+}

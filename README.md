@@ -134,6 +134,17 @@ restaurer un client complet.
 
 ---
 
+## Vitrine publique
+
+`landing/` contient la page de présentation et de demande d'accès, destinée au
+**domaine racine** — les instances clients occupant les sous-domaines. Elle est
+autonome : aucune dépendance au code applicatif, aucune ressource externe, et
+son propre `README`. Le bouton n'encaisse rien, il enregistre une demande ; le
+provisionnement reste manuel via `setup-server.sh`, ce qui correspond à la
+phase Alpha.
+
+---
+
 ## Tests
 
 Deux suites, séparées parce qu'elles n'ont pas les mêmes exigences.

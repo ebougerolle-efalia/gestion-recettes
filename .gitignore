@@ -16,6 +16,10 @@
 # === Uploads clients (logos, etc. — régénérés au déploiement) ===
 /public/uploads/
 
+# === Vitrine ===
+# Contient l'adresse de contact et le sel des empreintes.
+/landing/config.php
+
 # === Tests ===
 /.phpunit.cache/
 
