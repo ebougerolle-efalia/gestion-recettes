@@ -17,14 +17,15 @@ err()  { echo -e "${RED}[ERROR]${NC} $1"; exit 1; }
 # Toute commande qui echoue stoppe net le deploiement (avec le n de ligne).
 trap 'err "Echec du deploiement a la ligne $LINENO - site NON mis a jour."' ERR
 
-# deploy.sh est invoque tantot en root (premier deploiement, depuis
-# setup-server.sh), tantot en www-data (webhook, sur chaque push). Toute
-# commande qui ecrit dans l'arborescence doit donc tourner sous le MEME
-# utilisateur a chaque fois, sans quoi elle laisse des fichiers root-owned
-# qu'une invocation ulterieure en www-data ne peut plus modifier — le cas de
-# .git/ apres un premier clone en root : git fetch y echouerait en ecriture,
-# sans rapport avec l'authentification, meme une fois la cle SSH du depot en
-# place. Un seul point de passage pour php, composer et git.
+# Pas de deploiement automatique pour l'instant (pas de webhook, trop tot
+# dans le projet pour un push = mise en prod sans revue) : deploy.sh est
+# toujours lance a la main, en root, via SSH. Mais il ecrit dans une
+# arborescence lue en permanence par nginx/PHP-FPM sous www-data — sans
+# normalisation, un premier clone reste root-owned au-dela de var/, .git/
+# compris, et le jour ou un outil quelconque (cron, futur webhook) tente d'y
+# ecrire sous www-data, il echoue sans rapport avec l'authentification. Un
+# seul point de passage pour php, composer et git garantit un proprietaire
+# unique, quel que soit l'utilisateur qui a lance deploy.sh.
 run_as() {
     if [ "$(id -un)" = "$WEB_USER" ]; then
         "$@"

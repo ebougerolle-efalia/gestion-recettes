@@ -221,13 +221,18 @@ serveur vierge à l'instance en ligne — clés de déploiement SSH comprises, l
 trois dépôts (`gestion-recettes`, `gestion-recettes-vitrine`,
 `gestion-recettes-ops`) étant privés.
 
-Reste **ici**, parce qu'ils sont déployés avec chaque instance et non exécutés
-depuis un poste d'administration :
+`deploy.sh` reste **ici**, parce qu'il est déployé avec chaque instance et non
+exécuté depuis un poste d'administration : Composer, migrations, cache,
+appelé par `setup-server.sh` au premier déploiement.
 
-- `deploy.sh` — met à jour une instance (Composer, migrations, cache) ; appelé
-  par le webhook à chaque push, et par `setup-server.sh` au premier
-  déploiement
-- `public/webhook.php` — point d'entrée du déploiement automatique
+**Pas de déploiement automatique.** Aucun webhook n'est configuré : un
+`git push` sur `master` ne met à jour aucune instance toute seule — trop tôt
+dans le projet pour qu'une mise en production échappe à toute revue. Mettre à
+jour une instance est un geste explicite, en SSH :
+
+```bash
+cd /srv/gestion-recettes/<slug> && sudo ./deploy.sh
+```
 
 ---
 
@@ -253,16 +258,20 @@ non plus dans un fichier de l'arborescence. **Sauvegarder revient donc à faire 
 en privé garde un `origin` HTTPS anonyme dans son `.git/config` : renseigner
 `REPO_URL` dans `setup.conf` ne la corrige pas rétroactivement, et le premier
 `git fetch` suivant échouerait. `deploy.sh` compare l'origine réelle à
-`REPO_URL` (transmis par `webhook.php`, lu dans `.env.local`) à chaque
-déploiement, et la corrige elle-même quand elle est encore en HTTPS — même
-principe que la réparation des droits de `.env.local` juste après. Le premier
-`git pull` fait par un client provisionné avant ce changement écrit lui-même
-`REPO_URL` dans son `.env.local` (voir `gestion-recettes-ops/setup-server.sh`),
-sans intervention.
+`REPO_URL` (lu dans `.env.local`, ou passé explicitement en variable
+d'environnement) à chaque déploiement, et la corrige elle-même quand elle est
+encore en HTTPS — même principe que la réparation des droits de `.env.local`
+juste après. Un client déjà provisionné reçoit `REPO_URL` dans son
+`.env.local` dès la prochaine relance de `setup-server.sh` (voir
+`gestion-recettes-ops`) ; pour un déploiement manuel entre-temps :
+
+```bash
+REPO_URL="$(grep REPO_URL= .env.local | cut -d= -f2- | tr -d '"')" sudo ./deploy.sh
+```
 
 ## Fichiers de référence
 
-- `deploy.sh` — mise à jour d'une instance (appelé aussi par le webhook)
+- `deploy.sh` — mise à jour d'une instance, lancée manuellement en SSH
 - `.env` — valeurs par défaut (dev) ; **ne jamais mettre de secret ici**
 - `.env.local` — secrets de production (généré par `setup-server.sh`, jamais committé)
 
