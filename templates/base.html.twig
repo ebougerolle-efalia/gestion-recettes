@@ -5,10 +5,17 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% block title %}Gestion des recettes{% endblock %}</title>
     <link rel="icon" href="{{ asset('favicon.svg') }}" type="image/svg+xml">
+    {# Tailwind reste au CDN pour l'instant : les templates emploient des valeurs
+       arbitraires (text-[11px], text-[#1c2434]…) que seul le moteur du CDN sait
+       fabriquer à la volée. S'en passer impose une étape de compilation, donc
+       une décision d'outillage à part. Voir README, « Ressources externes ». #}
     <script src="https://cdn.tailwindcss.com?plugins=forms"></script>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+
+    {# Police et icônes hébergées ici : sans cela, l'adresse IP de chaque
+       utilisateur partait vers Google et Cloudflare à chaque page. #}
+    <link rel="stylesheet" href="{{ asset('assets/vendor/inter/inter.css') }}">
+    <link rel="stylesheet" href="{{ asset('assets/vendor/fontawesome/css/fontawesome.min.css') }}">
+    <link rel="stylesheet" href="{{ asset('assets/vendor/fontawesome/css/solid.min.css') }}">
     <style>
         body { font-family: 'Inter', sans-serif; }
         .chevron-icon { transition: transform 0.2s; }

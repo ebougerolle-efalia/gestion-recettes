@@ -11,8 +11,13 @@
     {% set product_name = "Gestion des recettes & coûts" %}
 
     <title>{{ product_name }} — Connexion</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    {# Police et icônes hébergées ici. La page de connexion est publique : c'est
+       celle où l'appel à un tiers ressemblerait le plus au cas jugé à Munich en
+       janvier 2022 — une adresse IP transmise aux États-Unis avant même que le
+       visiteur n'ait rien demandé. #}
+    <link rel="stylesheet" href="{{ asset('assets/vendor/inter/inter.css') }}">
+    <link rel="stylesheet" href="{{ asset('assets/vendor/fontawesome/css/fontawesome.min.css') }}">
+    <link rel="stylesheet" href="{{ asset('assets/vendor/fontawesome/css/solid.min.css') }}">
     <style>
         *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
         body { font-family: 'Inter', sans-serif; min-height: 100vh; display: flex; }

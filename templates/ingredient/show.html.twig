@@ -223,7 +223,9 @@
 {% endblock %}
 
 {% block javascripts %}
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+    {# Chart.js hébergé ici : un script tiers s'exécute avec accès complet au
+       DOM d'une session authentifiée qui affiche marges et prix fournisseurs. #}
+    <script src="{{ asset('assets/vendor/chartjs/chart.umd.min.js') }}"></script>
     <script>
         // Graphique évolution des prix
         // Les données sont lues depuis data-prices pour éviter les problèmes de portée Twig inter-blocs

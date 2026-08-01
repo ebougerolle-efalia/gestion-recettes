@@ -134,6 +134,27 @@ restaurer un client complet.
 
 ---
 
+## Ressources externes
+
+Police, icônes et bibliothèque de graphiques sont **hébergées par l'application**
+(`public/assets/vendor/`, voir son `LISEZMOI.md`). Elles étaient auparavant
+appelées chez Google et Cloudflare : l'adresse IP de chaque utilisateur partait
+vers deux entreprises américaines à chaque page, et un script tiers s'exécutait
+avec accès complet au DOM d'une session affichant marges et prix fournisseurs.
+
+Un test échoue si une adresse externe réapparaît dans une page rendue —
+`tests/Functional/RessourcesExternesTest.php`. C'est le seul garde-fou : recoller
+un lien de CDN tient en une ligne, marche immédiatement, et ne se voit pas.
+
+**Reste au CDN : Tailwind, et lui seul.** Les templates emploient une quarantaine
+de valeurs arbitraires (`text-[11px]` 85 fois, `text-[#1c2434]` 75 fois) que son
+moteur fabrique à la volée en lisant le DOM ; aucun fichier Tailwind prégénéré ne
+les contient. S'en passer impose une étape de compilation, donc Node en
+développement et le CSS produit versionné. Le jour où c'est fait, vider
+`RessourcesExternesTest::TOLERES`.
+
+---
+
 ## Vitrine publique
 
 `landing/` contient la page de présentation et de demande d'accès, destinée au
