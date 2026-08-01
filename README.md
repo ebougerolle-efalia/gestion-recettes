@@ -164,6 +164,17 @@ son propre `README`. Le bouton n'encaisse rien, il enregistre une demande ; le
 provisionnement reste manuel via `setup-server.sh`, ce qui correspond à la
 phase Alpha.
 
+Mise en place, sur un serveur vierge comme sur un serveur déjà peuplé :
+
+```bash
+sudo ./setup-vitrine.sh
+```
+
+Elle vit dans son propre clone (`$INSTALL_ROOT/vitrine`) : une correction de
+texte ne touche aucune instance, et la panne d'un client ne fait pas tomber la
+page publique. Le script est idempotent — le relancer publie les modifications.
+Détail des prérequis DNS dans `landing/README.md`.
+
 ---
 
 ## Tests

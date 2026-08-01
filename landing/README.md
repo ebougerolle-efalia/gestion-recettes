@@ -39,51 +39,60 @@ signalés par `NOM À DÉFINIR` dans `index.php` : l'en-tête et le pied. Le jou
 il est choisi, il reste à le poser à ces deux endroits, dans le `<title>` et
 dans la balise `og:title`.
 
-## Installation
+## Mise en place sur le serveur
+
+Une seule commande, depuis le dépôt de provisionnement (celui qui porte
+`setup.conf`) :
+
+```bash
+sudo ./setup-vitrine.sh
+```
+
+Le script clone la vitrine dans `$INSTALL_ROOT/vitrine`, engendre `config.php`
+avec un sel tiré au hasard et l'adresse `ADMIN_EMAIL`, prépare le dossier des
+demandes, écrit le vhost nginx pour le domaine nu **et** son `www`, obtient le
+certificat et installe la purge quotidienne des demandes de plus de douze mois.
+
+Il n'a besoin ni de base de données, ni de Composer, ni de Docker : il installe
+nginx et PHP-FPM s'ils manquent, et peut donc tourner sur un serveur vierge,
+avant toute instance client.
+
+**Avant de lancer**, deux enregistrements DNS doivent pointer vers le serveur :
+
+| Nom | Type |
+|---|---|
+| `exemple.fr` | A (ou AAAA) |
+| `www.exemple.fr` | A, ou CNAME vers `exemple.fr` |
+
+Sans le second, le certificat est demandé pour le domaine nu seul — le script le
+détecte et réessaie de lui-même.
+
+### Publier une modification
+
+Le script est idempotent : le relancer met à jour le clone, réécrit le vhost et
+recharge nginx. `config.php` n'est jamais écrasé.
+
+```bash
+sudo ./setup-vitrine.sh
+```
+
+Pour une simple correction de texte, un `git -C /srv/gestion-recettes/vitrine pull`
+suffit : la vitrine n'a ni cache ni compilation.
+
+### Configuration manuelle
+
+Si tu montes la vitrine à la main plutôt que par le script :
 
 ```bash
 cp config.example.php config.php
 php -r "echo bin2hex(random_bytes(16));"   # à reporter dans « sel »
-```
-
-Puis renseigner dans `config.php` l'adresse qui reçoit les demandes et celle qui
-les expédie. **L'expéditeur doit appartenir au domaine du serveur**, sinon les
-messageries classeront la notification en indésirable, voire la refuseront.
-
-Le dossier qui accueille les demandes doit être accessible en écriture à
-l'utilisateur du serveur web, et **hors de la racine web** :
-
-```bash
 mkdir -p ../var && chown www-data:www-data ../var && chmod 750 ../var
 ```
 
-### nginx
-
-```nginx
-server {
-    listen 443 ssl http2;
-    server_name exemple.fr www.exemple.fr;
-
-    root /srv/gestion-recettes/landing;
-    index index.php;
-
-    # La configuration ne doit jamais être lue, même si PHP tombe en panne et
-    # que nginx se met à servir les .php en texte brut.
-    location = /config.php { deny all; return 404; }
-
-    location / {
-        try_files $uri $uri/ =404;
-    }
-
-    location ~ \.php$ {
-        include snippets/fastcgi-php.conf;
-        fastcgi_pass unix:/run/php/php8.4-fpm.sock;
-    }
-
-    # La vitrine ne sert que ces types : tout le reste est refusé.
-    location ~ /\. { deny all; }
-}
-```
+**L'expéditeur doit appartenir au domaine du serveur**, sinon les messageries
+classeront la notification en indésirable, voire la refuseront. Le vhost à
+reproduire est celui qu'engendre `setup-vitrine.sh` — s'y reporter plutôt que de
+le réécrire : il refuse `config.php` et `bin/`, ce qui n'est pas facultatif.
 
 ## Vérifier avant mise en ligne
 
@@ -114,16 +123,20 @@ done
 
 Chaque demande porte une **empreinte** de l'adresse IP, jamais l'adresse
 elle-même : elle ne sert qu'à limiter le nombre d'envois par origine et par
-heure. Les mentions légales annoncent une purge à douze mois — c'est un
-engagement, il faut le tenir :
+heure.
+
+Les mentions légales annoncent une purge à douze mois. C'est un engagement, et
+il est tenu par une tâche quotidienne installée par `setup-vitrine.sh`. Pour la
+déclencher à la main, ou vérifier ce qu'elle ferait :
 
 ```bash
-# Retire les demandes de plus de douze mois.
-php -r '$f="../var/souscriptions.jsonl"; $g=[]; $l=strtotime("-12 months");
-foreach (file($f, FILE_IGNORE_NEW_LINES|FILE_SKIP_EMPTY_LINES) as $x) {
-  $d=json_decode($x,true); if ($d && strtotime($d["recu_le"])>=$l) { $g[]=$x; } }
-file_put_contents($f, $g ? implode("\n",$g)."\n" : "");'
+php bin/purge-demandes.php ../var/souscriptions.jsonl
 ```
+
+Une ligne illisible est conservée plutôt que supprimée : mieux vaut un résidu à
+examiner qu'une donnée effacée sur un malentendu. La réécriture passe par un
+fichier temporaire puis un remplacement atomique — une coupure en cours ne peut
+pas laisser un journal tronqué.
 
 ## Ce qui n'est pas fait
 
