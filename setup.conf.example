@@ -34,6 +34,16 @@ REPO_URL="https://github.com/ebougerolle-efalia/gestion-recettes.git"
 #    Conseil : garder "master" ici et passer la branche en argument pour les clients.
 GIT_BRANCH="master"
 
+# -- Dépôt Git de la vitrine (utilisé par setup-vitrine.sh). ------------------
+#    Séparé du dépôt applicatif, volontairement : historique de commits
+#    différent (tarifs envisagés, formulations d'offre) et rythme de
+#    publication différent — une correction de texte n'a pas à passer par la
+#    moindre revue de code applicatif. Dépôt privé recommandé.
+VITRINE_REPO_URL=""
+
+# -- Branche par défaut du dépôt vitrine (surchargeable en argument).
+VITRINE_BRANCH="main"
+
 # -- Nom technique de l'application. ------------------------------------------
 #    Sert de préfixe aux sites nginx, aux journaux, au fichier sudoers, au
 #    drapeau de bootstrap et aux crons de sauvegarde. Le changer après une

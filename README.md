@@ -157,23 +157,28 @@ développement et le CSS produit versionné. Le jour où c'est fait, vider
 
 ## Vitrine publique
 
-`landing/` contient la page de présentation et de demande d'accès, destinée au
-**domaine racine** — les instances clients occupant les sous-domaines. Elle est
-autonome : aucune dépendance au code applicatif, aucune ressource externe, et
-son propre `README`. Le bouton n'encaisse rien, il enregistre une demande ; le
-provisionnement reste manuel via `setup-server.sh`, ce qui correspond à la
-phase Alpha.
+Page de présentation et de demande d'accès, destinée au **domaine racine** —
+les instances clients occupant les sous-domaines. Elle vit dans **son propre
+dépôt Git**, distinct de celui-ci et privé : historique de commits différent
+(tarifs envisagés, formulations d'offre) et rythme de publication différent —
+une correction de texte n'a pas à passer par la moindre revue de code
+applicatif. Elle est autonome : aucune dépendance au code de ce dépôt, aucune
+ressource externe.
 
-Mise en place, sur un serveur vierge comme sur un serveur déjà peuplé :
+`setup-vitrine.sh`, lui, reste ici — aux côtés de `setup.conf` qu'il partage
+avec `setup-server.sh` (domaine, e-mail d'administration, emplacement
+d'installation). Renseigner `VITRINE_REPO_URL` dans `setup.conf`, puis :
 
 ```bash
 git pull && sudo ./setup-vitrine.sh
 ```
 
-Elle vit dans son propre clone (`$INSTALL_ROOT/vitrine`) : une correction de
-texte ne touche aucune instance, et la panne d'un client ne fait pas tomber la
-page publique. Le script est idempotent — le relancer publie les modifications.
-Détail des prérequis DNS dans `landing/README.md`.
+Elle vit dans son propre clone (`$INSTALL_ROOT/vitrine`), sa configuration et le
+journal des demandes dans un dossier frère (`$INSTALL_ROOT/vitrine-data`) —
+jamais atteignables par une racine web quelle qu'elle soit, même en cas d'erreur
+de vhost. Le script est idempotent — le relancer publie les modifications. Le
+bouton n'encaisse rien, il enregistre une demande ; le provisionnement reste
+manuel via `setup-server.sh`, ce qui correspond à la phase Alpha.
 
 ---
 

@@ -7,13 +7,17 @@ set -e
 #  Usage :
 #     sudo ./setup-vitrine.sh [branche]
 #
-#  La vitrine occupe le domaine nu (exemple.fr), les instances clients occupant
-#  les sous-domaines (dupont.exemple.fr). Elle vit dans son propre clone : une
-#  correction de texte ne touche aucune instance, et la panne d'un client ne
-#  fait pas tomber la page publique.
+#  La vitrine vit dans SON PROPRE dépôt (VITRINE_REPO_URL dans setup.conf),
+#  distinct de celui de l'application : historique de commits différent
+#  (tarifs envisagés, formulations d'offre) et rythme de publication différent
+#  — une correction de texte ne passe par aucune revue de code applicatif.
+#
+#  Elle occupe le domaine nu (exemple.fr), les instances clients occupant les
+#  sous-domaines (dupont.exemple.fr). Panne d'un client sans effet sur la page
+#  publique, et réciproquement.
 #
 #  Idempotent : relancer met à jour le clone, réécrit le vhost et recharge
-#  nginx. La configuration déjà en place (config.php) n'est jamais écrasée.
+#  nginx. La configuration déjà en place n'est jamais écrasée.
 # =============================================================================
 
 GREEN='\033[0;32m'; YELLOW='\033[1;33m'; RED='\033[0;31m'; NC='\033[0m'
@@ -36,9 +40,12 @@ fi
 # shellcheck source=/dev/null
 source "$SCRIPT_DIR/setup.conf"
 
-[ -z "$BASE_DOMAIN" ] && err "BASE_DOMAIN est vide dans setup.conf."
-[ -z "$ADMIN_EMAIL" ] && err "ADMIN_EMAIL est vide dans setup.conf."
-[ -z "$REPO_URL" ]    && err "REPO_URL est vide dans setup.conf."
+[ -z "$BASE_DOMAIN" ]      && err "BASE_DOMAIN est vide dans setup.conf."
+[ -z "$ADMIN_EMAIL" ]      && err "ADMIN_EMAIL est vide dans setup.conf."
+[ -z "$VITRINE_REPO_URL" ] && err "VITRINE_REPO_URL est vide dans setup.conf. La vitrine vit dans son propre dépôt — voir setup.conf.example."
+
+VITRINE_BRANCH="${VITRINE_BRANCH:-main}"
+[ -n "${1:-}" ] && VITRINE_BRANCH="$1"
 
 # --- Auto-mise à jour du script ----------------------------------------------
 # Même garde-fou que setup-server.sh, et pour la même raison : publier avec une
@@ -63,16 +70,22 @@ if [ -z "${VITRINE_SELF_UPDATED:-}" ] && [ -d "$SCRIPT_DIR/.git" ] && command -v
     fi
 fi
 
-[ -n "${1:-}" ] && GIT_BRANCH="$1"
-
+# --- Emplacements ---------------------------------------------------------------
+# VITRINE_DIR est le clone ET la racine web : le dépôt de la vitrine ne
+# contient que ce qui doit être public.
+#
+# DATA_DIR est son frère, jamais dans le clone : il porte config.php (le sel)
+# et le journal des demandes. La protection ne dépend ainsi d'aucune règle
+# nginx qu'un futur vhost pourrait oublier de reprendre — le fichier est
+# structurellement hors de toute racine web possible.
 VITRINE_DIR="${INSTALL_ROOT}/vitrine"
-DOC_ROOT="${VITRINE_DIR}/landing"
+DATA_DIR="${INSTALL_ROOT}/vitrine-data"
 SITE_NAME="${APP_NAME}-vitrine"
 BOOTSTRAP_FLAG="/etc/${APP_NAME}-bootstrap.done"
 
 log "Domaine  : $BASE_DOMAIN (et www.$BASE_DOMAIN)"
 log "Dossier  : $VITRINE_DIR"
-log "Branche  : $GIT_BRANCH"
+log "Branche  : $VITRINE_BRANCH"
 
 # --- Paquets ------------------------------------------------------------------
 # La vitrine peut être installée avant toute instance client : on ne suppose pas
@@ -113,40 +126,36 @@ command -v certbot >/dev/null 2>&1 || apt install -y certbot python3-certbot-ngi
 if [ -d "$VITRINE_DIR/.git" ]; then
     log "Mise à jour du clone…"
     git -C "$VITRINE_DIR" fetch --quiet origin
-    git -C "$VITRINE_DIR" checkout --quiet "$GIT_BRANCH"
+    git -C "$VITRINE_DIR" checkout --quiet "$VITRINE_BRANCH"
     git -C "$VITRINE_DIR" pull --ff-only --quiet \
         || err "Mise à jour impossible dans $VITRINE_DIR (modifications locales ?). Corrigez à la main."
 else
     log "Clonage → $VITRINE_DIR"
     mkdir -p "$INSTALL_ROOT"
-    git clone --quiet -b "$GIT_BRANCH" "$REPO_URL" "$VITRINE_DIR"
+    git clone --quiet -b "$VITRINE_BRANCH" "$VITRINE_REPO_URL" "$VITRINE_DIR"
 fi
 
-[ -f "$DOC_ROOT/index.php" ] || err "$DOC_ROOT/index.php introuvable : la branche $GIT_BRANCH contient-elle bien la vitrine ?"
+[ -f "$VITRINE_DIR/index.php" ] || err "$VITRINE_DIR/index.php introuvable : la branche $VITRINE_BRANCH du dépôt vitrine contient-elle bien la page ?"
 
-# --- Dossier des demandes -----------------------------------------------------
-# Hors de la racine web : servi en clair, le fichier des demandes exposerait des
-# données personnelles. Il vit dans le var/ du clone, que .gitignore ignore —
-# un git pull ne peut donc pas l'écraser.
-mkdir -p "$VITRINE_DIR/var"
-chown www-data:www-data "$VITRINE_DIR/var"
-chmod 750 "$VITRINE_DIR/var"
+# --- Données : configuration et journal des demandes --------------------------
+mkdir -p "$DATA_DIR"
+chown www-data:www-data "$DATA_DIR"
+chmod 750 "$DATA_DIR"
 
-# --- Configuration ------------------------------------------------------------
 # Créée une fois, jamais réécrite : elle porte un sel dont le changement
 # réinitialiserait les compteurs anti-robot.
-if [ ! -f "$DOC_ROOT/config.php" ]; then
+if [ ! -f "$DATA_DIR/config.php" ]; then
     log "Création de la configuration…"
     SEL="$(openssl rand -hex 16)"
-    cat > "$DOC_ROOT/config.php" <<PHPCONF
+    cat > "$DATA_DIR/config.php" <<PHPCONF
 <?php
-// Engendré par setup-vitrine.sh. Non versionné.
+// Engendré par setup-vitrine.sh. Vit hors du clone, jamais servi par le web.
 return [
     'destinataire'  => '${ADMIN_EMAIL}',
     // Doit appartenir au domaine du serveur, sinon les messageries classent
     // la notification en indésirable — voire la refusent.
     'expediteur'    => 'no-reply@${BASE_DOMAIN}',
-    'journal'       => '${VITRINE_DIR}/var/souscriptions.jsonl',
+    'journal'       => '${DATA_DIR}/souscriptions.jsonl',
     'max_par_heure' => 5,
     'sel'           => '${SEL}',
 ];
@@ -156,8 +165,8 @@ else
 fi
 
 # Lisible par le serveur web, par personne d'autre.
-chown root:www-data "$DOC_ROOT/config.php"
-chmod 640 "$DOC_ROOT/config.php"
+chown root:www-data "$DATA_DIR/config.php"
+chmod 640 "$DATA_DIR/config.php"
 
 # --- Vhost nginx --------------------------------------------------------------
 log "Configuration Nginx…"
@@ -165,7 +174,7 @@ cat > /etc/nginx/sites-available/${SITE_NAME} <<NGINX
 server {
     listen 80;
     server_name ${BASE_DOMAIN} www.${BASE_DOMAIN};
-    root ${DOC_ROOT};
+    root ${VITRINE_DIR};
     index index.php;
 
     access_log /var/log/nginx/${SITE_NAME}_access.log;
@@ -174,8 +183,9 @@ server {
     # La vitrine ne reçoit qu'un formulaire : inutile d'accepter davantage.
     client_max_body_size 1M;
 
-    # La configuration ne doit jamais être lue, même si PHP-FPM tombe et que
-    # nginx se met à servir les .php en texte brut — elle porte le sel.
+    # Défense en profondeur : un config.php ne devrait jamais se trouver ici,
+    # puisqu'il vit dans DATA_DIR. Cette règle protège une installation
+    # manuelle qui n'aurait pas suivi cette convention.
     location = /config.php  { deny all; return 404; }
     location = /config.example.php { deny all; return 404; }
 
@@ -186,15 +196,15 @@ server {
     location ~ \.php\$ {
         fastcgi_pass unix:/run/php/php${PHP_V}-fpm.sock;
         fastcgi_param SCRIPT_FILENAME \$realpath_root\$fastcgi_script_name;
+        # Indique à souscription.php où trouver sa configuration, hors du
+        # clone : voir le README de la vitrine, « Où vit la configuration ».
+        fastcgi_param VITRINE_CONFIG ${DATA_DIR}/config.php;
         include fastcgi_params;
     }
 
     location ~ /\. { deny all; }
     # Outils en ligne de commande : jamais atteignables par le web.
     location ^~ /bin/ { deny all; return 404; }
-
-    # Le reste du clone (code applicatif, var/, .git) est hors racine web par
-    # construction : la racine pointe sur landing/, pas sur le dépôt.
 }
 NGINX
 
@@ -225,14 +235,12 @@ cat > "$PURGE_CRON" <<CRON
 #!/bin/bash
 set -euo pipefail
 
-# Le chemin est inscrit à la génération : le passer au moment de l'exécution
-# obligerait à le transmettre à php, ce qui est une source d'erreur inutile.
-J="${VITRINE_DIR}/var/souscriptions.jsonl"
+# Les chemins sont inscrits à la génération : les passer au moment de
+# l'exécution obligerait à les transmettre à php, source d'erreur inutile.
+J="${DATA_DIR}/souscriptions.jsonl"
 [ -f "\$J" ] || exit 0
 
-# Réécriture par un fichier temporaire puis remplacement atomique : une coupure
-# en pleine écriture ne doit pas laisser un journal tronqué.
-php -f "${VITRINE_DIR}/landing/bin/purge-demandes.php" -- "\$J"
+php -f "${VITRINE_DIR}/bin/purge-demandes.php" -- "\$J"
 CRON
 chmod 750 "$PURGE_CRON"
 
@@ -242,12 +250,13 @@ log "============================================"
 log " VITRINE EN PLACE"
 log " URL        : https://${BASE_DOMAIN}"
 log " Dossier    : $VITRINE_DIR"
-log " Demandes   : ${VITRINE_DIR}/var/souscriptions.jsonl"
+log " Config     : ${DATA_DIR}/config.php"
+log " Demandes   : ${DATA_DIR}/souscriptions.jsonl"
 log " Notifiées à: $ADMIN_EMAIL"
 log "============================================"
 echo ""
 warn "Avant d'annoncer l'adresse :"
-warn "  1. Compléter ${DOC_ROOT}/mentions-legales.html — les passages entre"
+warn "  1. Compléter ${VITRINE_DIR}/mentions-legales.html — les passages entre"
 warn "     crochets sont des trous. Publier sans identifier l'éditeur"
 warn "     contrevient à l'article 6 III de la LCEN."
 warn "  2. Vérifier qu'une demande de test arrive bien par courriel."
