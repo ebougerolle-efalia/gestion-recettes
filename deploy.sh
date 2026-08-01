@@ -17,17 +17,22 @@ err()  { echo -e "${RED}[ERROR]${NC} $1"; exit 1; }
 # Toute commande qui echoue stoppe net le deploiement (avec le n de ligne).
 trap 'err "Echec du deploiement a la ligne $LINENO - site NON mis a jour."' ERR
 
-# Execute la console Symfony sous l'utilisateur web, pour que le cache,
-# les proxies Doctrine et la base restent toujours possedes par $WEB_USER,
-# meme si le script est lance en root (intervention manuelle).
-run_php() {
+# deploy.sh est invoque tantot en root (premier deploiement, depuis
+# setup-server.sh), tantot en www-data (webhook, sur chaque push). Toute
+# commande qui ecrit dans l'arborescence doit donc tourner sous le MEME
+# utilisateur a chaque fois, sans quoi elle laisse des fichiers root-owned
+# qu'une invocation ulterieure en www-data ne peut plus modifier — le cas de
+# .git/ apres un premier clone en root : git fetch y echouerait en ecriture,
+# sans rapport avec l'authentification, meme une fois la cle SSH du depot en
+# place. Un seul point de passage pour php, composer et git.
+run_as() {
     if [ "$(id -un)" = "$WEB_USER" ]; then
-        "$PHP_BIN" "$@"
+        "$@"
     elif command -v sudo >/dev/null 2>&1 && id "$WEB_USER" &>/dev/null; then
-        sudo -u "$WEB_USER" "$PHP_BIN" "$@"
+        sudo -u "$WEB_USER" "$@"
     else
         warn "Utilisateur '$WEB_USER' indisponible : execution en $(id -un)."
-        "$PHP_BIN" "$@"
+        "$@"
     fi
 }
 
@@ -71,26 +76,26 @@ fi
 # .env.local un peu plus bas — la panne s'est deja produite une fois pour
 # .env.local, elle guette pareillement ici tant que l'instance n'est pas migree.
 if [ -d ".git" ] && [ -n "${REPO_URL:-}" ]; then
-    CURRENT_ORIGIN="$(git remote get-url origin 2>/dev/null || echo '')"
+    CURRENT_ORIGIN="$(run_as git remote get-url origin 2>/dev/null || echo '')"
     if [ "$CURRENT_ORIGIN" != "$REPO_URL" ] && [[ "$CURRENT_ORIGIN" == https://* || "$CURRENT_ORIGIN" == http://* ]]; then
         warn "Origin git en HTTPS anonyme ($CURRENT_ORIGIN) - bascule vers $REPO_URL."
-        git remote set-url origin "$REPO_URL"
+        run_as git remote set-url origin "$REPO_URL"
     fi
 fi
 
 # --- Recuperation du code (synchro complete avec le depot) -----------------
 if [ -d ".git" ]; then
     log "Git pull (branche: $GIT_BRANCH)..."
-    git fetch origin \
-        || err "git fetch a echoue. Depot prive : verifiez la cle de deploiement SSH de www-data (README, section Depots prives)."
-    git reset --hard "origin/$GIT_BRANCH"
+    run_as git fetch origin \
+        || err "git fetch a echoue. Depot prive : verifiez la cle de deploiement SSH de \$WEB_USER (README, section Depots prives)."
+    run_as git reset --hard "origin/$GIT_BRANCH"
     log "Code a jour ($(git log -1 --format='%h - %s'))"
 fi
 
 # --- Dependances -----------------------------------------------------------
 log "Composer install..."
-"$COMPOSER_BIN" config allow-plugins.symfony/runtime true --no-interaction >/dev/null 2>&1 || true
-"$COMPOSER_BIN" install --no-dev --optimize-autoloader --no-interaction
+run_as "$COMPOSER_BIN" config allow-plugins.symfony/runtime true --no-interaction >/dev/null 2>&1 || true
+run_as "$COMPOSER_BIN" install --no-dev --optimize-autoloader --no-interaction
 
 # --- .env.local lisible par l'utilisateur web ------------------------------
 # La console tourne sous $WEB_USER : un .env.local en root:root la fait echouer
@@ -121,7 +126,7 @@ fi
 # doctrine_migration_versions. schema:update est proscrit ici, il peut
 # supprimer une colonne sans prevenir sur une base contenant des donnees.
 log "Migrations..."
-run_php bin/console doctrine:migrations:migrate --no-interaction --allow-no-migration
+run_as "$PHP_BIN" bin/console doctrine:migrations:migrate --no-interaction --allow-no-migration
 
 # Le seed depend de l'etat de la BASE, pas de la presence de vendor/ : un
 # premier deploiement interrompu apres composer install faisait basculer tous
@@ -141,7 +146,7 @@ fi
 
 if [ "$NEEDS_SEED" = "1" ]; then
     log "Seed initial (aucun utilisateur en base)..."
-    run_php bin/console app:seed
+    run_as "$PHP_BIN" bin/console app:seed
 fi
 
 # --- Cache : reconstruction propre, echec bloquant -------------------------
@@ -150,7 +155,7 @@ fi
 # deploiement s'arrete (au lieu de livrer un site casse en silence).
 log "Reconstruction du cache..."
 rm -rf var/cache/* 2>/dev/null || true
-run_php bin/console cache:warmup --env=prod --no-interaction
+run_as "$PHP_BIN" bin/console cache:warmup --env=prod --no-interaction
 
 # --- Permissions (filet de securite) ---------------------------------------
 log "Permissions..."

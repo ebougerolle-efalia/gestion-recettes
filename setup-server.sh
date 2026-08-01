@@ -91,6 +91,52 @@ if [ ! -f "$BOOTSTRAP_FLAG" ]; then
     # sudo est requis par deploy.sh (exécution sous www-data) et par le webhook.
     apt install -y curl git unzip nginx openssl sudo
 
+    # --- Vhost par defaut : ferme les sous-domaines non provisionnes --------
+    # Sans lui, un Host qui ne correspond a aucun vhost tombe sur le PREMIER
+    # bloc server lu par nginx — l'ordre depend du tri alphabetique des slugs
+    # clients, qui change a chaque nouveau client. Une sonde sur un sous-domaine
+    # au hasard, ou une simple faute de frappe, servirait alors silencieusement
+    # le contenu d'un client choisi par hasard d'alphabet plutot qu'une erreur.
+    # Pertinent des qu'un enregistrement DNS joker (*.bougerolle.ovh) couvre
+    # tous les sous-domaines a l'avance : voir README, section DNS.
+    rm -f /etc/nginx/sites-enabled/default
+
+    # Le meme risque existe en HTTPS, ou nginx choisit le certificat a
+    # presenter (SNI) selon le meme ordre non garanti — mais aucun vhost
+    # legitime n'a encore de certificat a ce stade du tout premier bootstrap.
+    # Un certificat auto-signe, jamais destine a etre valide, permet de fermer
+    # le port 443 au meme titre que le 80 : servir CE certificat pour un SNI
+    # inconnu est deja un signal clair d'erreur pour qui l'inspecte, et la
+    # connexion est de toute facon coupee ensuite.
+    mkdir -p /etc/nginx/ssl-catchall
+    if [ ! -f /etc/nginx/ssl-catchall/catchall.pem ]; then
+        openssl req -x509 -nodes -days 3650 -newkey rsa:2048 \
+            -keyout /etc/nginx/ssl-catchall/catchall.key \
+            -out /etc/nginx/ssl-catchall/catchall.pem \
+            -subj "/CN=invalid.invalid" >/dev/null 2>&1
+    fi
+
+    cat > /etc/nginx/sites-available/00-default-catchall <<NGINXDEFAULT
+server {
+    listen 80 default_server;
+    listen [::]:80 default_server;
+    server_name _;
+    # 444 : nginx ferme la connexion sans reponse. Ne confirme meme pas
+    # qu'un serveur ecoute ici, contrairement a une 404 ou une page d'erreur.
+    return 444;
+}
+server {
+    listen 443 ssl default_server;
+    listen [::]:443 ssl default_server;
+    server_name _;
+    ssl_certificate     /etc/nginx/ssl-catchall/catchall.pem;
+    ssl_certificate_key /etc/nginx/ssl-catchall/catchall.key;
+    return 444;
+}
+NGINXDEFAULT
+    ln -sf /etc/nginx/sites-available/00-default-catchall /etc/nginx/sites-enabled/
+    nginx -t && systemctl reload nginx 2>/dev/null || true
+
     # Détecter la meilleure version PHP disponible (8.4 > 8.3 > 8.2 > 8.1)
     PHP_V=""
     for v in 8.4 8.3 8.2 8.1; do
@@ -150,7 +196,15 @@ if [ -d "$APP_DIR" ]; then
 else
     log "Clonage du dépôt → $APP_DIR"
     mkdir -p "$INSTALL_ROOT"
-    git clone -b "$GIT_BRANCH" "$REPO_URL" "$APP_DIR"
+    # Cloné directement en www-data, pas en root suivi d'un chown : deploy.sh
+    # tourne tantôt en root (à l'instant, plus bas), tantôt en www-data
+    # (webhook, à chaque push). Un .git/ né root-owned ferait échouer le
+    # premier fetch déclenché par le webhook en écriture — sans rapport avec
+    # la clé SSH, un pur problème de propriétaire, découvert en préparant ce
+    # correctif. install crée le dossier déjà à www-data ; git clone accepte
+    # de cloner dans un répertoire existant tant qu'il est vide.
+    install -d -o www-data -g www-data -m 755 "$APP_DIR"
+    sudo -u www-data git clone -b "$GIT_BRANCH" "$REPO_URL" "$APP_DIR"
 fi
 
 cd "$APP_DIR"
