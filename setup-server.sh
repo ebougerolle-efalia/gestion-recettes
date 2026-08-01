@@ -223,7 +223,7 @@ mkdir -p public/uploads/boutique
 # --- Déploiement applicatif (composer, schéma, seed, cache) ------------------
 log "Déploiement initial via deploy.sh…"
 chmod +x deploy.sh
-GIT_BRANCH="$GIT_BRANCH" ./deploy.sh
+GIT_BRANCH="$GIT_BRANCH" REPO_URL="$REPO_URL" ./deploy.sh
 
 chown -R www-data:www-data var/ public/uploads/
 chmod -R 775 var/ public/uploads/
