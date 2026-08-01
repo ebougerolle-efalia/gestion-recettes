@@ -165,20 +165,15 @@ une correction de texte n'a pas à passer par la moindre revue de code
 applicatif. Elle est autonome : aucune dépendance au code de ce dépôt, aucune
 ressource externe.
 
-`setup-vitrine.sh`, lui, reste ici — aux côtés de `setup.conf` qu'il partage
-avec `setup-server.sh` (domaine, e-mail d'administration, emplacement
-d'installation). Renseigner `VITRINE_REPO_URL` dans `setup.conf`, puis :
+Son installation (`setup-vitrine.sh`) vit dans un **troisième dépôt**,
+`gestion-recettes-ops` — les outils d'exploitation eux-mêmes séparés du code
+applicatif, pour la même raison : historique et cadence propres à la
+topologie serveur, sans rapport avec les fonctionnalités du produit. Voir son
+README pour le mode opératoire complet.
 
-```bash
-git pull && sudo ./setup-vitrine.sh
-```
-
-Elle vit dans son propre clone (`$INSTALL_ROOT/vitrine`), sa configuration et le
-journal des demandes dans un dossier frère (`$INSTALL_ROOT/vitrine-data`) —
-jamais atteignables par une racine web quelle qu'elle soit, même en cas d'erreur
-de vhost. Le script est idempotent — le relancer publie les modifications. Le
-bouton n'encaisse rien, il enregistre une demande ; le provisionnement reste
-manuel via `setup-server.sh`, ce qui correspond à la phase Alpha.
+Le bouton de la vitrine n'encaisse rien, il enregistre une demande ; le
+provisionnement d'une instance reste manuel (`setup-server.sh`, dans
+`gestion-recettes-ops`), ce qui correspond à la phase Alpha.
 
 ---
 
@@ -215,151 +210,24 @@ l'absence d'environnement n'est pas une régression.
 
 ---
 
-## Dépôts privés : clé de déploiement SSH
+## Provisionnement et déploiement
 
-`gestion-recettes` et `gestion-recettes-vitrine` sont privés. Une déploiement
-qui clone ou tire en HTTPS anonyme échoue donc sans invite de mot de passe
-possible — c'est le cas de `setup-server.sh` (clone), de `setup-vitrine.sh`
-(clone) et du webhook (`git fetch` à chaque push). Il faut une clé SSH par
-dépôt : **une deploy key ne peut pas être partagée entre deux dépôts**, GitHub
-la refuse avec « Key is already in use ».
+Les scripts d'exploitation (`setup-server.sh`, `setup-vitrine.sh`,
+`setup.conf`) vivent dans un dépôt séparé, **`gestion-recettes-ops`** — même
+raisonnement que pour la vitrine : historique et cadence propres à la
+topologie serveur (domaines, slugs clients), sans rapport avec les
+fonctionnalités du produit. Son README est le mode opératoire complet, du
+serveur vierge à l'instance en ligne — clés de déploiement SSH comprises, les
+trois dépôts (`gestion-recettes`, `gestion-recettes-vitrine`,
+`gestion-recettes-ops`) étant privés.
 
-Sur le serveur, sous l'utilisateur qui exécute les déploiements (`www-data`) :
+Reste **ici**, parce qu'ils sont déployés avec chaque instance et non exécutés
+depuis un poste d'administration :
 
-```bash
-sudo mkdir -p /var/www/.ssh && sudo chown www-data:www-data /var/www/.ssh && sudo chmod 700 /var/www/.ssh
-
-sudo -u www-data ssh-keygen -t ed25519 -C "vps-gestion-recettes" -f /var/www/.ssh/id_ed25519 -N ""
-sudo -u www-data ssh-keygen -t ed25519 -C "vps-gestion-recettes-vitrine" -f /var/www/.ssh/id_ed25519_vitrine -N ""
-sudo -u www-data ssh-keyscan github.com >> /var/www/.ssh/known_hosts
-```
-
-Chaque clé publique (`*.pub`) devient une **Deploy key en lecture seule** sur
-son dépôt (GitHub → Settings → Deploy keys). Puis un alias par dépôt, pour que
-`git` sache laquelle utiliser — les deux hôtes valent `github.com`, ils
-entreraient sinon en collision :
-
-```bash
-sudo -u www-data tee /var/www/.ssh/config > /dev/null <<'EOF'
-Host github-gestion-recettes
-    HostName github.com
-    User git
-    IdentityFile /var/www/.ssh/id_ed25519
-    IdentitiesOnly yes
-
-Host github-gestion-recettes-vitrine
-    HostName github.com
-    User git
-    IdentityFile /var/www/.ssh/id_ed25519_vitrine
-    IdentitiesOnly yes
-EOF
-sudo chmod 600 /var/www/.ssh/config
-```
-
-`REPO_URL` et `VITRINE_REPO_URL`, dans `setup.conf`, utilisent l'alias — pas
-`github.com` directement :
-
-```bash
-REPO_URL="git@github-gestion-recettes:ebougerolle-efalia/gestion-recettes.git"
-VITRINE_REPO_URL="git@github-gestion-recettes-vitrine:ebougerolle-efalia/gestion-recettes-vitrine.git"
-```
-
-Vérifier que chaque alias résout vers la bonne clé — le nom du dépôt dans la
-réponse doit correspondre :
-
-```bash
-sudo -u www-data ssh -T git@github-gestion-recettes
-sudo -u www-data ssh -T git@github-gestion-recettes-vitrine
-```
-
-**Une instance déjà clonée en HTTPS avant ce changement** garde cette origine
-dans son `.git/config` : changer `REPO_URL` dans `setup.conf` ne la corrige
-pas rétroactivement. `deploy.sh` le fait lui-même à chaque passage — voir plus
-bas, « Structure d'un déploiement ».
-
-**Amorçage d'un serveur neuf.** L'étape 1 ci-dessous (`git clone <REPO_URL>
-/root/gr-setup`) s'exécute en root, avant que la clé de `www-data` n'existe :
-il faut donc soit une clé de déploiement pour root également, soit récupérer
-`gr-setup` autrement (archive transférée, clé personnelle temporaire).
-
----
-
-## Déploiement d'un client en production
-
-Toute la configuration vit dans **`setup.conf`**, seul fichier à personnaliser.
-Il n'est pas versionné : on part du modèle `setup.conf.example`.
-
-Les commandes ci-dessous sont à lancer **en root** (le script refuse de démarrer
-autrement) ; inutile de les préfixer de `sudo` si vous êtes déjà root.
-
-### 1. Récupérer les scripts sur le serveur
-
-```bash
-apt update && apt install -y git
-git clone <REPO_URL> /root/gr-setup && chmod 700 /root/gr-setup
-```
-
-`/root` plutôt que `/tmp` : le script se relance à chaque nouveau client, et
-`setup.conf` ne doit pas disparaître au redémarrage ni être lisible par tous.
-
-### 2. Renseigner `setup.conf`
-
-```bash
-cd /root/gr-setup && cp setup.conf.example setup.conf && nano setup.conf
-```
-
-Seuls `BASE_DOMAIN` et `ADMIN_EMAIL` sont à remplir, le reste a des valeurs
-saines. Vérification avant de lancer quoi que ce soit :
-
-```bash
-bash -c 'source setup.conf && echo "$BASE_DOMAIN | $INSTALL_ROOT | $GOTENBERG_PORT"'
-```
-
-> ⚠️ Si vous éditez ce fichier depuis Windows, enregistrez-le en **fins de ligne
-> Unix (LF)**. Un fichier CRLF colle un retour chariot invisible à chaque valeur
-> et fabrique un domaine `demo.exemple.fr\r` : vhost nginx cassé et certbot en
-> échec. Le script s'arrête désormais avec un message explicite dans ce cas.
-
-### 3. Pointer le DNS
-
-Créez un enregistrement `A` (ou un wildcard `*.<BASE_DOMAIN>`) vers l'IP du
-serveur, **avant** de lancer le script : certbot valide le domaine en HTTP et
-échoue si la propagation n'est pas faite.
-
-### 4. Lancer le déploiement
-
-```bash
-cd /root/gr-setup && ./setup-server.sh dupont master
-```
-
-Ce qui se passe :
-
-- **Au premier lancement seulement** : installation de nginx, PHP (+ `php-pgsql`),
-  PostgreSQL et `postgresql-contrib`, Docker + Gotenberg, Composer et Certbot.
-  Les versions de PHP et PostgreSQL sont détectées et mémorisées dans
-  `/etc/gestion-recettes-bootstrap.done`
-- Clonage de l'instance dans `/srv/gestion-recettes/dupont`
-- Création d'un **rôle et d'une base PostgreSQL dédiés** au client
-- Génération d'un `.env.local` (mot de passe de base aléatoire, `root:www-data`,
-  non lisible par tous)
-- Appel de `deploy.sh` : Composer, migrations versionnées, seed initial si la
-  base est vide, reconstruction du cache
-- Vhost nginx, certificat HTTPS, webhook de déploiement
-- **Sauvegarde `pg_dump` quotidienne** dans `var/backups`, rétention 14 jours
-
-Résultat : l'instance est en ligne sur **https://dupont.<BASE_DOMAIN>**
-(admin / admin123 — **à changer immédiatement**, il apparaît en clair dans la
-sortie du script).
-
-### 5. Ajouter d'autres clients
-
-```bash
-cd /root/gr-setup && git pull && ./setup-server.sh martin production
-```
-
-Le `git pull` garantit de provisionner avec la version à jour des scripts.
-L'étape système est ignorée, seule la nouvelle instance est créée : dossier,
-base, rôle, certificat et secrets lui sont propres.
+- `deploy.sh` — met à jour une instance (Composer, migrations, cache) ; appelé
+  par le webhook à chaque push, et par `setup-server.sh` au premier
+  déploiement
+- `public/webhook.php` — point d'entrée du déploiement automatique
 
 ---
 
@@ -389,13 +257,14 @@ en privé garde un `origin` HTTPS anonyme dans son `.git/config` : renseigner
 déploiement, et la corrige elle-même quand elle est encore en HTTPS — même
 principe que la réparation des droits de `.env.local` juste après. Le premier
 `git pull` fait par un client provisionné avant ce changement écrit lui-même
-`REPO_URL` dans son `.env.local` (voir `setup-server.sh`), sans intervention.
+`REPO_URL` dans son `.env.local` (voir `gestion-recettes-ops/setup-server.sh`),
+sans intervention.
 
 ## Fichiers de référence
 
-- `setup.conf.example` — modèle versionné, à copier en `setup.conf`
-- `setup.conf` — configuration du serveur (jamais versionnée)
-- `setup-server.sh` — provisionnement d'une instance client
 - `deploy.sh` — mise à jour d'une instance (appelé aussi par le webhook)
 - `.env` — valeurs par défaut (dev) ; **ne jamais mettre de secret ici**
-- `.env.local` — secrets de production (généré, jamais committé)
+- `.env.local` — secrets de production (généré par `setup-server.sh`, jamais committé)
+
+Provisionnement, `setup.conf` et clés de déploiement : voir le dépôt
+`gestion-recettes-ops`.

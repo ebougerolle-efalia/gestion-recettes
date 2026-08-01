@@ -10,15 +10,14 @@
 # === Base de données SQLite ===
 /var/data/*.db
 
-# === Configuration de déploiement (peut contenir des secrets) ===
-/setup.conf
-
 # === Uploads clients (logos, etc. — régénérés au déploiement) ===
 /public/uploads/
 
-# === Vitrine ===
-# Contient l'adresse de contact et le sel des empreintes.
-/landing/config.php
+# === Configuration d'exploitation (déplacée vers gestion-recettes-ops) ===
+# Filet de sécurité : si un setup.conf traîne encore ici sur ce poste, il ne
+# doit jamais partir dans un commit — il porte de vraies valeurs (domaine,
+# e-mail).
+/setup.conf
 
 # === Tests ===
 /.phpunit.cache/
