@@ -40,6 +40,29 @@ source "$SCRIPT_DIR/setup.conf"
 [ -z "$ADMIN_EMAIL" ] && err "ADMIN_EMAIL est vide dans setup.conf."
 [ -z "$REPO_URL" ]    && err "REPO_URL est vide dans setup.conf."
 
+# --- Auto-mise à jour du script ----------------------------------------------
+# Même garde-fou que setup-server.sh, et pour la même raison : publier avec une
+# copie périmée met en ligne une vitrine qui n'est pas celle du dépôt, sans que
+# rien ne le signale. Le script se met à jour puis se relance, une seule fois.
+#
+# Ne dispense pas du premier « git pull » : un script encore absent ne peut pas
+# se mettre à jour lui-même.
+if [ -z "${VITRINE_SELF_UPDATED:-}" ] && [ -d "$SCRIPT_DIR/.git" ] && command -v git >/dev/null 2>&1; then
+    if git -C "$SCRIPT_DIR" fetch --quiet origin 2>/dev/null; then
+        LOCAL_REV="$(git -C "$SCRIPT_DIR" rev-parse HEAD 2>/dev/null || echo x)"
+        REMOTE_REV="$(git -C "$SCRIPT_DIR" rev-parse '@{u}' 2>/dev/null || echo "$LOCAL_REV")"
+        if [ "$LOCAL_REV" != "$REMOTE_REV" ]; then
+            log "Scripts de provisionnement obsolètes — mise à jour puis relance…"
+            git -C "$SCRIPT_DIR" pull --ff-only --quiet \
+                || err "Mise à jour impossible dans $SCRIPT_DIR. Corrigez à la main : git -C $SCRIPT_DIR pull"
+            export VITRINE_SELF_UPDATED=1
+            exec "$SCRIPT_DIR/setup-vitrine.sh" "$@"
+        fi
+    else
+        warn "Dépôt injoignable : impossible de vérifier que le script est à jour."
+    fi
+fi
+
 [ -n "${1:-}" ] && GIT_BRANCH="$1"
 
 VITRINE_DIR="${INSTALL_ROOT}/vitrine"

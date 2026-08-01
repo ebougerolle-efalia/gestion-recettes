@@ -167,7 +167,7 @@ phase Alpha.
 Mise en place, sur un serveur vierge comme sur un serveur déjà peuplé :
 
 ```bash
-sudo ./setup-vitrine.sh
+git pull && sudo ./setup-vitrine.sh
 ```
 
 Elle vit dans son propre clone (`$INSTALL_ROOT/vitrine`) : une correction de

@@ -41,12 +41,16 @@ dans la balise `og:title`.
 
 ## Mise en place sur le serveur
 
-Une seule commande, depuis le dépôt de provisionnement (celui qui porte
-`setup.conf`) :
+Depuis le dépôt de provisionnement — celui qui porte `setup.conf` :
 
 ```bash
-sudo ./setup-vitrine.sh
+git pull && sudo ./setup-vitrine.sh
 ```
+
+Ce premier `git pull` n'est pas facultatif : le script se met ensuite à jour
+tout seul avant chaque exécution, mais un fichier encore absent ne peut pas le
+faire. Une fois qu'il est là, `sudo ./setup-vitrine.sh` suffit — il se
+rafraîchit et se relance de lui-même si le dépôt a bougé.
 
 Le script clone la vitrine dans `$INSTALL_ROOT/vitrine`, engendre `config.php`
 avec un sel tiré au hasard et l'adresse `ADMIN_EMAIL`, prépare le dossier des
