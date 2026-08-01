@@ -215,6 +215,75 @@ l'absence d'environnement n'est pas une régression.
 
 ---
 
+## Dépôts privés : clé de déploiement SSH
+
+`gestion-recettes` et `gestion-recettes-vitrine` sont privés. Une déploiement
+qui clone ou tire en HTTPS anonyme échoue donc sans invite de mot de passe
+possible — c'est le cas de `setup-server.sh` (clone), de `setup-vitrine.sh`
+(clone) et du webhook (`git fetch` à chaque push). Il faut une clé SSH par
+dépôt : **une deploy key ne peut pas être partagée entre deux dépôts**, GitHub
+la refuse avec « Key is already in use ».
+
+Sur le serveur, sous l'utilisateur qui exécute les déploiements (`www-data`) :
+
+```bash
+sudo mkdir -p /var/www/.ssh && sudo chown www-data:www-data /var/www/.ssh && sudo chmod 700 /var/www/.ssh
+
+sudo -u www-data ssh-keygen -t ed25519 -C "vps-gestion-recettes" -f /var/www/.ssh/id_ed25519 -N ""
+sudo -u www-data ssh-keygen -t ed25519 -C "vps-gestion-recettes-vitrine" -f /var/www/.ssh/id_ed25519_vitrine -N ""
+sudo -u www-data ssh-keyscan github.com >> /var/www/.ssh/known_hosts
+```
+
+Chaque clé publique (`*.pub`) devient une **Deploy key en lecture seule** sur
+son dépôt (GitHub → Settings → Deploy keys). Puis un alias par dépôt, pour que
+`git` sache laquelle utiliser — les deux hôtes valent `github.com`, ils
+entreraient sinon en collision :
+
+```bash
+sudo -u www-data tee /var/www/.ssh/config > /dev/null <<'EOF'
+Host github-gestion-recettes
+    HostName github.com
+    User git
+    IdentityFile /var/www/.ssh/id_ed25519
+    IdentitiesOnly yes
+
+Host github-gestion-recettes-vitrine
+    HostName github.com
+    User git
+    IdentityFile /var/www/.ssh/id_ed25519_vitrine
+    IdentitiesOnly yes
+EOF
+sudo chmod 600 /var/www/.ssh/config
+```
+
+`REPO_URL` et `VITRINE_REPO_URL`, dans `setup.conf`, utilisent l'alias — pas
+`github.com` directement :
+
+```bash
+REPO_URL="git@github-gestion-recettes:ebougerolle-efalia/gestion-recettes.git"
+VITRINE_REPO_URL="git@github-gestion-recettes-vitrine:ebougerolle-efalia/gestion-recettes-vitrine.git"
+```
+
+Vérifier que chaque alias résout vers la bonne clé — le nom du dépôt dans la
+réponse doit correspondre :
+
+```bash
+sudo -u www-data ssh -T git@github-gestion-recettes
+sudo -u www-data ssh -T git@github-gestion-recettes-vitrine
+```
+
+**Une instance déjà clonée en HTTPS avant ce changement** garde cette origine
+dans son `.git/config` : changer `REPO_URL` dans `setup.conf` ne la corrige
+pas rétroactivement. `deploy.sh` le fait lui-même à chaque passage — voir plus
+bas, « Structure d'un déploiement ».
+
+**Amorçage d'un serveur neuf.** L'étape 1 ci-dessous (`git clone <REPO_URL>
+/root/gr-setup`) s'exécute en root, avant que la clé de `www-data` n'existe :
+il faut donc soit une clé de déploiement pour root également, soit récupérer
+`gr-setup` autrement (archive transférée, clé personnelle temporaire).
+
+---
+
 ## Déploiement d'un client en production
 
 Toute la configuration vit dans **`setup.conf`**, seul fichier à personnaliser.
@@ -311,6 +380,16 @@ base, rôle, certificat et secrets lui sont propres.
 Les données vivent dans PostgreSQL, une base par client (`recettes_dupont`), et
 non plus dans un fichier de l'arborescence. **Sauvegarder revient donc à faire un
 `pg_dump`** : copier `/srv` à chaud ne suffit plus.
+
+**Origine git auto-réparée.** Une instance clonée avant le passage des dépôts
+en privé garde un `origin` HTTPS anonyme dans son `.git/config` : renseigner
+`REPO_URL` dans `setup.conf` ne la corrige pas rétroactivement, et le premier
+`git fetch` suivant échouerait. `deploy.sh` compare l'origine réelle à
+`REPO_URL` (transmis par `webhook.php`, lu dans `.env.local`) à chaque
+déploiement, et la corrige elle-même quand elle est encore en HTTPS — même
+principe que la réparation des droits de `.env.local` juste après. Le premier
+`git pull` fait par un client provisionné avant ce changement écrit lui-même
+`REPO_URL` dans son `.env.local` (voir `setup-server.sh`), sans intervention.
 
 ## Fichiers de référence
 

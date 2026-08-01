@@ -63,10 +63,26 @@ if [ "$MODE" = "update" ] && command -v pg_dump >/dev/null 2>&1; then
     fi
 fi
 
+# --- Origin git en SSH (depot prive) ----------------------------------------
+# Une instance clonee avant le passage du depot en prive garde un remote HTTPS
+# anonyme dans son .git/config : changer REPO_URL dans setup.conf ne la repare
+# pas retroactivement, seul un nouveau clone en profiterait. Ce correctif
+# tourne donc a chaque deploiement, meme logique que celui des droits de
+# .env.local un peu plus bas — la panne s'est deja produite une fois pour
+# .env.local, elle guette pareillement ici tant que l'instance n'est pas migree.
+if [ -d ".git" ] && [ -n "${REPO_URL:-}" ]; then
+    CURRENT_ORIGIN="$(git remote get-url origin 2>/dev/null || echo '')"
+    if [ "$CURRENT_ORIGIN" != "$REPO_URL" ] && [[ "$CURRENT_ORIGIN" == https://* || "$CURRENT_ORIGIN" == http://* ]]; then
+        warn "Origin git en HTTPS anonyme ($CURRENT_ORIGIN) - bascule vers $REPO_URL."
+        git remote set-url origin "$REPO_URL"
+    fi
+fi
+
 # --- Recuperation du code (synchro complete avec le depot) -----------------
 if [ -d ".git" ]; then
     log "Git pull (branche: $GIT_BRANCH)..."
-    git fetch origin
+    git fetch origin \
+        || err "git fetch a echoue. Depot prive : verifiez la cle de deploiement SSH de www-data (README, section Depots prives)."
     git reset --hard "origin/$GIT_BRANCH"
     log "Code a jour ($(git log -1 --format='%h - %s'))"
 fi

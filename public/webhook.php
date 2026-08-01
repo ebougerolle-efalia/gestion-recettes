@@ -16,14 +16,21 @@ $appDir = dirname(__DIR__);
 $logFile = $appDir . '/var/log/webhook.log';
 $branch = 'master';
 
-// Load secret from .env.local
-$secret = null;
+// Lecture de .env.local : le secret du webhook, et l'origine git attendue.
+// REPO_URL est transmis à deploy.sh, qui répare tout seul un remote resté en
+// HTTPS anonyme — le cas d'une instance clonée avant le passage du dépôt en
+// privé, que ce fichier ne peut pas corriger rétroactivement lui-même.
+$secret  = null;
+$repoUrl = null;
 $envFile = $appDir . '/.env.local';
 if (file_exists($envFile)) {
     foreach (file($envFile) as $line) {
         $line = trim($line);
         if (str_starts_with($line, 'WEBHOOK_SECRET=')) {
             $secret = trim(substr($line, strlen('WEBHOOK_SECRET=')), '"\'');
+        }
+        if (str_starts_with($line, 'REPO_URL=')) {
+            $repoUrl = trim(substr($line, strlen('REPO_URL=')), '"\'');
         }
     }
 }
@@ -50,6 +57,14 @@ if ($ref !== "refs/heads/$branch") respond(200, "Ignored: push to $ref", $logFil
 
 wlog("Push sur $branch par " . ($data['pusher']['name'] ?? '?') . " — " . ($data['head_commit']['message'] ?? ''), $logFile);
 
-exec(sprintf('cd %s && bash deploy.sh >> %s 2>&1 &', escapeshellarg($appDir), escapeshellarg($logFile)));
+// REPO_URL='...' bash deploy.sh — affectation de variable en tête de
+// commande, syntaxe shell standard, valable même si $repoUrl est vide (la
+// variable existe alors vide côté deploy.sh, qui ignore le correctif).
+exec(sprintf(
+    'cd %s && REPO_URL=%s bash deploy.sh >> %s 2>&1 &',
+    escapeshellarg($appDir),
+    escapeshellarg((string) $repoUrl),
+    escapeshellarg($logFile)
+));
 
 respond(200, 'Deployment triggered', $logFile);

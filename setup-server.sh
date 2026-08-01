@@ -187,6 +187,10 @@ DATABASE_URL="postgresql://${DB_USER}:${DB_PASS}@127.0.0.1:5432/${DB_NAME}?serve
 GOTENBERG_DSN=http://localhost:${GOTENBERG_PORT}
 WEBHOOK_SECRET=$(openssl rand -hex 20)
 INVOICE_MAILBOX_DSN="${INVOICE_MAILBOX_DSN:-}"
+# Pas un secret : webhook.php le relit pour transmettre l'origine correcte à
+# deploy.sh, qui répare tout seul un remote git resté en HTTPS anonyme — le
+# cas d'une instance clonée avant le passage du dépôt en privé.
+REPO_URL="${REPO_URL}"
 EOF
     # Le fichier porte le mot de passe de la base : il ne doit pas être lisible
     # par tous. Mais deploy.sh exécute la console sous www-data, qui doit
@@ -201,6 +205,14 @@ fi
 # .env.local en root:root, que www-data ne peut pas lire. Relancer le script
 # répare alors l'instance au lieu d'échouer à nouveau.
 if [ -f ".env.local" ]; then
+    # De même pour REPO_URL, absent des .env.local créés avant que ce script
+    # ne l'écrive : sans lui, webhook.php ne peut pas transmettre l'origine
+    # correcte à deploy.sh, et le correctif d'un remote resté en HTTPS reste
+    # sans effet sur cette instance.
+    if ! grep -q '^REPO_URL=' .env.local; then
+        log "REPO_URL absent de .env.local — ajout…"
+        echo "REPO_URL=\"${REPO_URL}\"" >> .env.local
+    fi
     chown root:www-data .env.local
     chmod 640 .env.local
 fi
