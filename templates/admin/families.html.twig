@@ -22,11 +22,11 @@
             <tbody class="divide-y divide-trait-fin">
             {% for f in families %}
                 <tr class="hover:bg-voile/50">
-                    <td class="py-2.5.5 px-5 font-medium text-ardoise">{{ f.name }}</td>
-                    <td class="py-2.5.5 px-3 text-center">
+                    <td class="py-2.5 px-5 font-medium text-ardoise">{{ f.name }}</td>
+                    <td class="py-2.5 px-3 text-center">
                         <span class="inline-flex items-center justify-center w-8 h-8 rounded-lg bg-voile text-ardoise-doux text-sm font-semibold">{{ f.sortOrder }}</span>
                     </td>
-                    <td class="py-2.5.5 px-5">
+                    <td class="py-2.5 px-5">
                         <div class="flex items-center justify-center gap-1">
                             <button type="button"
                                     onclick="openEditFamilyModal({{ f.id }}, '{{ f.name|e('js') }}', {{ f.sortOrder }})"

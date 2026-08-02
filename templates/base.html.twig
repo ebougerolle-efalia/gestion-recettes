@@ -136,7 +136,7 @@
         <main class="flex-1 overflow-y-auto p-4 lg:p-7">
             {% for type, messages in app.flashes %}
                 {% for message in messages %}
-                    <div class="mb-4 flex items-center gap-3 rounded-xl px-5 py-2.5.5 text-sm border
+                    <div class="mb-4 flex items-center gap-3 rounded-xl px-5 py-2.5 text-sm border
                     {{ type == 'success' ? 'bg-pousse-voile border-pousse/30 text-pousse' : '' }}
                     {{ type == 'danger'  ? 'bg-sang-voile border-sang/30 text-sang'       : '' }}
                     {{ type == 'warning' ? 'bg-laiton-voile border-laiton/40 text-laiton-patine' : '' }}

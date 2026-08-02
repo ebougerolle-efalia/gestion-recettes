@@ -40,18 +40,20 @@
             </div>
         </div>
         <div class="grid grid-cols-2 gap-3">
-            <div class="rounded-2xl border border-laiton/30 bg-voile/40 px-4 py-2.5 text-center">
-                <p class="text-2xs font-semibold uppercase tracking-wider text-laiton-patine">Factures</p>
-                <p class="text-3xl font-bold text-ardoise-fort mt-1">{{ invoices|length }}</p>
+            {# Comme sur la liste : deux dénombrements neutres n'appellent ni le
+               laiton ni le vert, qui portent un jugement dans ce thème. #}
+            <div class="rounded-2xl border border-trait bg-white px-4 py-2.5 text-center">
+                <p class="text-2xs font-semibold uppercase tracking-wider text-ardoise-faible">Factures</p>
+                <p class="text-3xl font-bold text-ardoise mt-1 tabular-nums">{{ invoices|length }}</p>
             </div>
-            <div class="rounded-2xl border border-pousse/30 bg-pousse-voile/40 px-4 py-2.5 text-center">
-                <p class="text-2xs font-semibold uppercase tracking-wider text-pousse">Produits</p>
-                <p class="text-3xl font-bold text-pousse mt-1">{{ products|length }}</p>
+            <div class="rounded-2xl border border-trait bg-white px-4 py-2.5 text-center">
+                <p class="text-2xs font-semibold uppercase tracking-wider text-ardoise-faible">Produits</p>
+                <p class="text-3xl font-bold text-ardoise mt-1 tabular-nums">{{ products|length }}</p>
             </div>
             {% set totalHt = invoices|map(i => i.total_ht)|reduce((carry, v) => carry + v, 0) %}
             <div class="col-span-2 rounded-2xl border border-trait bg-white px-4 py-2.5 text-center">
                 <p class="text-2xs font-semibold uppercase tracking-wider text-ardoise-faible">Total achats HT</p>
-                <p class="text-2xl font-bold text-ardoise mt-1">{{ totalHt|number_format(2, ',', ' ') }} €</p>
+                <p class="text-2xl font-bold text-ardoise mt-1 tabular-nums">{{ totalHt|number_format(2, ',', ' ') }} €</p>
             </div>
         </div>
     </div>
@@ -81,7 +83,7 @@
                     <a href="{{ isActive
                     ? path('app_supplier_show', {id: supplier.id})
                     : path('app_supplier_show', {id: supplier.id, facture: inv.id}) }}"
-                       class="flex items-center gap-3 px-5 py-2.5.5 transition-all group
+                       class="flex items-center gap-3 px-5 py-2.5 transition-all group
                   {{ isActive ? 'bg-voile border-l-[3px] border-l-laiton-patine' : 'hover:bg-voile border-l-[3px] border-l-transparent hover:border-l-trait' }}">
 
                         <div class="flex-shrink-0 w-8 h-8 rounded-lg flex items-center justify-center
@@ -134,7 +136,7 @@
                         {% set variation = p.prev_price and p.prev_price > 0
                             ? ((p.last_price - p.prev_price) / p.prev_price * 100)|round(1)
                             : null %}
-                        <div class="px-5 py-2.5.5">
+                        <div class="px-5 py-2.5">
                             <div class="flex items-center justify-between gap-3">
                                 <div class="flex-1 min-w-0">
                                     <a href="{{ path('app_ingredient_show', {id: p.ingredient_id}) }}"

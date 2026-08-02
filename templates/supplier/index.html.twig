@@ -26,20 +26,26 @@
 <div class="grid grid-cols-2 md:grid-cols-4 gap-3 mb-4">
     <div class="rounded-2xl border border-trait bg-white px-5 py-2.5">
         <p class="text-2xs font-semibold uppercase tracking-wider text-ardoise-faible">Fournisseurs</p>
-        <p class="text-3xl font-bold text-ardoise mt-1">{{ suppliers|length }}</p>
+        <p class="text-3xl font-bold text-ardoise mt-1 tabular-nums">{{ suppliers|length }}</p>
     </div>
-    <div class="rounded-2xl border border-laiton/30 bg-voile/40 px-5 py-2.5">
-        <p class="text-2xs font-semibold uppercase tracking-wider text-laiton-patine">Factures importées</p>
-        <p class="text-3xl font-bold text-ardoise-fort mt-1">{{ totalInvoices }}</p>
+    {# Ces deux cartes étaient teintées en permanence, l'une en laiton l'autre en
+       vert. Or dans le thème la couleur porte un jugement : le vert dit « marge
+       saine », le rouge « dérive », le laiton « à regarder ». Un volume d'achats
+       ne dit rien de tel — il est neutre, et le peindre en vert laissait croire
+       à une bonne nouvelle. Le reste de l'application réserve la teinte aux
+       cartes qui signalent quelque chose ; celles-ci redeviennent blanches. #}
+    <div class="rounded-2xl border border-trait bg-white px-5 py-2.5">
+        <p class="text-2xs font-semibold uppercase tracking-wider text-ardoise-faible">Factures importées</p>
+        <p class="text-3xl font-bold text-ardoise mt-1 tabular-nums">{{ totalInvoices }}</p>
     </div>
-    <div class="rounded-2xl border border-pousse/30 bg-pousse-voile/40 px-5 py-2.5">
-        <p class="text-2xs font-semibold uppercase tracking-wider text-pousse">Achats 12 mois</p>
-        <p class="text-3xl font-bold text-pousse mt-1">{{ totalHt12m|number_format(0, ',', ' ') }} €</p>
-        <p class="text-2xs text-pousse mt-1">HT</p>
+    <div class="rounded-2xl border border-trait bg-white px-5 py-2.5">
+        <p class="text-2xs font-semibold uppercase tracking-wider text-ardoise-faible">Achats 12 mois</p>
+        <p class="text-3xl font-bold text-ardoise mt-1 tabular-nums">{{ totalHt12m|number_format(0, ',', ' ') }} €</p>
+        <p class="text-2xs text-ardoise-faible mt-1">HT</p>
     </div>
     <div class="rounded-2xl border border-trait bg-white px-5 py-2.5">
         <p class="text-2xs font-semibold uppercase tracking-wider text-ardoise-faible">Ingrédients sourcés</p>
-        <p class="text-3xl font-bold text-ardoise mt-1">{{ totalIngredients }}</p>
+        <p class="text-3xl font-bold text-ardoise mt-1 tabular-nums">{{ totalIngredients }}</p>
     </div>
 </div>
 
@@ -68,7 +74,7 @@
         <tbody class="divide-y divide-trait-fin">
         {% for s in suppliers %}
         <tr class="hover:bg-voile/50 transition-colors">
-            <td class="py-2.5.5 px-5">
+            <td class="py-2.5 px-5">
                 <a href="{{ path('app_supplier_show', {id: s.id}) }}"
                    class="font-semibold text-ardoise hover:text-laiton-patine transition-colors block">
                     {{ s.name }}
@@ -78,33 +84,35 @@
                     {% if s.siret %} · SIRET {{ s.siret|slice(0,9) }}…{% endif %}
                 </p>
             </td>
-            <td class="py-2.5.5 px-4 text-center">
+            <td class="py-2.5 px-4 text-center">
                 <span class="inline-flex items-center justify-center w-8 h-8 rounded-full bg-voile text-ardoise-fort font-semibold text-sm">
                     {{ s.invoice_count }}
                 </span>
             </td>
-            <td class="py-2.5.5 px-4 text-center">
+            <td class="py-2.5 px-4 text-center">
                 <span class="text-sm font-medium text-ardoise">{{ s.ingredient_count }}</span>
             </td>
-            <td class="py-2.5.5 px-4 text-right">
-                <span class="font-semibold text-pousse">
+            {# Chasse tabulaire : c'est la règle du thème pour tout chiffre
+               d'argent, sans quoi les colonnes de montants ne s'alignent pas. #}
+            <td class="py-2.5 px-4 text-right">
+                <span class="font-semibold text-ardoise tabular-nums">
                     {{ s.total_ht_12m > 0 ? s.total_ht_12m|number_format(2, ',', ' ') ~ ' €' : '—' }}
                 </span>
             </td>
-            <td class="py-2.5.5 px-4 text-right">
-                <span class="text-sm text-ardoise-doux">
+            <td class="py-2.5 px-4 text-right">
+                <span class="text-sm text-ardoise-doux tabular-nums">
                     {{ s.total_ht_all > 0 ? s.total_ht_all|number_format(2, ',', ' ') ~ ' €' : '—' }}
                 </span>
             </td>
-            <td class="py-2.5.5 px-4">
+            <td class="py-2.5 px-4">
                 {% if s.last_invoice_date_computed %}
                     {% set d = s.last_invoice_date_computed %}
-                    <span class="text-sm text-ardoise-doux">{{ d|date('d/m/Y') }}</span>
+                    <span class="text-sm text-ardoise-doux tabular-nums">{{ d|date('d/m/Y') }}</span>
                 {% else %}
                     <span class="text-sm text-ardoise-faible">—</span>
                 {% endif %}
             </td>
-            <td class="py-2.5.5 px-4 text-right">
+            <td class="py-2.5 px-4 text-right">
                 <a href="{{ path('app_supplier_show', {id: s.id}) }}"
                    class="text-ardoise-faible hover:text-laiton-patine transition-colors">
                     <i class="fas fa-eye"></i>

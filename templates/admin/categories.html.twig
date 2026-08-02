@@ -32,13 +32,13 @@
             <tbody class="divide-y divide-trait-fin">
             {% for c in categories %}
                 <tr class="hover:bg-voile/50 transition-colors">
-                    <td class="py-2.5.5 px-5 font-medium text-ardoise">{{ c.name }}</td>
-                    <td class="py-2.5.5 px-4 text-center">
+                    <td class="py-2.5 px-5 font-medium text-ardoise">{{ c.name }}</td>
+                    <td class="py-2.5 px-4 text-center">
                 <span class="inline-flex items-center justify-center w-8 h-8 rounded-lg bg-voile text-ardoise-doux text-sm font-semibold">
                     {{ c.sortOrder }}
                 </span>
                     </td>
-                    <td class="py-2.5.5 px-4 text-center">
+                    <td class="py-2.5 px-4 text-center">
                         {% set nb = c.ingredients|length %}
                         {% if nb > 0 %}
                             <span class="inline-flex items-center justify-center rounded-full bg-voile text-ardoise-fort text-xs font-semibold px-3 py-1">
@@ -48,7 +48,7 @@
                             <span class="text-ardoise-faible text-xs">vide</span>
                         {% endif %}
                     </td>
-                    <td class="py-2.5.5 px-5">
+                    <td class="py-2.5 px-5">
                         <div class="flex items-center justify-center gap-1">
                             {# Bouton modifier #}
                             <button onclick="openEditModal({{ c.id }}, '{{ c.name|e('js') }}', {{ c.sortOrder }})"

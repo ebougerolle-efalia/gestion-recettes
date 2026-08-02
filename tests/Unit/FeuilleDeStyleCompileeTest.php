@@ -161,6 +161,45 @@ class FeuilleDeStyleCompileeTest extends TestCase
     }
 
     /**
+     * Aucune classe d'espacement malformée.
+     *
+     * La conversion mécanique de la phase 1 a produit « py-2.5.5 » en 21
+     * endroits : un « py-3.5 » dont le 3 a été remplacé par 2.5. Tailwind ne
+     * génère rien pour cette classe, elle ne déclenche aucune erreur, et le
+     * résultat est un padding nul — les lignes des tableaux fournisseurs,
+     * catégories, familles et utilisateurs étaient collées les unes aux autres.
+     * Aucun garde-fou existant ne pouvait le voir : la classe n'est pas une
+     * valeur arbitraire, ne s'assemble pas à l'exécution, et ne porte pas de
+     * taille de texte.
+     *
+     * Le contrôle est syntaxique et non sémantique : une classe d'espacement
+     * n'a qu'un seul point décimal.
+     */
+    public function testAucuneClasseDEspacementMalformee(): void
+    {
+        $motif = '/\b(?:p|px|py|pt|pb|pl|pr|m|mx|my|mt|mb|ml|mr|gap|gap-x|gap-y|space-x|space-y|w|h|inset|top|bottom|left|right)-\d+(?:\.\d+){2,}/';
+
+        $fautes = [];
+
+        foreach ($this->fichiersTwig() as $fichier) {
+            $contenu = (string) file_get_contents($fichier->getPathname());
+
+            if (preg_match_all($motif, $contenu, $trouvees)) {
+                foreach (array_unique($trouvees[0]) as $classe) {
+                    $fautes[] = sprintf('%s : %s', $fichier->getFilename(), $classe);
+                }
+            }
+        }
+
+        self::assertSame(
+            [],
+            $fautes,
+            "Classes d'espacement malformées — Tailwind ne génère rien pour elles "
+            . "et l'écran s'affiche sans marge :\n  " . implode("\n  ", $fautes)
+        );
+    }
+
+    /**
      * Valeurs arbitraires réellement écrites dans un attribut class.
      *
      * Lecture restreinte aux attributs class= : ailleurs, une expression Twig
