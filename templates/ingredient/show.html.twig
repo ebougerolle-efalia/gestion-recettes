@@ -24,21 +24,21 @@
 
     {# KPI #}
     {% set latestPrice = ingredient.prices|first %}
-    <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-        <div class="rounded-2xl border border-trait bg-white px-5 py-4">
+    <div class="grid grid-cols-2 md:grid-cols-4 gap-3 mb-4">
+        <div class="rounded-2xl border border-trait bg-white px-5 py-2.5">
             <p class="text-2xs font-semibold uppercase tracking-wider text-ardoise-faible">Prix actuel</p>
             <p class="text-2xl font-bold text-pousse mt-1">{{ latestPrice ? latestPrice.priceHt|number_format(4,',',' ') ~ ' €' : '—' }}</p>
             <p class="text-2xs text-ardoise-faible mt-0.5">par {{ ingredient.baseUnit }}</p>
         </div>
-        <div class="rounded-2xl border border-trait bg-white px-5 py-4">
+        <div class="rounded-2xl border border-trait bg-white px-5 py-2.5">
             <p class="text-2xs font-semibold uppercase tracking-wider text-ardoise-faible">Relevés</p>
             <p class="text-2xl font-bold text-ardoise mt-1">{{ ingredient.prices|length }}</p>
         </div>
-        <div class="rounded-2xl border border-trait bg-white px-5 py-4">
+        <div class="rounded-2xl border border-trait bg-white px-5 py-2.5">
             <p class="text-2xs font-semibold uppercase tracking-wider text-ardoise-faible">Fournisseur</p>
             <p class="text-sm font-semibold text-ardoise mt-2">{{ ingredient.defaultSupplier ?? '—' }}</p>
         </div>
-        <div class="rounded-2xl border border-trait bg-white px-5 py-4">
+        <div class="rounded-2xl border border-trait bg-white px-5 py-2.5">
             <p class="text-2xs font-semibold uppercase tracking-wider text-ardoise-faible">TVA</p>
             <p class="text-2xl font-bold text-ardoise mt-1">{{ ingredient.vatRate }} %</p>
         </div>
@@ -49,7 +49,7 @@
         {# Fiche #}
         <div>
             <div class="rounded-2xl border border-trait bg-white">
-                <div class="px-6 py-4 border-b border-trait-fin">
+                <div class="px-6 py-2.5 border-b border-trait-fin">
                     <h3 class="font-semibold text-sm text-ardoise"><i class="fas fa-pencil-alt text-laiton-patine mr-2 text-sm"></i>Fiche</h3>
                 </div>
                 <form method="post" action="{{ path('app_ingredient_update', {id: ingredient.id}) }}" class="p-6 space-y-4">
@@ -139,7 +139,7 @@
         {# Historique prix #}
         <div class="lg:col-span-2">
             <div class="rounded-2xl border border-trait bg-white">
-                <div class="px-6 py-4 border-b border-trait-fin flex items-center justify-between">
+                <div class="px-6 py-2.5 border-b border-trait-fin flex items-center justify-between">
                     <h3 class="font-semibold text-sm text-ardoise"><i class="fas fa-chart-line text-pousse mr-2 text-sm"></i>Historique des prix</h3>
                     {% if canEdit %}
                         <button onclick="document.getElementById('addPriceModal').classList.remove('hidden');document.getElementById('addPriceModal').classList.add('flex')" class="inline-flex items-center gap-1.5 rounded-lg bg-pousse hover:bg-pousse px-3 py-2 text-xs font-medium text-white">
@@ -173,7 +173,7 @@
                     </div>
                     <div class="border-t border-trait-fin"></div>
                 {% elseif ingredient.prices|length == 1 %}
-                    <div class="px-6 py-4">
+                    <div class="px-6 py-2.5">
                         <p class="text-xs text-ardoise-faible italic">Ajoutez un 2ème relevé de prix pour voir l'évolution.</p>
                     </div>
                     <div class="border-t border-trait-fin"></div>
@@ -182,16 +182,16 @@
                 {% if ingredient.prices|length > 0 %}
                     <table class="w-full text-sm">
                         <thead><tr class="border-b border-trait-fin">
-                            <th class="py-3 px-5 text-left text-xs font-medium uppercase text-ardoise-faible">Date</th>
-                            <th class="py-3 px-3 text-right text-xs font-medium uppercase text-ardoise-faible">Prix HT / {{ ingredient.baseUnit }}</th>
-                            <th class="py-3 px-3 text-left text-xs font-medium uppercase text-ardoise-faible">Fournisseur</th>
+                            <th class="py-2.5 px-5 text-left text-xs font-medium uppercase text-ardoise-faible">Date</th>
+                            <th class="py-2.5 px-3 text-right text-xs font-medium uppercase text-ardoise-faible">Prix HT / {{ ingredient.baseUnit }}</th>
+                            <th class="py-2.5 px-3 text-left text-xs font-medium uppercase text-ardoise-faible">Fournisseur</th>
                         </tr></thead>
                         <tbody class="divide-y divide-trait-fin">
                         {% for p in ingredient.prices %}
                             <tr class="{{ loop.first ? 'bg-pousse-voile/50' : '' }}">
-                                <td class="py-3 px-5 text-ardoise">{{ p.effectiveDate|date('d/m/Y') }}</td>
-                                <td class="py-3 px-3 text-right font-semibold {{ loop.first ? 'text-pousse' : 'text-ardoise-doux' }}">{{ p.priceHt|number_format(4, ',', ' ') }} €</td>
-                                <td class="py-3 px-3 text-ardoise-doux">{{ p.supplier|default('—') }}</td>
+                                <td class="py-2.5 px-5 text-ardoise">{{ p.effectiveDate|date('d/m/Y') }}</td>
+                                <td class="py-2.5 px-3 text-right font-semibold {{ loop.first ? 'text-pousse' : 'text-ardoise-doux' }}">{{ p.priceHt|number_format(4, ',', ' ') }} €</td>
+                                <td class="py-2.5 px-3 text-ardoise-doux">{{ p.supplier|default('—') }}</td>
                             </tr>
                         {% endfor %}
                         </tbody>
@@ -209,13 +209,13 @@
     {# Modal nouveau prix #}
     <div id="addPriceModal" class="fixed inset-0 z-[9999] hidden items-center justify-center bg-black/50">
         <form method="post" action="{{ path('app_ingredient_add_price', {id: ingredient.id}) }}" class="bg-white rounded-2xl shadow-xl w-full max-w-sm mx-4">
-            <div class="px-6 py-4 border-b border-trait-fin"><h3 class="font-semibold text-ardoise">Nouveau prix</h3></div>
+            <div class="px-6 py-2.5 border-b border-trait-fin"><h3 class="font-semibold text-ardoise">Nouveau prix</h3></div>
             <div class="p-6 space-y-4">
                 <div><label class="block text-sm font-medium text-ardoise-doux mb-1.5">Prix HT / {{ ingredient.baseUnit }} *</label><input type="number" name="price_ht" step="0.0001" required class="w-full rounded-lg border border-trait px-4 py-2.5 text-sm outline-none focus:border-laiton-patine"></div>
                 <div><label class="block text-sm font-medium text-ardoise-doux mb-1.5">Fournisseur</label><input type="text" name="supplier" value="{{ ingredient.defaultSupplier }}" class="w-full rounded-lg border border-trait px-4 py-2.5 text-sm outline-none focus:border-laiton-patine"></div>
                 <div><label class="block text-sm font-medium text-ardoise-doux mb-1.5">Date effective</label><input type="date" name="effective_date" value="{{ 'now'|date('Y-m-d') }}" class="w-full rounded-lg border border-trait px-4 py-2.5 text-sm outline-none focus:border-laiton-patine"></div>
             </div>
-            <div class="px-6 py-4 border-t border-trait-fin flex justify-end gap-3">
+            <div class="px-6 py-2.5 border-t border-trait-fin flex justify-end gap-3">
                 <button type="button" onclick="this.closest('.fixed').classList.add('hidden');this.closest('.fixed').classList.remove('flex')" class="rounded-lg border border-trait px-4 py-2 text-sm text-ardoise-doux hover:bg-voile">Annuler</button>
                 <button type="submit" class="rounded-lg bg-pousse hover:bg-pousse px-5 py-2 text-sm font-medium text-white">Ajouter</button>
             </div>

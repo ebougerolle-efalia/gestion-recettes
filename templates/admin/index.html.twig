@@ -8,10 +8,10 @@
     {# ═══════════════════════════════════════════════════════
    ZONE 1 — L'ARGENT : ce qui appelle une décision aujourd'hui
 ═══════════════════════════════════════════════════════ #}
-    <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+    <div class="grid grid-cols-2 md:grid-cols-4 gap-3 mb-4">
 
         {# Marque réelle — la seule marge opposable, calculée sur les prix pratiqués #}
-        <div class="rounded-2xl border border-trait bg-white px-5 py-4">
+        <div class="rounded-2xl border border-trait bg-white px-5 py-2.5">
             <p class="text-2xs font-semibold uppercase tracking-wider text-ardoise-faible">Marque réelle médiane</p>
             <p class="text-3xl font-bold mt-1 {{ kpis.median_markup is null ? 'text-ardoise-faible' : (kpis.median_markup >= 40 ? 'text-pousse' : (kpis.median_markup >= 25 ? 'text-laiton-patine' : 'text-sang')) }}">
                 {{ kpis.median_markup is null ? '—' : kpis.median_markup|number_format(1, ',', ' ') ~ ' %' }}
@@ -20,21 +20,21 @@
         </div>
 
         {# Sous l'objectif #}
-        <div class="rounded-2xl border {{ underpriced|length ? 'border-sang/30 bg-sang-voile/40' : 'border-trait bg-white' }} px-5 py-4">
+        <div class="rounded-2xl border {{ underpriced|length ? 'border-sang/30 bg-sang-voile/40' : 'border-trait bg-white' }} px-5 py-2.5">
             <p class="text-2xs font-semibold uppercase tracking-wider {{ underpriced|length ? 'text-sang' : 'text-ardoise-faible' }}">Sous le prix conseillé</p>
             <p class="text-3xl font-bold mt-1 {{ underpriced|length ? 'text-sang' : 'text-ardoise' }}">{{ underpriced|length }}</p>
             <p class="text-2xs text-ardoise-faible mt-2">écart supérieur à 2 %</p>
         </div>
 
         {# Dérive des coûts #}
-        <div class="rounded-2xl border {{ cost_drift|length ? 'border-laiton/40 bg-laiton-voile/40' : 'border-trait bg-white' }} px-5 py-4">
+        <div class="rounded-2xl border {{ cost_drift|length ? 'border-laiton/40 bg-laiton-voile/40' : 'border-trait bg-white' }} px-5 py-2.5">
             <p class="text-2xs font-semibold uppercase tracking-wider {{ cost_drift|length ? 'text-laiton-patine' : 'text-ardoise-faible' }}">Coûts en hausse (30 j)</p>
             <p class="text-3xl font-bold mt-1 {{ cost_drift|length ? 'text-laiton-patine' : 'text-ardoise' }}">{{ cost_drift|length }}</p>
             <p class="text-2xs text-ardoise-faible mt-2">recettes touchées par une hausse de prix</p>
         </div>
 
         {# Factures à valider #}
-        <div class="rounded-2xl border {{ kpis.pending_invoices ? 'border-laiton/40 bg-voile/40' : 'border-trait bg-white' }} px-5 py-4">
+        <div class="rounded-2xl border {{ kpis.pending_invoices ? 'border-laiton/40 bg-voile/40' : 'border-trait bg-white' }} px-5 py-2.5">
             <p class="text-2xs font-semibold uppercase tracking-wider {{ kpis.pending_invoices ? 'text-laiton-patine' : 'text-ardoise-faible' }}">Factures à valider</p>
             <p class="text-3xl font-bold mt-1 {{ kpis.pending_invoices ? 'text-ardoise-fort' : 'text-ardoise' }}">{{ kpis.pending_invoices }}</p>
             {% if kpis.pending_invoices %}
@@ -48,15 +48,15 @@
     {# ── Dérive des coûts : le bloc qu'aucun concurrent ne peut afficher,
           faute de recevoir les factures automatiquement. Muet si rien ne bouge. ── #}
     {% if cost_drift|length %}
-        <div class="rounded-2xl border border-laiton/40 bg-white mb-6 overflow-hidden">
-            <div class="px-5 py-3 bg-laiton-voile/70 border-b border-laiton/40 flex items-center gap-2">
+        <div class="rounded-2xl border border-laiton/40 bg-white mb-4 overflow-hidden">
+            <div class="px-5 py-2.5 bg-laiton-voile/70 border-b border-laiton/40 flex items-center gap-2">
                 <i class="fas fa-arrow-trend-up text-laiton-patine text-sm"></i>
                 <h3 class="font-semibold text-sm text-laiton-patine">Coûts en hausse sur 30 jours</h3>
                 <span class="text-2xs text-laiton-patine/70 ml-auto">comparé aux prix en vigueur il y a 30 jours</span>
             </div>
             <div class="divide-y divide-trait-fin">
                 {% for d in cost_drift %}
-                    <div class="flex items-center gap-4 px-5 py-3">
+                    <div class="flex items-center gap-3 px-5 py-2.5">
                         <a href="{{ path('app_recipe_show', {id: d.recipe_id}) }}" class="flex-1 min-w-0 font-medium text-sm text-laiton-patine hover:text-ardoise">{{ d.recipe_name }}</a>
                         <div class="text-right text-xs text-ardoise-doux w-48 flex-shrink-0">
                             {{ d.cost_then|number_format(2, ',', ' ') }} €
@@ -75,8 +75,8 @@
 
     {# ── Vendu sous l'objectif ── #}
     {% if underpriced|length %}
-        <div class="rounded-2xl border border-sang/30 bg-white mb-6 overflow-hidden">
-            <div class="px-5 py-3 bg-sang-voile/70 border-b border-sang/30 flex items-center gap-2">
+        <div class="rounded-2xl border border-sang/30 bg-white mb-4 overflow-hidden">
+            <div class="px-5 py-2.5 bg-sang-voile/70 border-b border-sang/30 flex items-center gap-2">
                 <i class="fas fa-triangle-exclamation text-sang text-sm"></i>
                 <h3 class="font-semibold text-sm text-sang">
                     {{ underpriced|length }} recette(s) vendue(s) sous le prix conseillé
@@ -84,7 +84,7 @@
             </div>
             <div class="divide-y divide-trait-fin">
                 {% for r in underpriced|slice(0, 5) %}
-                    <div class="flex items-center gap-4 px-5 py-3">
+                    <div class="flex items-center gap-3 px-5 py-2.5">
                         <a href="{{ path('app_recipe_show', {id: r.id}) }}" class="flex-1 min-w-0 font-medium text-sm text-laiton-patine hover:text-ardoise">{{ r.name }}</a>
                         <div class="text-right text-xs text-ardoise-doux w-44 flex-shrink-0">
                             pratiqué <strong class="text-ardoise">{{ r.sellPriceTtc|number_format(2, ',', ' ') }} €</strong>
@@ -110,10 +110,10 @@
     {# ═══════════════════════════════════════════════════════
    ZONE 2 — L'ÉTAT DU CATALOGUE
 ═══════════════════════════════════════════════════════ #}
-    <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+    <div class="grid grid-cols-2 md:grid-cols-4 gap-3 mb-4">
 
         {# Recettes #}
-        <div class="rounded-2xl border border-trait bg-white px-5 py-4">
+        <div class="rounded-2xl border border-trait bg-white px-5 py-2.5">
             <p class="text-2xs font-semibold uppercase tracking-wider text-ardoise-faible">Recettes</p>
             <p class="text-3xl font-bold text-ardoise mt-1">{{ kpis.total_recipes }}</p>
             <div class="mt-2 flex gap-2 flex-wrap">
@@ -129,7 +129,7 @@
         </div>
 
         {# Ingrédients #}
-        <div class="rounded-2xl border border-trait bg-white px-5 py-4">
+        <div class="rounded-2xl border border-trait bg-white px-5 py-2.5">
             <p class="text-2xs font-semibold uppercase tracking-wider text-ardoise-faible">Ingrédients</p>
             <p class="text-3xl font-bold text-ardoise mt-1">{{ kpis.total_ingredients }}</p>
             <div class="mt-2 flex gap-2 flex-wrap">
@@ -145,7 +145,7 @@
         </div>
 
         {# Marque conseillée — la théorie, à distinguer de la marque réelle ci-dessus #}
-        <div class="rounded-2xl border border-trait bg-white px-5 py-4">
+        <div class="rounded-2xl border border-trait bg-white px-5 py-2.5">
             <p class="text-2xs font-semibold uppercase tracking-wider text-ardoise-faible">Marque conseillée moyenne</p>
             <p class="text-3xl font-bold mt-1 {{ kpis.avg_margin >= 60 ? 'text-pousse' : (kpis.avg_margin >= 40 ? 'text-laiton-patine' : 'text-sang') }}">
                 {{ kpis.avg_margin > 0 ? kpis.avg_margin ~ ' %' : '—' }}
@@ -156,7 +156,7 @@
         {# Apprentissage du rapprochement de factures : le seul chiffre
            « technique » qui dise quelque chose d'utile — plus il monte, moins
            l'utilisateur a de lignes à trier à chaque facture. #}
-        <div class="rounded-2xl border border-trait bg-white px-5 py-4">
+        <div class="rounded-2xl border border-trait bg-white px-5 py-2.5">
             <p class="text-2xs font-semibold uppercase tracking-wider text-ardoise-faible">Libellés fournisseurs appris</p>
             <p class="text-3xl font-bold text-ardoise mt-1">{{ mapping_count }}</p>
             <p class="text-2xs text-ardoise-faible mt-2">reconnus automatiquement à l'import</p>
@@ -169,11 +169,11 @@
 ═══════════════════════════════════════════════════════ #}
     {% set hasAlerts = alerts.no_price|length > 0 or alerts.empty|length > 0 or alerts.old_prices|length > 0 %}
     {% if hasAlerts %}
-        <div class="mb-6 space-y-3">
+        <div class="mb-4 space-y-2">
 
             {# Ingrédients sans prix #}
             {% if alerts.no_price|length > 0 %}
-                <div class="rounded-2xl border border-sang/30 bg-sang-voile/50 px-5 py-4">
+                <div class="rounded-2xl border border-sang/30 bg-sang-voile/50 px-5 py-2.5">
                     <div class="flex items-start gap-3">
                         <i class="fas fa-exclamation-circle text-sang mt-0.5"></i>
                         <div class="flex-1">
@@ -195,7 +195,7 @@
 
             {# Prix anciens #}
             {% if alerts.old_prices|length > 0 %}
-                <div class="rounded-2xl border border-laiton/40 bg-laiton-voile/50 px-5 py-4">
+                <div class="rounded-2xl border border-laiton/40 bg-laiton-voile/50 px-5 py-2.5">
                     <div class="flex items-start gap-3">
                         <i class="fas fa-clock text-laiton-patine mt-0.5"></i>
                         <div class="flex-1">
@@ -217,7 +217,7 @@
 
             {# Recettes vides #}
             {% if alerts.empty|length > 0 %}
-                <div class="rounded-2xl border border-trait bg-voile/50 px-5 py-4">
+                <div class="rounded-2xl border border-trait bg-voile/50 px-5 py-2.5">
                     <div class="flex items-start gap-3">
                         <i class="fas fa-file-circle-xmark text-ardoise-faible mt-0.5"></i>
                         <div class="flex-1">
@@ -245,15 +245,15 @@
           les plus chers » ne disaient rien d'actionnable : un ingrédient cher
           n'est pas un problème, un ingrédient qui grimpe en est un. ── #}
     {% if ingredient_rises|length %}
-        <div class="rounded-2xl border border-trait bg-white mb-6 overflow-hidden">
-            <div class="px-5 py-4 border-b border-trait-fin flex items-center gap-2">
+        <div class="rounded-2xl border border-trait bg-white mb-4 overflow-hidden">
+            <div class="px-5 py-2.5 border-b border-trait-fin flex items-center gap-2">
                 <div class="w-2 h-2 rounded-full bg-laiton"></div>
                 <h3 class="font-semibold text-sm text-ardoise">Ingrédients en hausse sur 30 jours</h3>
                 <span class="text-2xs text-ardoise-faible ml-auto">à renégocier ou substituer</span>
             </div>
             <div class="divide-y divide-trait-fin">
                 {% for ing in ingredient_rises %}
-                    <div class="flex items-center gap-4 px-5 py-3">
+                    <div class="flex items-center gap-3 px-5 py-2.5">
                         <a href="{{ path('app_ingredient_show', {id: ing.id}) }}" class="flex-1 min-w-0 font-medium text-sm text-laiton-patine hover:text-ardoise">{{ ing.name }}</a>
                         <div class="text-right text-xs text-ardoise-doux w-52 flex-shrink-0">
                             {{ ing.old_price|number_format(4, ',', ' ') }} €

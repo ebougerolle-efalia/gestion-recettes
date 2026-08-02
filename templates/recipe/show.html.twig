@@ -25,7 +25,7 @@
     {# ══ Bandeau d'alertes : coûts potentiellement faussés ══ #}
     {% set w = t.warnings %}
     {% if w.total > 0 %}
-        <div class="mb-5 rounded-xl border border-laiton/40 bg-laiton-voile px-5 py-4 text-sm text-laiton-patine">
+        <div class="mb-5 rounded-xl border border-laiton/40 bg-laiton-voile px-5 py-2.5 text-sm text-laiton-patine">
             <div class="flex items-center gap-2 font-semibold mb-1.5">
                 <i class="fas fa-triangle-exclamation"></i> Attention : le coût affiché peut être sous-évalué
             </div>
@@ -48,7 +48,7 @@
        Tous les nombres passent par des séparateurs français explicites : sans
        eux, number_format rend « 61.5 % » à côté de « 1,67 € ». ── #}
     {% set hasReal = t.real_markup_percent is not null %}
-    <div class="rounded-2xl border border-trait bg-white px-2 py-3 mb-6 flex flex-wrap">
+    <div class="rounded-2xl border border-trait bg-white px-2 py-2.5 mb-4 flex flex-wrap">
 
         {# Coût de revient #}
         <div class="flex-1 min-w-[120px] px-4 py-1">
@@ -134,8 +134,8 @@
             <div class="rounded-2xl border border-trait bg-white">
                 <div class="px-4 border-b border-trait-fin flex items-center justify-between">
                     <div class="flex">
-                        <button type="button" id="tabBtn-compo" onclick="showRecipeTab('compo')" class="tab-btn px-4 py-3 text-sm font-medium border-b-2 border-transparent text-ardoise-doux transition-colors">Composition <span class="text-xs text-ardoise-faible ml-0.5">({{ lines|length }})</span></button>
-                        {% if t.total_cost_ht > 0 %}<button type="button" id="tabBtn-couts" onclick="showRecipeTab('couts')" class="tab-btn px-4 py-3 text-sm font-medium border-b-2 border-transparent text-ardoise-doux transition-colors">Analyse des coûts</button>{% endif %}
+                        <button type="button" id="tabBtn-compo" onclick="showRecipeTab('compo')" class="tab-btn px-4 py-2.5 text-sm font-medium border-b-2 border-transparent text-ardoise-doux transition-colors">Composition <span class="text-xs text-ardoise-faible ml-0.5">({{ lines|length }})</span></button>
+                        {% if t.total_cost_ht > 0 %}<button type="button" id="tabBtn-couts" onclick="showRecipeTab('couts')" class="tab-btn px-4 py-2.5 text-sm font-medium border-b-2 border-transparent text-ardoise-doux transition-colors">Analyse des coûts</button>{% endif %}
                     </div>
                     {% if canEdit %}
                         <button onclick="document.getElementById('addLineModal').classList.remove('hidden');document.getElementById('addLineModal').classList.add('flex')" class="inline-flex items-center gap-1.5 rounded-lg bg-ardoise hover:bg-ardoise-clair px-3 py-1.5 text-xs font-medium text-white transition-colors"><i class="fas fa-plus text-[12px]"></i> Ajouter</button>
@@ -211,21 +211,21 @@
                                 {% set pct_mat   = t.total_cost_ht > 0 ? (t.material_cost_ht   / t.total_cost_ht * 100)|round(1) : 0 %}
                                 {% set pct_labor = t.total_cost_ht > 0 ? (t.labor_cost_ht      / t.total_cost_ht * 100)|round(1) : 0 %}
                                 {% set pct_pack  = t.total_cost_ht > 0 ? (t.packaging_cost_ht  / t.total_cost_ht * 100)|round(1) : 0 %}
-                                <div class="flex items-center gap-4">
+                                <div class="flex items-center gap-3">
                                     <div class="w-3 h-3 rounded-full bg-ardoise flex-shrink-0"></div>
                                     <div class="flex-1">
                                         <div class="flex justify-between text-sm mb-1"><span class="font-medium text-ardoise">Matières premières</span><span class="font-semibold text-ardoise">{{ t.material_cost_ht|number_format(2,',',' ') }} € <span class="text-ardoise-faible font-normal">({{ pct_mat }}%)</span></span></div>
                                         <div class="h-2 rounded-full bg-voile"><div class="h-2 rounded-full bg-ardoise" style="width:{{ pct_mat }}%"></div></div>
                                     </div>
                                 </div>
-                                <div class="flex items-center gap-4">
+                                <div class="flex items-center gap-3">
                                     <div class="w-3 h-3 rounded-full bg-pousse flex-shrink-0"></div>
                                     <div class="flex-1">
                                         <div class="flex justify-between text-sm mb-1"><span class="font-medium text-ardoise">Main d'œuvre</span><span class="font-semibold text-ardoise">{{ t.labor_cost_ht|number_format(2,',',' ') }} € <span class="text-ardoise-faible font-normal">({{ pct_labor }}%)</span></span></div>
                                         <div class="h-2 rounded-full bg-voile"><div class="h-2 rounded-full bg-pousse" style="width:{{ pct_labor }}%"></div></div>
                                     </div>
                                 </div>
-                                <div class="flex items-center gap-4">
+                                <div class="flex items-center gap-3">
                                     <div class="w-3 h-3 rounded-full bg-laiton flex-shrink-0"></div>
                                     <div class="flex-1">
                                         <div class="flex justify-between text-sm mb-1"><span class="font-medium text-ardoise">Emballage</span><span class="font-semibold text-ardoise">{{ t.packaging_cost_ht|number_format(2,',',' ') }} € <span class="text-ardoise-faible font-normal">({{ pct_pack }}%)</span></span></div>
@@ -233,7 +233,7 @@
                                     </div>
                                 </div>
                                 <hr class="border-trait-fin">
-                                <div class="flex justify-between items-center bg-pousse-voile/70 rounded-xl px-4 py-3">
+                                <div class="flex justify-between items-center bg-pousse-voile/70 rounded-xl px-4 py-2.5">
                                     <span class="text-sm font-semibold text-ardoise">Marge brute</span>
                                     <span class="font-bold text-pousse">{{ t.margin_ht|number_format(2,',',' ') }} € <span class="font-normal text-pousse text-sm">(marque {{ t.markup_percent|number_format(1, ',', ' ') }} %)</span></span>
                                 </div>
@@ -249,7 +249,7 @@
         <aside id="infoSidebar" class="hidden w-full lg:w-80 shrink-0 space-y-4 lg:sticky lg:top-4">
 
             {# Allergènes #}
-            <div class="rounded-2xl border border-trait bg-white px-5 py-4">
+            <div class="rounded-2xl border border-trait bg-white px-5 py-2.5">
                 <div class="flex items-center gap-2 mb-3">
                     <div class="w-2 h-2 rounded-full bg-sang"></div>
                     <h3 class="font-semibold text-sm text-ardoise">Allergènes</h3>
@@ -278,7 +278,7 @@
 
             {# Valeurs nutritionnelles #}
             {% set n = t.nutrition %}
-            <div class="rounded-2xl border border-trait bg-white px-5 py-4">
+            <div class="rounded-2xl border border-trait bg-white px-5 py-2.5">
                 <div class="flex items-center gap-2 mb-1">
                     <div class="w-2 h-2 rounded-full bg-pousse"></div>
                     <h3 class="font-semibold text-sm text-ardoise">Valeurs nutritionnelles</h3>
@@ -317,7 +317,7 @@
     {# ===== MODAL IMPRESSION ===== #}
     <div id="printQtyModal" class="fixed inset-0 z-[9999] hidden items-center justify-center bg-black/50">
         <div class="bg-white rounded-2xl shadow-xl w-full max-w-sm mx-4">
-            <div class="px-6 py-4 border-b border-trait-fin">
+            <div class="px-6 py-2.5 border-b border-trait-fin">
                 <h3 class="font-semibold text-ardoise"><i class="fas fa-print text-laiton-patine mr-2 text-sm"></i>Quantité à imprimer</h3>
                 <p class="text-xs text-ardoise-faible mt-1">Recette de base : <strong>{{ recipe.outputValue }} {{ recipe.outputUnitLabel }}</strong></p>
             </div>
@@ -338,12 +338,12 @@
                         <button type="button" onclick="setPrintQty({{ recipe.outputValue * 10 }})" class="rounded-lg border border-trait px-3 py-1.5 text-xs text-ardoise-doux hover:bg-voile hover:border-laiton/40 hover:text-laiton-patine transition-colors">× 10</button>
                     </div>
                 </div>
-                <div class="bg-voile rounded-xl px-4 py-3 flex items-center justify-between">
+                <div class="bg-voile rounded-xl px-4 py-2.5 flex items-center justify-between">
                     <span class="text-sm text-ardoise-doux">Facteur multiplicateur</span>
                     <span id="printFactorDisplay" class="text-base font-bold text-ardoise">× 1,00</span>
                 </div>
             </div>
-            <div class="px-6 py-4 border-t border-trait-fin flex flex-col gap-2">
+            <div class="px-6 py-2.5 border-t border-trait-fin flex flex-col gap-2">
                 <button type="button" onclick="generatePrint('lab')"
                         class="w-full inline-flex items-center justify-center gap-2 rounded-lg bg-ardoise hover:bg-ardoise-clair px-5 py-2.5 text-sm font-medium text-white transition-colors">
                     <i class="fas fa-flask text-[12px]"></i> Fiche labo
@@ -366,21 +366,21 @@
     {# Modal ajouter ligne #}
     <div id="addLineModal" class="fixed inset-0 z-[9999] hidden items-center justify-center bg-black/50">
         <form method="post" action="{{ path('app_recipe_add_line', {id: recipe.id}) }}" class="bg-white rounded-2xl shadow-xl w-full max-w-lg mx-4">
-            <div class="px-6 py-4 border-b border-trait-fin"><h3 class="font-semibold text-ardoise"><i class="fas fa-plus text-laiton-patine mr-2 text-sm"></i>Ajouter une ligne</h3></div>
+            <div class="px-6 py-2.5 border-b border-trait-fin"><h3 class="font-semibold text-ardoise"><i class="fas fa-plus text-laiton-patine mr-2 text-sm"></i>Ajouter une ligne</h3></div>
             <div class="p-6 space-y-4">
                 <div><label class="block text-sm font-medium text-ardoise-doux mb-1.5">Type</label><select name="type" id="lineTypeSelect" class="w-full rounded-lg border border-trait px-4 py-2.5 text-sm outline-none focus:border-laiton-patine bg-white" onchange="toggleLineType()"><option value="ingredient">Ingrédient</option><option value="sub_recipe">Sous-recette</option></select></div>
                 <div id="ingredientField"><label class="block text-sm font-medium text-ardoise-doux mb-1.5">Ingrédient</label><select name="ingredient_id" class="w-full rounded-lg border border-trait px-4 py-2.5 text-sm outline-none focus:border-laiton-patine bg-white"><option value="">Choisir…</option>{% for i in ingredients %}<option value="{{ i.id }}">{{ i.name }} ({{ i.baseUnit }})</option>{% endfor %}</select></div>
                 <div id="subRecipeField" style="display:none"><label class="block text-sm font-medium text-ardoise-doux mb-1.5">Sous-recette</label><select name="sub_recipe_id" class="w-full rounded-lg border border-trait px-4 py-2.5 text-sm outline-none focus:border-laiton-patine bg-white"><option value="">Choisir…</option>{% for r in availableSubs %}<option value="{{ r.id }}">{{ r.name }} ({{ r.family }})</option>{% endfor %}</select></div>
-                <div class="grid grid-cols-2 gap-4">
+                <div class="grid grid-cols-2 gap-3">
                     <div><label class="block text-sm font-medium text-ardoise-doux mb-1.5">Quantité brute</label><input type="number" name="qty_brute" step="0.001" required placeholder="0.000" class="w-full rounded-lg border border-trait px-4 py-2.5 text-sm outline-none focus:border-laiton-patine"></div>
                     <div><label class="block text-sm font-medium text-ardoise-doux mb-1.5">Unité</label><select name="unit" class="w-full rounded-lg border border-trait px-4 py-2.5 text-sm outline-none focus:border-laiton-patine bg-white"><option value="kg">kg</option><option value="g">g</option><option value="piece">pièce</option><option value="litre">litre</option></select></div>
                 </div>
-                <div class="grid grid-cols-2 gap-4">
+                <div class="grid grid-cols-2 gap-3">
                     <div><label class="block text-sm font-medium text-ardoise-doux mb-1.5">% perte</label><input type="number" name="loss_percent" step="0.01" value="0" class="w-full rounded-lg border border-trait px-4 py-2.5 text-sm outline-none focus:border-laiton-patine"></div>
                     <div><label class="block text-sm font-medium text-ardoise-doux mb-1.5">% rendement</label><input type="number" name="yield_percent" step="0.01" value="100" class="w-full rounded-lg border border-trait px-4 py-2.5 text-sm outline-none focus:border-laiton-patine"></div>
                 </div>
             </div>
-            <div class="px-6 py-4 border-t border-trait-fin flex justify-end gap-3">
+            <div class="px-6 py-2.5 border-t border-trait-fin flex justify-end gap-3">
                 <button type="button" onclick="this.closest('.fixed').classList.add('hidden');this.closest('.fixed').classList.remove('flex')" class="rounded-lg border border-trait px-4 py-2 text-sm text-ardoise-doux hover:bg-voile">Annuler</button>
                 <button type="submit" class="rounded-lg bg-ardoise hover:bg-ardoise-clair px-5 py-2 text-sm font-medium text-white"><i class="fas fa-plus text-[12px] mr-1"></i> Ajouter</button>
             </div>
@@ -389,15 +389,15 @@
     {# Modal dupliquer #}
     <div id="dupeModal" class="fixed inset-0 z-[9999] hidden items-center justify-center bg-black/50">
         <form method="post" action="{{ path('app_recipe_duplicate', {id: recipe.id}) }}" class="bg-white rounded-2xl shadow-xl w-full max-w-sm mx-4">
-            <div class="px-6 py-4 border-b border-trait-fin"><h3 class="font-semibold text-ardoise">Dupliquer</h3></div>
+            <div class="px-6 py-2.5 border-b border-trait-fin"><h3 class="font-semibold text-ardoise">Dupliquer</h3></div>
             <div class="p-6"><p class="text-xs text-ardoise-faible mb-3">Copie la recette avec tous ses ingrédients.</p><label class="block text-sm font-medium text-ardoise-doux mb-1.5">Nom de la copie</label><input type="text" name="new_name" value="{{ recipe.name }} (copie)" required class="w-full rounded-lg border border-trait px-4 py-2.5 text-sm outline-none focus:border-laiton-patine"></div>
-            <div class="px-6 py-4 border-t border-trait-fin flex justify-end gap-3"><button type="button" onclick="this.closest('.fixed').classList.add('hidden');this.closest('.fixed').classList.remove('flex')" class="rounded-lg border border-trait px-4 py-2 text-sm text-ardoise-doux hover:bg-voile">Annuler</button><button type="submit" class="rounded-lg bg-pousse hover:bg-pousse px-5 py-2 text-sm font-medium text-white">Dupliquer</button></div>
+            <div class="px-6 py-2.5 border-t border-trait-fin flex justify-end gap-3"><button type="button" onclick="this.closest('.fixed').classList.add('hidden');this.closest('.fixed').classList.remove('flex')" class="rounded-lg border border-trait px-4 py-2 text-sm text-ardoise-doux hover:bg-voile">Annuler</button><button type="submit" class="rounded-lg bg-pousse hover:bg-pousse px-5 py-2 text-sm font-medium text-white">Dupliquer</button></div>
         </form></div>
     {# Modal édition des paramètres #}
     {% if canEdit %}
         <div id="paramsModal" class="fixed inset-0 z-[9999] hidden items-center justify-center bg-black/50 p-4">
             <div class="bg-white rounded-2xl shadow-xl w-full max-w-2xl max-h-[90vh] flex flex-col overflow-hidden">
-                <div class="px-6 py-4 border-b border-trait-fin flex items-center justify-between shrink-0">
+                <div class="px-6 py-2.5 border-b border-trait-fin flex items-center justify-between shrink-0">
                     <h3 class="font-semibold text-ardoise"><i class="fas fa-pen text-purple-500 mr-2 text-sm"></i>Modifier les paramètres</h3>
                     <button type="button" onclick="closeParamsModal()" class="w-8 h-8 inline-flex items-center justify-center rounded-lg text-ardoise-faible hover:text-ardoise-doux hover:bg-voile"><i class="fas fa-times"></i></button>
                 </div>
@@ -442,7 +442,7 @@
                     </div>
                 </form>
 
-                <div class="px-6 py-4 border-t border-trait-fin flex items-center justify-between gap-3 shrink-0">
+                <div class="px-6 py-2.5 border-t border-trait-fin flex items-center justify-between gap-3 shrink-0">
                     <form method="post" action="{{ path('app_recipe_delete', {id: recipe.id}) }}" onsubmit="return confirm('Supprimer définitivement cette recette ?')">
                         <button type="submit" class="inline-flex items-center gap-1.5 text-xs font-medium text-sang hover:text-sang transition-colors"><i class="fas fa-trash text-[12px]"></i> Supprimer</button>
                     </form>

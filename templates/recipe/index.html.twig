@@ -11,7 +11,7 @@
 
     {# Table #}
     <div class="rounded-2xl border border-trait bg-white">
-        <div class="px-5 py-4 border-b border-trait-fin flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+        <div class="px-5 py-2.5 border-b border-trait-fin flex flex-col sm:flex-row sm:items-center justify-between gap-3">
             <div class="relative">
                 <input type="text" id="searchInput" placeholder="Rechercher…" class="w-60 pl-9 pr-3 py-2 rounded-lg border border-trait text-sm outline-none focus:border-laiton-patine bg-voile placeholder-ardoise-faible">
                 <i class="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-ardoise-faible text-xs"></i>
@@ -27,26 +27,26 @@
         <div class="overflow-x-auto">
             <table class="w-full text-sm">
                 <thead><tr class="border-b border-trait-fin">
-                    <th class="py-3 px-5 text-left text-xs font-medium uppercase tracking-wider text-ardoise-faible">Nom</th>
-                    <th class="py-3 px-3 text-left text-xs font-medium uppercase tracking-wider text-ardoise-faible">Famille</th>
-                    <th class="py-3 px-3 text-center text-xs font-medium uppercase tracking-wider text-ardoise-faible">Sortie</th>
-                    <th class="py-3 px-3 text-right text-xs font-medium uppercase tracking-wider text-ardoise-faible">Coût/u HT</th>
-                    <th class="py-3 px-3 text-right text-xs font-medium uppercase tracking-wider text-ardoise-faible">PV conseillé</th>
-                    <th class="py-3 px-3 text-right text-xs font-medium uppercase tracking-wider text-ardoise-faible">PV pratiqué</th>
-                    <th class="py-3 px-3 text-right text-xs font-medium uppercase tracking-wider text-ardoise-faible">Marque</th>
-                    <th class="py-3 px-5 text-center text-xs font-medium uppercase tracking-wider text-ardoise-faible" style="min-width:80px">Actions</th>
+                    <th class="py-2.5 px-5 text-left text-xs font-medium uppercase tracking-wider text-ardoise-faible">Nom</th>
+                    <th class="py-2.5 px-3 text-left text-xs font-medium uppercase tracking-wider text-ardoise-faible">Famille</th>
+                    <th class="py-2.5 px-3 text-center text-xs font-medium uppercase tracking-wider text-ardoise-faible">Sortie</th>
+                    <th class="py-2.5 px-3 text-right text-xs font-medium uppercase tracking-wider text-ardoise-faible">Coût/u HT</th>
+                    <th class="py-2.5 px-3 text-right text-xs font-medium uppercase tracking-wider text-ardoise-faible">PV conseillé</th>
+                    <th class="py-2.5 px-3 text-right text-xs font-medium uppercase tracking-wider text-ardoise-faible">PV pratiqué</th>
+                    <th class="py-2.5 px-3 text-right text-xs font-medium uppercase tracking-wider text-ardoise-faible">Marque</th>
+                    <th class="py-2.5 px-5 text-center text-xs font-medium uppercase tracking-wider text-ardoise-faible" style="min-width:80px">Actions</th>
                 </tr></thead>
                 <tbody class="divide-y divide-trait-fin">
                 {% for r in recipes %}
                     <tr class="dt-row hover:bg-voile/50 transition-colors" data-search="{{ r.name|lower }} {{ r.family|lower }}">
-                        <td class="py-3 px-5">
+                        <td class="py-2.5 px-5">
                             <a href="{{ path('app_recipe_show', {id: r.id}) }}" class="font-medium text-laiton-patine hover:text-ardoise">{{ r.name }}</a>
                         </td>
-                        <td class="py-3 px-3"><span class="inline-flex items-center rounded-full bg-voile px-2.5 py-0.5 text-2xs font-medium text-ardoise-doux">{{ r.family }}</span></td>
-                        <td class="py-3 px-3 text-center text-ardoise-doux">{{ r.outputValue }} {{ r.outputUnitLabel }}</td>
-                        <td class="py-3 px-3 text-right font-semibold text-ardoise">{{ r.costCache ? r.costCache.costPerOutputHt|number_format(2, ',', ' ') ~ ' €' : '—' }}</td>
-                        <td class="py-3 px-3 text-right text-ardoise-doux">{{ r.costCache ? r.costCache.advisedSellTtc|number_format(2, ',', ' ') ~ ' €' : '—' }}</td>
-                        <td class="py-3 px-3 text-right">
+                        <td class="py-2.5 px-3"><span class="inline-flex items-center rounded-full bg-voile px-2.5 py-0.5 text-2xs font-medium text-ardoise-doux">{{ r.family }}</span></td>
+                        <td class="py-2.5 px-3 text-center text-ardoise-doux">{{ r.outputValue }} {{ r.outputUnitLabel }}</td>
+                        <td class="py-2.5 px-3 text-right font-semibold text-ardoise">{{ r.costCache ? r.costCache.costPerOutputHt|number_format(2, ',', ' ') ~ ' €' : '—' }}</td>
+                        <td class="py-2.5 px-3 text-right text-ardoise-doux">{{ r.costCache ? r.costCache.advisedSellTtc|number_format(2, ',', ' ') ~ ' €' : '—' }}</td>
+                        <td class="py-2.5 px-3 text-right">
                             {% if r.hasSellPrice %}
                                 <span class="font-semibold text-ardoise">{{ r.sellPriceTtc|number_format(2, ',', ' ') }} €</span>
                                 {% if r.priceGapPercent is not null and r.priceGapPercent < -2 %}
@@ -58,7 +58,7 @@
                         </td>
                         {# Marque réelle dès que le prix pratiqué est connu ; sinon
                            la théorique, signalée comme telle pour ne pas tromper. #}
-                        <td class="py-3 px-3 text-right">
+                        <td class="py-2.5 px-3 text-right">
                             {% set markup = r.realMarkupPercent is not null ? r.realMarkupPercent : (r.costCache ? r.costCache.marginPercent : null) %}
                             {% if markup is not null %}
                                 <span class="font-semibold {{ markup >= 30 ? 'text-pousse' : (markup >= 15 ? 'text-laiton-patine' : 'text-sang') }}">{{ markup|number_format(1, ',', ' ') }}%</span>
@@ -67,7 +67,7 @@
                                 {% endif %}
                             {% else %}—{% endif %}
                         </td>
-                        <td class="py-3 px-5 text-center">
+                        <td class="py-2.5 px-5 text-center">
                             <a href="{{ path('app_recipe_show', {id: r.id}) }}" class="w-8 h-8 inline-flex items-center justify-center rounded-lg text-ardoise-faible hover:text-laiton-patine hover:bg-voile transition-colors" title="Ouvrir"><i class="fas fa-eye text-xs"></i></a>
                         </td>
                     </tr>
@@ -78,7 +78,7 @@
             </table>
         </div>
 
-        <div class="px-5 py-4 border-t border-trait-fin flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+        <div class="px-5 py-2.5 border-t border-trait-fin flex flex-col sm:flex-row sm:items-center justify-between gap-3">
             <p class="text-sm text-ardoise-doux" id="paginationInfo">—</p>
             <nav class="flex items-center gap-1" id="paginationNav"></nav>
         </div>
@@ -87,7 +87,7 @@
     {# Create Modal #}
     <div id="createModal" class="fixed inset-0 z-[9999] hidden items-center justify-center bg-black/50">
         <form method="post" action="{{ path('app_recipe_create') }}" class="bg-white rounded-2xl shadow-xl w-full max-w-lg mx-4 max-h-[90vh] overflow-y-auto">
-            <div class="px-6 py-4 border-b border-trait-fin"><h3 class="font-semibold text-ardoise"><i class="fas fa-plus text-laiton-patine mr-2 text-sm"></i>Nouvelle recette</h3></div>
+            <div class="px-6 py-2.5 border-b border-trait-fin"><h3 class="font-semibold text-ardoise"><i class="fas fa-plus text-laiton-patine mr-2 text-sm"></i>Nouvelle recette</h3></div>
             <div class="p-6 space-y-4">
                 <div><label class="block text-sm font-medium text-ardoise-doux mb-1.5">Nom *</label><input type="text" name="name" required class="w-full rounded-lg border border-trait px-4 py-2.5 text-sm outline-none focus:border-laiton-patine focus:ring-2 focus:ring-laiton/40/20"></div>
                 <div><label class="block text-sm font-medium text-ardoise-doux mb-1.5">Famille *</label>
@@ -95,19 +95,19 @@
                         {% for f in families %}<option value="{{ f.name }}">{{ f.name }}</option>{% endfor %}
                     </select>
                 </div>
-                <div class="grid grid-cols-2 gap-4">
+                <div class="grid grid-cols-2 gap-3">
                     <div><label class="block text-sm font-medium text-ardoise-doux mb-1.5">Type sortie</label><select name="output_type" class="w-full rounded-lg border border-trait px-4 py-2.5 text-sm outline-none focus:border-laiton-patine bg-white"><option value="weight">Poids (kg)</option><option value="portion">Portions</option></select></div>
                     <div><label class="block text-sm font-medium text-ardoise-doux mb-1.5">Quantité sortie *</label><input type="number" name="output_value" step="0.001" value="5" required class="w-full rounded-lg border border-trait px-4 py-2.5 text-sm outline-none focus:border-laiton-patine"></div>
                 </div>
-                <div class="grid grid-cols-2 gap-4">
+                <div class="grid grid-cols-2 gap-3">
                     <div><label class="block text-sm font-medium text-ardoise-doux mb-1.5">Mode prix</label><select name="pricing_mode" class="w-full rounded-lg border border-trait px-4 py-2.5 text-sm outline-none focus:border-laiton-patine bg-white"><option value="coef">Coefficient (× coût HT)</option><option value="margin">Taux de marque (% du PV)</option></select></div>
                     <div><label class="block text-sm font-medium text-ardoise-doux mb-1.5">Objectif</label><input type="number" name="pricing_value" step="0.01" value="{{ boutique().coefDefaut }}" class="w-full rounded-lg border border-trait px-4 py-2.5 text-sm outline-none focus:border-laiton-patine"></div>
                 </div>
-                <div class="grid grid-cols-2 gap-4">
+                <div class="grid grid-cols-2 gap-3">
                     <div><label class="block text-sm font-medium text-ardoise-doux mb-1.5">TVA produit %</label><input type="number" name="product_vat_rate" step="0.01" value="{{ boutique().tvaDefaut }}" class="w-full rounded-lg border border-trait px-4 py-2.5 text-sm outline-none focus:border-laiton-patine"></div>
                     <div></div>
                 </div>
-                <div class="grid grid-cols-2 gap-4">
+                <div class="grid grid-cols-2 gap-3">
                     <div>
                         <label class="block text-sm font-medium text-ardoise-doux mb-1.5">Main d'œuvre (minutes)</label>
                         <input type="number" name="labor_minutes" min="0" step="1" value="0"
@@ -124,7 +124,7 @@
                 <input type="hidden" name="loss_percent" value="0">
                 <input type="hidden" name="yield_percent" value="100">
             </div>
-            <div class="px-6 py-4 border-t border-trait-fin flex justify-end gap-3">
+            <div class="px-6 py-2.5 border-t border-trait-fin flex justify-end gap-3">
                 <button type="button" onclick="this.closest('.fixed').classList.add('hidden');this.closest('.fixed').classList.remove('flex')" class="rounded-lg border border-trait px-4 py-2 text-sm text-ardoise-doux hover:bg-voile">Annuler</button>
                 <button type="submit" class="rounded-lg bg-ardoise hover:bg-ardoise-clair px-5 py-2 text-sm font-medium text-white">Créer</button>
             </div>

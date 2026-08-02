@@ -8,7 +8,7 @@
 
         {# ── Identité ── #}
         <div class="rounded-2xl border border-trait bg-white">
-            <div class="px-6 py-4 border-b border-trait-fin">
+            <div class="px-6 py-2.5 border-b border-trait-fin">
                 <div class="flex items-center gap-2">
                     <div class="w-2 h-2 rounded-full bg-ardoise"></div>
                     <h3 class="font-semibold text-sm text-ardoise">Identité de l'établissement</h3>
@@ -16,7 +16,7 @@
             </div>
             <div class="p-6 space-y-4">
 
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
                     <div>
                         <label class="block text-xs font-semibold text-ardoise-doux uppercase tracking-wider mb-1.5">
                             Nom de l'établissement <span class="text-sang">*</span>
@@ -56,7 +56,7 @@
                     </div>
                 </div>
 
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
                     <div>
                         <label class="block text-xs font-semibold text-ardoise-doux uppercase tracking-wider mb-1.5">Téléphone</label>
                         <input type="text" name="telephone" value="{{ config.telephone ?: '' }}"
@@ -79,7 +79,7 @@
 
         {# ── Logo ── #}
         <div class="rounded-2xl border border-trait bg-white">
-            <div class="px-6 py-4 border-b border-trait-fin">
+            <div class="px-6 py-2.5 border-b border-trait-fin">
                 <div class="flex items-center gap-2">
                     <div class="w-2 h-2 rounded-full bg-violet-500"></div>
                     <h3 class="font-semibold text-sm text-ardoise">Logo</h3>
@@ -108,7 +108,7 @@
 
         {# ── Paramètres métier ── #}
         <div class="rounded-2xl border border-trait bg-white">
-            <div class="px-6 py-4 border-b border-trait-fin">
+            <div class="px-6 py-2.5 border-b border-trait-fin">
                 <div class="flex items-center gap-2">
                     <div class="w-2 h-2 rounded-full bg-laiton"></div>
                     <h3 class="font-semibold text-sm text-ardoise">Paramètres de calcul</h3>
@@ -150,7 +150,7 @@
 
         {# ── Mention pied PDF ── #}
         <div class="rounded-2xl border border-trait bg-white">
-            <div class="px-6 py-4 border-b border-trait-fin">
+            <div class="px-6 py-2.5 border-b border-trait-fin">
                 <div class="flex items-center gap-2">
                     <div class="w-2 h-2 rounded-full bg-trait"></div>
                     <h3 class="font-semibold text-sm text-ardoise">Mention pied de page PDF</h3>
@@ -167,7 +167,7 @@
         {# ── Bouton ── #}
         <div class="flex justify-end">
             <button type="submit"
-                    class="inline-flex items-center gap-2 rounded-xl bg-ardoise hover:bg-ardoise-clair px-8 py-3 text-sm font-semibold text-white transition-colors">
+                    class="inline-flex items-center gap-2 rounded-xl bg-ardoise hover:bg-ardoise-clair px-8 py-2.5 text-sm font-semibold text-white transition-colors">
                 <i class="fas fa-save text-[12px]"></i>
                 Enregistrer les paramètres
             </button>

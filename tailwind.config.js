@@ -117,14 +117,23 @@ module.exports = {
              * gardent des valeurs arbitraires, relevées à 11–12 px.
              */
             fontSize: {
-                '2xs': ['0.8125rem', { lineHeight: '1.15rem' }],  /* 13 px — plancher absolu du texte */
-                xs:    ['0.875rem',  { lineHeight: '1.25rem' }],  /* 14 px — était 12 */
-                sm:    ['0.9375rem', { lineHeight: '1.375rem' }], /* 15 px — était 14, c'est la base de lecture */
-                base:  ['1.0625rem', { lineHeight: '1.5rem' }],   /* 17 px — était 16 */
-                lg:    ['1.25rem',   { lineHeight: '1.75rem' }],  /* 20 px — était 18 */
-                xl:    ['1.5rem',    { lineHeight: '1.9rem' }],   /* 24 px — était 20 */
-                '2xl': ['1.875rem',  { lineHeight: '2.25rem' }],  /* 30 px — était 24 */
-                '3xl': ['2.375rem',  { lineHeight: '2.6rem' }],   /* 38 px — était 30 */
+                /* Seul le BAS de l'échelle est relevé. Le haut revient aux
+                 * valeurs d'origine : personne ne trouvait les titres trop
+                 * petits, et les avoir agrandis avait porté le tableau de bord
+                 * à 1 640 px de contenu pour 900 px de fenêtre — presque deux
+                 * écrans à faire défiler pour lire quatre indicateurs.
+                 *
+                 * Lisibilité n'est pas synonyme de gros : c'est un plancher,
+                 * pas un facteur d'agrandissement.
+                 */
+                '2xs': ['0.8125rem', { lineHeight: '1.1rem' }],   /* 13 px — plancher absolu du texte */
+                xs:    ['0.875rem',  { lineHeight: '1.2rem' }],   /* 14 px — était 12 */
+                sm:    ['0.9375rem', { lineHeight: '1.3rem' }],   /* 15 px — était 14, base de lecture */
+                base:  ['1rem',      { lineHeight: '1.5rem' }],   /* 16 px — inchangé */
+                lg:    ['1.125rem',  { lineHeight: '1.6rem' }],   /* 18 px — inchangé */
+                xl:    ['1.25rem',   { lineHeight: '1.65rem' }],  /* 20 px — inchangé */
+                '2xl': ['1.5rem',    { lineHeight: '1.85rem' }],  /* 24 px — inchangé */
+                '3xl': ['1.75rem',   { lineHeight: '2rem' }],     /* 28 px — resserré, c'est le chiffre des indicateurs */
             },
 
             minHeight: {

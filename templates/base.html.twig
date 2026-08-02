@@ -107,7 +107,7 @@
             {% endif %}
         </nav>
 
-        <div class="border-t border-white/[.06] px-7 py-4">
+        <div class="border-t border-white/[.06] px-7 py-2.5">
             {% if app.user %}
                 <p class="text-xs text-trait">{{ app.user.username }} <span class="text-trait">({{ app.user.role }})</span></p>
                 <a href="{{ path('app_logout') }}" class="text-2xs text-sang-clair hover:text-white">Déconnexion</a>
@@ -119,7 +119,7 @@
 
     <div class="flex-1 flex flex-col lg:ml-[280px] h-full overflow-hidden">
         <header class="flex-shrink-0 z-40 bg-white border-b border-trait/80 px-4 lg:px-8 min-h-[72px] h-[72px] flex items-center justify-between shadow-sm overflow-hidden">
-            <div class="flex items-center gap-4">
+            <div class="flex items-center gap-3">
                 <button onclick="toggleSidebar()" class="lg:hidden w-9 h-9 flex items-center justify-center rounded-lg border border-trait text-ardoise-doux hover:bg-voile">
                     <i class="fas fa-bars text-sm"></i>
                 </button>
@@ -136,7 +136,7 @@
         <main class="flex-1 overflow-y-auto p-4 lg:p-7">
             {% for type, messages in app.flashes %}
                 {% for message in messages %}
-                    <div class="mb-4 flex items-center gap-3 rounded-xl px-5 py-3.5 text-sm border
+                    <div class="mb-4 flex items-center gap-3 rounded-xl px-5 py-2.5.5 text-sm border
                     {{ type == 'success' ? 'bg-pousse-voile border-pousse/30 text-pousse' : '' }}
                     {{ type == 'danger'  ? 'bg-sang-voile border-sang/30 text-sang'       : '' }}
                     {{ type == 'warning' ? 'bg-laiton-voile border-laiton/40 text-laiton-patine' : '' }}

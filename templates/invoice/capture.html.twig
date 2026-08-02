@@ -5,7 +5,7 @@
 
 {% block body %}
 
-    <div class="rounded-2xl border border-laiton/40 bg-laiton-voile/50 px-6 py-4 mb-6">
+    <div class="rounded-2xl border border-laiton/40 bg-laiton-voile/50 px-6 py-2.5 mb-4">
         <p class="text-sm text-laiton-patine">
             <i class="fas fa-triangle-exclamation mr-1"></i>
             Cette pièce ne contient pas de données Factur-X : rien n'a pu en être lu automatiquement.
@@ -22,7 +22,7 @@
             {# ── Pièce d'origine ── #}
             <div class="lg:col-span-1">
                 <div class="rounded-2xl border border-trait bg-white sticky top-6">
-                    <div class="px-6 py-4 border-b border-trait-fin">
+                    <div class="px-6 py-2.5 border-b border-trait-fin">
                         <h3 class="font-semibold text-sm text-ardoise">Pièce reçue</h3>
                     </div>
                     <div class="p-6 space-y-4">
@@ -48,10 +48,10 @@
             <div class="lg:col-span-2 space-y-6">
 
                 <div class="rounded-2xl border border-trait bg-white">
-                    <div class="px-6 py-4 border-b border-trait-fin">
+                    <div class="px-6 py-2.5 border-b border-trait-fin">
                         <h3 class="font-semibold text-sm text-ardoise">En-tête</h3>
                     </div>
-                    <div class="p-6 grid grid-cols-1 sm:grid-cols-3 gap-4">
+                    <div class="p-6 grid grid-cols-1 sm:grid-cols-3 gap-3">
                         <div class="sm:col-span-3">
                             <label class="block text-2xs font-semibold uppercase tracking-wider text-ardoise-faible mb-1">Fournisseur</label>
                             <select name="supplier_id" required
@@ -87,7 +87,7 @@
                 </div>
 
                 <div class="rounded-2xl border border-trait bg-white">
-                    <div class="px-6 py-4 border-b border-trait-fin flex items-center justify-between">
+                    <div class="px-6 py-2.5 border-b border-trait-fin flex items-center justify-between">
                         <h3 class="font-semibold text-sm text-ardoise">Lignes</h3>
                         <button type="button" id="add-line"
                                 class="text-2xs font-semibold text-laiton-patine hover:underline">
@@ -99,11 +99,11 @@
                         <table class="w-full text-sm">
                             <thead class="bg-voile/70 text-2xs uppercase tracking-wider text-ardoise-faible">
                                 <tr>
-                                    <th class="px-6 py-3 text-left font-semibold">Libellé sur la facture</th>
-                                    <th class="px-3 py-3 text-right font-semibold w-24">Quantité</th>
-                                    <th class="px-3 py-3 text-left font-semibold w-24">Unité</th>
-                                    <th class="px-3 py-3 text-right font-semibold w-28">Prix HT</th>
-                                    <th class="px-6 py-3 text-right font-semibold w-24">TVA %</th>
+                                    <th class="px-6 py-2.5 text-left font-semibold">Libellé sur la facture</th>
+                                    <th class="px-3 py-2.5 text-right font-semibold w-24">Quantité</th>
+                                    <th class="px-3 py-2.5 text-left font-semibold w-24">Unité</th>
+                                    <th class="px-3 py-2.5 text-right font-semibold w-28">Prix HT</th>
+                                    <th class="px-6 py-2.5 text-right font-semibold w-24">TVA %</th>
                                 </tr>
                             </thead>
                             <tbody id="lines" class="divide-y divide-trait-fin">
@@ -140,7 +140,7 @@
                         <option value="kg"><option value="g"><option value="l"><option value="ml"><option value="pièce">
                     </datalist>
 
-                    <div class="px-6 py-4 border-t border-trait-fin flex items-center justify-between">
+                    <div class="px-6 py-2.5 border-t border-trait-fin flex items-center justify-between">
                         <p class="text-2xs text-ardoise-faible">
                             Le prix est celui de l'unité indiquée. Les lignes vides sont ignorées.
                             Chaque libellé passe ensuite par le rapprochement habituel : ce qui a déjà été tranché une fois est reconnu.

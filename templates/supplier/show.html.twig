@@ -22,9 +22,9 @@
 {% block body %}
 
     {# ── Identité fournisseur ── #}
-    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-3 mb-4">
         <div class="md:col-span-2 rounded-2xl border border-trait bg-white px-6 py-5">
-            <div class="flex items-start gap-4">
+            <div class="flex items-start gap-3">
                 <div class="w-12 h-12 rounded-xl bg-ardoise flex items-center justify-center flex-shrink-0">
                     <i class="fas fa-truck text-white text-lg"></i>
                 </div>
@@ -40,16 +40,16 @@
             </div>
         </div>
         <div class="grid grid-cols-2 gap-3">
-            <div class="rounded-2xl border border-laiton/30 bg-voile/40 px-4 py-4 text-center">
+            <div class="rounded-2xl border border-laiton/30 bg-voile/40 px-4 py-2.5 text-center">
                 <p class="text-2xs font-semibold uppercase tracking-wider text-laiton-patine">Factures</p>
                 <p class="text-3xl font-bold text-ardoise-fort mt-1">{{ invoices|length }}</p>
             </div>
-            <div class="rounded-2xl border border-pousse/30 bg-pousse-voile/40 px-4 py-4 text-center">
+            <div class="rounded-2xl border border-pousse/30 bg-pousse-voile/40 px-4 py-2.5 text-center">
                 <p class="text-2xs font-semibold uppercase tracking-wider text-pousse">Produits</p>
                 <p class="text-3xl font-bold text-pousse mt-1">{{ products|length }}</p>
             </div>
             {% set totalHt = invoices|map(i => i.total_ht)|reduce((carry, v) => carry + v, 0) %}
-            <div class="col-span-2 rounded-2xl border border-trait bg-white px-4 py-4 text-center">
+            <div class="col-span-2 rounded-2xl border border-trait bg-white px-4 py-2.5 text-center">
                 <p class="text-2xs font-semibold uppercase tracking-wider text-ardoise-faible">Total achats HT</p>
                 <p class="text-2xl font-bold text-ardoise mt-1">{{ totalHt|number_format(2, ',', ' ') }} €</p>
             </div>
@@ -60,7 +60,7 @@
 
         {# ══ FACTURES (cliquables) ══ #}
         <div class="rounded-2xl border border-trait bg-white">
-            <div class="px-5 py-4 border-b border-trait-fin flex items-center justify-between">
+            <div class="px-5 py-2.5 border-b border-trait-fin flex items-center justify-between">
                 <div class="flex items-center gap-2">
                     <div class="w-2 h-2 rounded-full bg-ardoise"></div>
                     <h3 class="font-semibold text-sm text-ardoise">Factures importées</h3>
@@ -81,7 +81,7 @@
                     <a href="{{ isActive
                     ? path('app_supplier_show', {id: supplier.id})
                     : path('app_supplier_show', {id: supplier.id, facture: inv.id}) }}"
-                       class="flex items-center gap-3 px-5 py-3.5 transition-all group
+                       class="flex items-center gap-3 px-5 py-2.5.5 transition-all group
                   {{ isActive ? 'bg-voile border-l-[3px] border-l-laiton-patine' : 'hover:bg-voile border-l-[3px] border-l-transparent hover:border-l-trait' }}">
 
                         <div class="flex-shrink-0 w-8 h-8 rounded-lg flex items-center justify-center
@@ -112,7 +112,7 @@
 
         {# ══ PRODUITS (filtrés ou non) ══ #}
         <div class="rounded-2xl border {{ filter_invoice ? 'border-laiton/40' : 'border-trait' }} bg-white">
-            <div class="px-5 py-4 border-b {{ filter_invoice ? 'border-laiton/30 bg-voile/30' : 'border-trait-fin' }} flex items-center justify-between">
+            <div class="px-5 py-2.5 border-b {{ filter_invoice ? 'border-laiton/30 bg-voile/30' : 'border-trait-fin' }} flex items-center justify-between">
                 <div class="flex items-center gap-2">
                     <div class="w-2 h-2 rounded-full {{ filter_invoice ? 'bg-ardoise' : 'bg-pousse' }}"></div>
                     <h3 class="font-semibold text-sm text-ardoise">
@@ -134,7 +134,7 @@
                         {% set variation = p.prev_price and p.prev_price > 0
                             ? ((p.last_price - p.prev_price) / p.prev_price * 100)|round(1)
                             : null %}
-                        <div class="px-5 py-3.5">
+                        <div class="px-5 py-2.5.5">
                             <div class="flex items-center justify-between gap-3">
                                 <div class="flex-1 min-w-0">
                                     <a href="{{ path('app_ingredient_show', {id: p.ingredient_id}) }}"

@@ -23,21 +23,21 @@
 {% set totalHt12m      = suppliers|map(s => s.total_ht_12m)|reduce((carry, v) => carry + v, 0) %}
 {% set totalIngredients= suppliers|map(s => s.ingredient_count)|reduce((carry, v) => carry + v, 0) %}
 
-<div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-    <div class="rounded-2xl border border-trait bg-white px-5 py-4">
+<div class="grid grid-cols-2 md:grid-cols-4 gap-3 mb-4">
+    <div class="rounded-2xl border border-trait bg-white px-5 py-2.5">
         <p class="text-2xs font-semibold uppercase tracking-wider text-ardoise-faible">Fournisseurs</p>
         <p class="text-3xl font-bold text-ardoise mt-1">{{ suppliers|length }}</p>
     </div>
-    <div class="rounded-2xl border border-laiton/30 bg-voile/40 px-5 py-4">
+    <div class="rounded-2xl border border-laiton/30 bg-voile/40 px-5 py-2.5">
         <p class="text-2xs font-semibold uppercase tracking-wider text-laiton-patine">Factures importées</p>
         <p class="text-3xl font-bold text-ardoise-fort mt-1">{{ totalInvoices }}</p>
     </div>
-    <div class="rounded-2xl border border-pousse/30 bg-pousse-voile/40 px-5 py-4">
+    <div class="rounded-2xl border border-pousse/30 bg-pousse-voile/40 px-5 py-2.5">
         <p class="text-2xs font-semibold uppercase tracking-wider text-pousse">Achats 12 mois</p>
         <p class="text-3xl font-bold text-pousse mt-1">{{ totalHt12m|number_format(0, ',', ' ') }} €</p>
         <p class="text-2xs text-pousse mt-1">HT</p>
     </div>
-    <div class="rounded-2xl border border-trait bg-white px-5 py-4">
+    <div class="rounded-2xl border border-trait bg-white px-5 py-2.5">
         <p class="text-2xs font-semibold uppercase tracking-wider text-ardoise-faible">Ingrédients sourcés</p>
         <p class="text-3xl font-bold text-ardoise mt-1">{{ totalIngredients }}</p>
     </div>
@@ -45,7 +45,7 @@
 
 {# ── Liste fournisseurs ── #}
 <div class="rounded-2xl border border-trait bg-white">
-    <div class="px-6 py-4 border-b border-trait-fin">
+    <div class="px-6 py-2.5 border-b border-trait-fin">
         <div class="flex items-center gap-2">
             <div class="w-2 h-2 rounded-full bg-ardoise"></div>
             <h3 class="font-semibold text-sm text-ardoise">Liste des fournisseurs</h3>
@@ -56,19 +56,19 @@
     <table class="w-full text-sm">
         <thead>
             <tr class="border-b border-trait-fin bg-voile/50">
-                <th class="py-3 px-5 text-left text-xs font-semibold uppercase tracking-wider text-ardoise-faible">Fournisseur</th>
-                <th class="py-3 px-4 text-center text-xs font-semibold uppercase tracking-wider text-ardoise-faible">Factures</th>
-                <th class="py-3 px-4 text-center text-xs font-semibold uppercase tracking-wider text-ardoise-faible">Produits</th>
-                <th class="py-3 px-4 text-right text-xs font-semibold uppercase tracking-wider text-ardoise-faible">Total HT (12m)</th>
-                <th class="py-3 px-4 text-right text-xs font-semibold uppercase tracking-wider text-ardoise-faible">Total HT (tout)</th>
-                <th class="py-3 px-4 text-left text-xs font-semibold uppercase tracking-wider text-ardoise-faible">Dernière facture</th>
-                <th class="py-3 px-4 w-10"></th>
+                <th class="py-2.5 px-5 text-left text-xs font-semibold uppercase tracking-wider text-ardoise-faible">Fournisseur</th>
+                <th class="py-2.5 px-4 text-center text-xs font-semibold uppercase tracking-wider text-ardoise-faible">Factures</th>
+                <th class="py-2.5 px-4 text-center text-xs font-semibold uppercase tracking-wider text-ardoise-faible">Produits</th>
+                <th class="py-2.5 px-4 text-right text-xs font-semibold uppercase tracking-wider text-ardoise-faible">Total HT (12m)</th>
+                <th class="py-2.5 px-4 text-right text-xs font-semibold uppercase tracking-wider text-ardoise-faible">Total HT (tout)</th>
+                <th class="py-2.5 px-4 text-left text-xs font-semibold uppercase tracking-wider text-ardoise-faible">Dernière facture</th>
+                <th class="py-2.5 px-4 w-10"></th>
             </tr>
         </thead>
         <tbody class="divide-y divide-trait-fin">
         {% for s in suppliers %}
         <tr class="hover:bg-voile/50 transition-colors">
-            <td class="py-3.5 px-5">
+            <td class="py-2.5.5 px-5">
                 <a href="{{ path('app_supplier_show', {id: s.id}) }}"
                    class="font-semibold text-ardoise hover:text-laiton-patine transition-colors block">
                     {{ s.name }}
@@ -78,25 +78,25 @@
                     {% if s.siret %} · SIRET {{ s.siret|slice(0,9) }}…{% endif %}
                 </p>
             </td>
-            <td class="py-3.5 px-4 text-center">
+            <td class="py-2.5.5 px-4 text-center">
                 <span class="inline-flex items-center justify-center w-8 h-8 rounded-full bg-voile text-ardoise-fort font-semibold text-sm">
                     {{ s.invoice_count }}
                 </span>
             </td>
-            <td class="py-3.5 px-4 text-center">
+            <td class="py-2.5.5 px-4 text-center">
                 <span class="text-sm font-medium text-ardoise">{{ s.ingredient_count }}</span>
             </td>
-            <td class="py-3.5 px-4 text-right">
+            <td class="py-2.5.5 px-4 text-right">
                 <span class="font-semibold text-pousse">
                     {{ s.total_ht_12m > 0 ? s.total_ht_12m|number_format(2, ',', ' ') ~ ' €' : '—' }}
                 </span>
             </td>
-            <td class="py-3.5 px-4 text-right">
+            <td class="py-2.5.5 px-4 text-right">
                 <span class="text-sm text-ardoise-doux">
                     {{ s.total_ht_all > 0 ? s.total_ht_all|number_format(2, ',', ' ') ~ ' €' : '—' }}
                 </span>
             </td>
-            <td class="py-3.5 px-4">
+            <td class="py-2.5.5 px-4">
                 {% if s.last_invoice_date_computed %}
                     {% set d = s.last_invoice_date_computed %}
                     <span class="text-sm text-ardoise-doux">{{ d|date('d/m/Y') }}</span>
@@ -104,7 +104,7 @@
                     <span class="text-sm text-ardoise-faible">—</span>
                 {% endif %}
             </td>
-            <td class="py-3.5 px-4 text-right">
+            <td class="py-2.5.5 px-4 text-right">
                 <a href="{{ path('app_supplier_show', {id: s.id}) }}"
                    class="text-ardoise-faible hover:text-laiton-patine transition-colors">
                     <i class="fas fa-eye"></i>
