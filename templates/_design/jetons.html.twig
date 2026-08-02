@@ -1,0 +1,254 @@
+{#
+   Référence des jetons — page interne, sans lien dans la navigation.
+
+   Volontairement autonome (pas d'extends base.html.twig) : on juge des couleurs
+   et des tailles, la barre latérale et ses propres couleurs n'auraient fait que
+   parasiter la comparaison.
+#}
+<!DOCTYPE html>
+<html lang="fr" class="h-full">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Jetons de conception</title>
+    <link rel="icon" href="{{ asset('favicon.svg') }}" type="image/svg+xml">
+    <link rel="stylesheet" href="{{ asset('assets/app.css') }}">
+    <link rel="stylesheet" href="{{ asset('assets/vendor/inter/inter.css') }}">
+    <link rel="stylesheet" href="{{ asset('assets/vendor/fontawesome/css/fontawesome.min.css') }}">
+    <link rel="stylesheet" href="{{ asset('assets/vendor/fontawesome/css/solid.min.css') }}">
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+        .avant-apres { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; }
+        @media (max-width: 900px) { .avant-apres { grid-template-columns: 1fr; } }
+    </style>
+</head>
+<body class="bg-inox min-h-full">
+
+<div class="max-w-6xl mx-auto px-6 py-10">
+
+    <header class="mb-10">
+        <p class="text-[11px] font-semibold uppercase tracking-[0.18em] text-laiton-patine mb-2">Refonte — phase 2</p>
+        <h1 class="text-[34px] font-extrabold tracking-tight text-ardoise leading-none">Jetons de conception</h1>
+        <p class="mt-3 text-[15px] text-ardoise/70 max-w-2xl">
+            Chaque décision est ici sur un vrai composant, pas sur un nuancier.
+            À gauche l'interface actuelle, à droite ce que propose la refonte.
+            Rien n'est appliqué à l'application tant que cette page n'est pas validée.
+        </p>
+    </header>
+
+    {# ── Palette ─────────────────────────────────────────────────────────── #}
+    <section class="mb-12">
+        <h2 class="text-[20px] font-bold text-ardoise mb-1">Palette</h2>
+        <p class="text-[14px] text-ardoise/60 mb-5">
+            Nommée d'après l'atelier : inox brossé, ardoise, craie, laiton.
+            Le gris de l'interface actuelle (#f1f5f9) est un bleuté de Tailwind
+            qui ne vient de nulle part ; l'inox tire légèrement vers le vert,
+            comme la surface d'un laboratoire.
+        </p>
+
+        <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+            {% for j in [
+                {n: 'ardoise',       v: '#16202B', r: 'Fond sombre, texte principal', c: 'bg-ardoise',       t: 'text-white'},
+                {n: 'ardoise-clair', v: '#243447', r: 'Survol, séparateurs sur sombre', c: 'bg-ardoise-clair', t: 'text-white'},
+                {n: 'inox',          v: '#E8EBE9', r: 'Surface de l’application',     c: 'bg-inox',          t: 'text-ardoise'},
+                {n: 'craie',         v: '#FBFCFB', r: 'Surface des cartes',           c: 'bg-craie',         t: 'text-ardoise'},
+                {n: 'laiton',        v: '#C9973F', r: 'Ornement seul — jamais du texte sur clair', c: 'bg-laiton',  t: 'text-ardoise'},
+                {n: 'laiton-patine', v: '#7E5B1E', r: 'Le laiton quand il porte du texte', c: 'bg-laiton-patine', t: 'text-white'},
+                {n: 'sang',          v: '#A8342A', r: 'Hausse, marge sous l’objectif', c: 'bg-sang',         t: 'text-white'},
+                {n: 'pousse',        v: '#3F6B52', r: 'Marge saine',                  c: 'bg-pousse',        t: 'text-white'},
+            ] %}
+                <div class="rounded-xl overflow-hidden border border-ardoise/10">
+                    <div class="{{ j.c }} {{ j.t }} h-20 flex items-end p-3">
+                        <span class="text-[13px] font-mono">{{ j.v }}</span>
+                    </div>
+                    <div class="bg-craie p-3">
+                        <p class="text-[14px] font-semibold text-ardoise">{{ j.n }}</p>
+                        <p class="text-[13px] text-ardoise/60 mt-0.5 leading-snug">{{ j.r }}</p>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+    </section>
+
+    {# ── Contrastes ──────────────────────────────────────────────────────── #}
+    <section class="mb-12">
+        <h2 class="text-[20px] font-bold text-ardoise mb-1">Contrastes mesurés</h2>
+        <p class="text-[14px] text-ardoise/60 mb-5">
+            Calculés selon le WCAG&nbsp;2.1, pas estimés. Seuil de 4,5 pour du
+            texte courant. <strong>C'est ce calcul qui a révélé que le laiton de
+            la marque ne peut pas porter de texte sur fond clair</strong> — ce que
+            l'interface actuelle fait pourtant.
+        </p>
+
+        <div class="rounded-xl border border-ardoise/10 overflow-hidden bg-craie">
+            <table class="w-full text-[14px]">
+                <thead class="bg-inox">
+                    <tr class="text-left text-[12px] uppercase tracking-wider text-ardoise/60">
+                        <th class="px-4 py-2.5 font-semibold">Paire</th>
+                        <th class="px-4 py-2.5 font-semibold">Aperçu</th>
+                        <th class="px-4 py-2.5 font-semibold text-right tabular-nums">Rapport</th>
+                        <th class="px-4 py-2.5 font-semibold">Verdict</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-ardoise/5">
+                    {% for c in contrastes %}
+                        <tr>
+                            <td class="px-4 py-2.5 text-ardoise">{{ c[0] }}</td>
+                            <td class="px-4 py-2.5">
+                                <span class="inline-block px-3 py-1 rounded text-[14px] font-medium"
+                                      style="color: {{ c[1] }}; background: {{ c[2] }};">
+                                    23,30 € — marge 21 %
+                                </span>
+                            </td>
+                            <td class="px-4 py-2.5 text-right tabular-nums font-semibold text-ardoise">
+                                {{ c[3]|number_format(2, ',', ' ') }}:1
+                            </td>
+                            <td class="px-4 py-2.5">
+                                {% if c[3] >= 4.5 %}
+                                    <span class="text-[13px] font-semibold text-pousse">Texte courant</span>
+                                {% elseif c[3] >= 3 %}
+                                    <span class="text-[13px] font-semibold text-laiton-patine">Grand texte seulement</span>
+                                {% else %}
+                                    <span class="text-[13px] font-semibold text-sang">Échec</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </section>
+
+    {# ── Échelle typographique ───────────────────────────────────────────── #}
+    <section class="mb-12">
+        <h2 class="text-[20px] font-bold text-ardoise mb-1">Échelle typographique</h2>
+        <p class="text-[14px] text-ardoise/60 mb-5">
+            L'interface actuelle descend à 8&nbsp;px et emploie 367&nbsp;fois une
+            taille inférieure ou égale à 12&nbsp;px. Pour un artisan de 50&nbsp;ans,
+            écran à bout de bras dans un laboratoire, ce n'est pas une question de
+            goût. Le plancher passe à 13&nbsp;px.
+        </p>
+
+        <div class="avant-apres">
+            <div class="rounded-xl border border-sang/30 bg-craie p-5">
+                <p class="text-[11px] font-semibold uppercase tracking-wider text-sang mb-4">Actuel</p>
+                <p style="font-size:8px"  class="text-gray-400 mb-1.5">8 px — employé 7 fois</p>
+                <p style="font-size:9px"  class="text-gray-400 mb-1.5">9 px — employé 13 fois</p>
+                <p style="font-size:10px" class="text-gray-400 mb-1.5">10 px — employé 104 fois</p>
+                <p style="font-size:11px" class="text-gray-400 mb-1.5">11 px — employé 86 fois</p>
+                <p style="font-size:12px" class="text-gray-500 mb-1.5">12 px — employé 157 fois</p>
+                <p style="font-size:14px" class="text-gray-700">14 px — employé 285 fois</p>
+            </div>
+
+            <div class="rounded-xl border border-pousse/30 bg-craie p-5">
+                <p class="text-[11px] font-semibold uppercase tracking-wider text-pousse mb-4">Proposé</p>
+                <p style="font-size:13px" class="text-ardoise/70 mb-1.5">13 px — plancher, mentions et légendes</p>
+                <p style="font-size:14px" class="text-ardoise/80 mb-1.5">14 px — texte secondaire</p>
+                <p style="font-size:15px" class="text-ardoise mb-1.5">15 px — base de lecture</p>
+                <p style="font-size:17px" class="text-ardoise mb-1.5">17 px — texte long</p>
+                <p style="font-size:20px" class="text-ardoise font-semibold mb-1.5">20 px — titre de section</p>
+                <p style="font-size:26px" class="text-ardoise font-bold">26 px — titre de page</p>
+            </div>
+        </div>
+    </section>
+
+    {# ── Composants réels ────────────────────────────────────────────────── #}
+    <section class="mb-12">
+        <h2 class="text-[20px] font-bold text-ardoise mb-1">Sur de vrais composants</h2>
+        <p class="text-[14px] text-ardoise/60 mb-5">
+            Une carte d'indicateur et une ligne de mercuriale, telles qu'elles
+            apparaissent dans l'application. Les chiffres passent en chasse
+            tabulaire : les colonnes de prix s'alignent enfin.
+        </p>
+
+        <div class="avant-apres">
+            {# Avant #}
+            <div>
+                <p class="text-[11px] font-semibold uppercase tracking-wider text-sang mb-3">Actuel</p>
+
+                <div class="rounded-2xl border border-gray-200 bg-white px-5 py-3 mb-3">
+                    <p class="text-[10px] font-semibold uppercase tracking-wider text-gray-400">Marque réelle médiane</p>
+                    <p class="text-2xl font-bold text-[#1c2434] mt-0.5">21,4 %</p>
+                </div>
+
+                <div class="rounded-2xl border border-gray-200 bg-white overflow-hidden">
+                    <table class="w-full text-sm">
+                        <thead class="bg-gray-50/70 text-[11px] uppercase tracking-wider text-gray-400">
+                            <tr>
+                                <th class="px-4 py-3 text-left font-semibold">Ingrédient</th>
+                                <th class="px-4 py-3 text-right font-semibold">Prix HT</th>
+                                <th class="px-4 py-3 text-right font-semibold">Évolution</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-gray-50">
+                            <tr><td class="px-4 py-3 text-gray-800">Épaule de porc</td><td class="px-4 py-3 text-right">8,10 €</td><td class="px-4 py-3 text-right text-red-600">+9,5 %</td></tr>
+                            <tr><td class="px-4 py-3 text-gray-800">Beurre de tourage</td><td class="px-4 py-3 text-right">11,40 €</td><td class="px-4 py-3 text-right text-red-600">+4,3 %</td></tr>
+                            <tr><td class="px-4 py-3 text-gray-800">Sel de Guérande</td><td class="px-4 py-3 text-right">1,90 €</td><td class="px-4 py-3 text-right text-emerald-600">−1,2 %</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            {# Après #}
+            <div>
+                <p class="text-[11px] font-semibold uppercase tracking-wider text-pousse mb-3">Proposé</p>
+
+                <div class="rounded-2xl border border-ardoise/10 bg-craie px-5 py-4 mb-3">
+                    <p class="text-[13px] font-semibold uppercase tracking-[0.12em] text-laiton-patine">Marque réelle médiane</p>
+                    <p class="text-[34px] font-extrabold tracking-tight text-ardoise mt-1 tabular-nums leading-none">21,4 %</p>
+                </div>
+
+                <div class="rounded-2xl border border-ardoise/10 bg-craie overflow-hidden">
+                    <table class="w-full text-[15px]">
+                        <thead class="bg-inox text-[13px] uppercase tracking-wider text-ardoise/60">
+                            <tr>
+                                <th class="px-4 py-3 text-left font-semibold">Ingrédient</th>
+                                <th class="px-4 py-3 text-right font-semibold">Prix HT</th>
+                                <th class="px-4 py-3 text-right font-semibold">Évolution</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-ardoise/5">
+                            <tr><td class="px-4 py-3 text-ardoise">Épaule de porc</td><td class="px-4 py-3 text-right tabular-nums text-ardoise">8,10 €</td><td class="px-4 py-3 text-right tabular-nums font-semibold text-sang">+9,5 %</td></tr>
+                            <tr><td class="px-4 py-3 text-ardoise">Beurre de tourage</td><td class="px-4 py-3 text-right tabular-nums text-ardoise">11,40 €</td><td class="px-4 py-3 text-right tabular-nums font-semibold text-sang">+4,3 %</td></tr>
+                            <tr><td class="px-4 py-3 text-ardoise">Sel de Guérande</td><td class="px-4 py-3 text-right tabular-nums text-ardoise">1,90 €</td><td class="px-4 py-3 text-right tabular-nums font-semibold text-pousse">−1,2 %</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    {# ── Boutons et cibles tactiles ──────────────────────────────────────── #}
+    <section class="mb-12">
+        <h2 class="text-[20px] font-bold text-ardoise mb-1">Actions</h2>
+        <p class="text-[14px] text-ardoise/60 mb-5">
+            Hauteur minimale portée à 36&nbsp;px au bureau. En mode atelier
+            (phase&nbsp;4, tablette), elle passera à 56&nbsp;px — un doigt ganté
+            ne vise pas comme une souris.
+        </p>
+
+        <div class="flex flex-wrap gap-3 items-center">
+            <button class="min-h-cible inline-flex items-center gap-2 rounded-xl bg-ardoise px-5 text-[15px] font-semibold text-craie hover:bg-ardoise-clair transition-colors">
+                <i class="fas fa-check text-[13px]"></i> Valider la facture
+            </button>
+            <button class="min-h-cible inline-flex items-center gap-2 rounded-xl bg-laiton px-5 text-[15px] font-semibold text-ardoise hover:brightness-105 transition">
+                Demander un accès
+            </button>
+            <button class="min-h-cible inline-flex items-center gap-2 rounded-xl border border-ardoise/20 bg-craie px-5 text-[15px] font-semibold text-ardoise hover:bg-inox transition-colors">
+                Annuler
+            </button>
+            <button class="min-h-cible inline-flex items-center gap-2 rounded-xl border border-sang/30 bg-craie px-5 text-[15px] font-semibold text-sang hover:bg-sang/5 transition-colors">
+                <i class="fas fa-ban text-[13px]"></i> Écarter
+            </button>
+        </div>
+    </section>
+
+    <footer class="border-t border-ardoise/10 pt-5 text-[13px] text-ardoise/50">
+        Page interne, sans lien depuis la navigation. Elle reste après la refonte :
+        c'est ici qu'on vérifie qu'un nouveau jeton tient ses promesses de
+        contraste avant de l'employer.
+    </footer>
+
+</div>
+</body>
+</html>
