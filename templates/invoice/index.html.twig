@@ -8,26 +8,26 @@
     <div class="flex items-center justify-between mb-6">
         <div class="flex items-center gap-3">
             <div class="rounded-2xl border border-trait bg-white px-5 py-3">
-                <p class="text-[10px] font-semibold uppercase tracking-wider text-ardoise-faible">À valider</p>
+                <p class="text-2xs font-semibold uppercase tracking-wider text-ardoise-faible">À valider</p>
                 <p class="text-2xl font-bold {{ pending|length ? 'text-laiton-patine' : 'text-ardoise' }} mt-0.5">{{ pending|length }}</p>
             </div>
             <div class="rounded-2xl border border-trait bg-white px-5 py-3">
-                <p class="text-[10px] font-semibold uppercase tracking-wider text-ardoise-faible">À saisir</p>
+                <p class="text-2xs font-semibold uppercase tracking-wider text-ardoise-faible">À saisir</p>
                 <p class="text-2xl font-bold {{ to_capture|length ? 'text-laiton-patine' : 'text-ardoise' }} mt-0.5">{{ to_capture|length }}</p>
             </div>
             <div class="rounded-2xl border border-trait bg-white px-5 py-3">
-                <p class="text-[10px] font-semibold uppercase tracking-wider text-ardoise-faible">Traitées</p>
+                <p class="text-2xs font-semibold uppercase tracking-wider text-ardoise-faible">Traitées</p>
                 <p class="text-2xl font-bold text-ardoise mt-0.5">{{ processed|length }}</p>
             </div>
         </div>
         <a href="{{ path('app_invoice_import') }}"
            class="inline-flex items-center gap-2 rounded-xl bg-ardoise hover:bg-ardoise-clair px-5 py-2.5 text-sm font-medium text-white">
-            <i class="fas fa-file-import text-[11px]"></i> Importer une facture
+            <i class="fas fa-file-import text-[12px]"></i> Importer une facture
         </a>
     </div>
 
     {% if mailbox %}
-        <p class="mb-6 text-[11px] text-ardoise-faible">
+        <p class="mb-6 text-2xs text-ardoise-faible">
             <i class="fas fa-inbox mr-1"></i>
             Réception automatique active sur <span class="font-mono">{{ mailbox }}</span>.
             Les factures envoyées à cette adresse arrivent seules dans cette page.
@@ -39,8 +39,8 @@
         <div class="rounded-2xl border border-laiton/40 bg-white mb-6">
             <div class="px-6 py-4 border-b border-laiton/40 flex items-center gap-2">
                 <div class="w-2 h-2 rounded-full bg-laiton"></div>
-                <h3 class="font-semibold text-[15px] text-ardoise">Reçues, à saisir</h3>
-                <span class="text-[11px] text-ardoise-faible">
+                <h3 class="font-semibold text-sm text-ardoise">Reçues, à saisir</h3>
+                <span class="text-2xs text-ardoise-faible">
                     — pièces conservées, mais sans données Factur-X exploitables
                 </span>
             </div>
@@ -52,7 +52,7 @@
                             <p class="font-medium text-sm text-ardoise">
                                 {{ invoice.supplier ? invoice.supplier.name : 'Fournisseur à rattacher' }}
                             </p>
-                            <p class="text-[11px] text-ardoise-faible mt-0.5 truncate">
+                            <p class="text-2xs text-ardoise-faible mt-0.5 truncate">
                                 {{ invoice.displayReference }}
                                 · reçue le {{ invoice.importedAt|date('d/m/Y') }}
                                 {% if invoice.senderEmail %} · de {{ invoice.senderEmail }}{% endif %}
@@ -60,12 +60,12 @@
                         </div>
                         {% if invoice.hasAttachment %}
                             <a href="{{ path('app_invoice_attachment', {id: invoice.id}) }}" target="_blank"
-                               class="text-[11px] text-laiton-patine hover:underline flex-shrink-0">
+                               class="text-2xs text-laiton-patine hover:underline flex-shrink-0">
                                 <i class="fas fa-file-pdf mr-1"></i>Voir la pièce
                             </a>
                         {% endif %}
                         <a href="{{ path('app_invoice_capture', {id: invoice.id}) }}"
-                           class="inline-flex items-center rounded-full bg-laiton-voile px-3 py-1 text-[10px] font-semibold text-laiton-patine hover:bg-laiton-voile flex-shrink-0">
+                           class="inline-flex items-center rounded-full bg-laiton-voile px-3 py-1 text-2xs font-semibold text-laiton-patine hover:bg-laiton-voile flex-shrink-0">
                             Saisir les lignes
                         </a>
                     </div>
@@ -78,7 +78,7 @@
     <div class="rounded-2xl border border-trait bg-white mb-6">
         <div class="px-6 py-4 border-b border-trait-fin flex items-center gap-2">
             <div class="w-2 h-2 rounded-full {{ pending|length ? 'bg-laiton' : 'bg-trait' }}"></div>
-            <h3 class="font-semibold text-[15px] text-ardoise">En attente de validation</h3>
+            <h3 class="font-semibold text-sm text-ardoise">En attente de validation</h3>
         </div>
 
         {% if pending is empty %}
@@ -92,7 +92,7 @@
                        class="flex items-center gap-4 px-6 py-4 hover:bg-voile/40 transition-colors">
                         <div class="flex-1 min-w-0">
                             <p class="font-medium text-sm text-ardoise">{{ invoice.supplier ? invoice.supplier.name : 'Fournisseur inconnu' }}</p>
-                            <p class="text-[11px] text-ardoise-faible mt-0.5">
+                            <p class="text-2xs text-ardoise-faible mt-0.5">
                                 {{ invoice.invoiceId }} · {{ invoice.invoiceDate|date('d/m/Y') }}
                                 {% if invoice.source != 'manual' %}
                                     · <span class="text-laiton-patine">{{ invoice.source == 'email' ? 'reçue par mail' : 'plateforme' }}</span>
@@ -103,12 +103,12 @@
                             <p class="text-sm font-semibold text-ardoise">
                                 {{ invoice.totalHt ? invoice.totalHt|number_format(2, ',', ' ') ~ ' € HT' : '—' }}
                             </p>
-                            <p class="text-[11px] text-ardoise-faible">{{ invoice.lines|length }} ligne(s)</p>
+                            <p class="text-2xs text-ardoise-faible">{{ invoice.lines|length }} ligne(s)</p>
                         </div>
-                        <span class="inline-flex items-center rounded-full bg-laiton-voile px-2.5 py-1 text-[10px] font-semibold text-laiton-patine flex-shrink-0">
+                        <span class="inline-flex items-center rounded-full bg-laiton-voile px-2.5 py-1 text-2xs font-semibold text-laiton-patine flex-shrink-0">
                             À valider
                         </span>
-                        <i class="fas fa-chevron-right text-[10px] text-ardoise-faible flex-shrink-0"></i>
+                        <i class="fas fa-chevron-right text-[12px] text-ardoise-faible flex-shrink-0"></i>
                     </a>
                 {% endfor %}
             </div>
@@ -118,7 +118,7 @@
     {# ── Historique ── #}
     <div class="rounded-2xl border border-trait bg-white">
         <div class="px-6 py-4 border-b border-trait-fin">
-            <h3 class="font-semibold text-[15px] text-ardoise"><i class="fas fa-clock-rotate-left text-ardoise-faible mr-2 text-sm"></i>Historique</h3>
+            <h3 class="font-semibold text-sm text-ardoise"><i class="fas fa-clock-rotate-left text-ardoise-faible mr-2 text-sm"></i>Historique</h3>
         </div>
 
         {% if processed is empty %}
@@ -126,7 +126,7 @@
         {% else %}
             <div class="overflow-x-auto">
                 <table class="w-full text-sm">
-                    <thead class="bg-voile/70 text-[11px] uppercase tracking-wider text-ardoise-faible">
+                    <thead class="bg-voile/70 text-2xs uppercase tracking-wider text-ardoise-faible">
                         <tr>
                             <th class="px-6 py-3 text-left font-semibold">Fournisseur</th>
                             <th class="px-4 py-3 text-left font-semibold">N°</th>
@@ -148,13 +148,13 @@
                                 <td class="px-4 py-3 text-right text-ardoise-doux">{{ invoice.lines|length }}</td>
                                 <td class="px-6 py-3">
                                     {% if invoice.applied %}
-                                        <span class="inline-flex items-center rounded-full bg-pousse-voile px-2.5 py-1 text-[10px] font-semibold text-pousse">
-                                            <i class="fas fa-check text-[8px] mr-1"></i>Prix appliqués
+                                        <span class="inline-flex items-center rounded-full bg-pousse-voile px-2.5 py-1 text-2xs font-semibold text-pousse">
+                                            <i class="fas fa-check text-[12px] mr-1"></i>Prix appliqués
                                         </span>
                                     {% else %}
-                                        <span class="inline-flex items-center rounded-full bg-voile px-2.5 py-1 text-[10px] font-semibold text-ardoise-doux"
+                                        <span class="inline-flex items-center rounded-full bg-voile px-2.5 py-1 text-2xs font-semibold text-ardoise-doux"
                                               title="{{ invoice.note }}">
-                                            <i class="fas fa-ban text-[8px] mr-1"></i>Écartée
+                                            <i class="fas fa-ban text-[12px] mr-1"></i>Écartée
                                         </span>
                                     {% endif %}
                                 </td>

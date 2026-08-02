@@ -12,7 +12,7 @@
     <p class="text-sm text-ardoise-faible mt-1">Les fournisseurs sont créés automatiquement lors de l'import de factures Factur-X.</p>
     <a href="{{ path('app_invoice_import') }}"
        class="mt-5 inline-flex items-center gap-2 rounded-xl bg-ardoise hover:bg-ardoise-clair px-5 py-2.5 text-sm font-semibold text-white transition-colors">
-        <i class="fas fa-file-import text-[11px]"></i> Importer une facture
+        <i class="fas fa-file-import text-[12px]"></i> Importer une facture
     </a>
 </div>
 
@@ -25,20 +25,20 @@
 
 <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
     <div class="rounded-2xl border border-trait bg-white px-5 py-4">
-        <p class="text-[10px] font-semibold uppercase tracking-wider text-ardoise-faible">Fournisseurs</p>
+        <p class="text-2xs font-semibold uppercase tracking-wider text-ardoise-faible">Fournisseurs</p>
         <p class="text-3xl font-bold text-ardoise mt-1">{{ suppliers|length }}</p>
     </div>
     <div class="rounded-2xl border border-laiton/30 bg-voile/40 px-5 py-4">
-        <p class="text-[10px] font-semibold uppercase tracking-wider text-laiton-patine">Factures importées</p>
+        <p class="text-2xs font-semibold uppercase tracking-wider text-laiton-patine">Factures importées</p>
         <p class="text-3xl font-bold text-ardoise-fort mt-1">{{ totalInvoices }}</p>
     </div>
     <div class="rounded-2xl border border-pousse/30 bg-pousse-voile/40 px-5 py-4">
-        <p class="text-[10px] font-semibold uppercase tracking-wider text-pousse">Achats 12 mois</p>
+        <p class="text-2xs font-semibold uppercase tracking-wider text-pousse">Achats 12 mois</p>
         <p class="text-3xl font-bold text-pousse mt-1">{{ totalHt12m|number_format(0, ',', ' ') }} €</p>
-        <p class="text-[10px] text-pousse mt-1">HT</p>
+        <p class="text-2xs text-pousse mt-1">HT</p>
     </div>
     <div class="rounded-2xl border border-trait bg-white px-5 py-4">
-        <p class="text-[10px] font-semibold uppercase tracking-wider text-ardoise-faible">Ingrédients sourcés</p>
+        <p class="text-2xs font-semibold uppercase tracking-wider text-ardoise-faible">Ingrédients sourcés</p>
         <p class="text-3xl font-bold text-ardoise mt-1">{{ totalIngredients }}</p>
     </div>
 </div>
@@ -48,7 +48,7 @@
     <div class="px-6 py-4 border-b border-trait-fin">
         <div class="flex items-center gap-2">
             <div class="w-2 h-2 rounded-full bg-ardoise"></div>
-            <h3 class="font-semibold text-[15px] text-ardoise">Liste des fournisseurs</h3>
+            <h3 class="font-semibold text-sm text-ardoise">Liste des fournisseurs</h3>
         </div>
     </div>
 
@@ -73,7 +73,7 @@
                    class="font-semibold text-ardoise hover:text-laiton-patine transition-colors block">
                     {{ s.name }}
                 </a>
-                <p class="text-[11px] text-ardoise-faible mt-0.5">
+                <p class="text-2xs text-ardoise-faible mt-0.5">
                     {% if s.city %}{{ s.city }}{% endif %}
                     {% if s.siret %} · SIRET {{ s.siret|slice(0,9) }}…{% endif %}
                 </p>

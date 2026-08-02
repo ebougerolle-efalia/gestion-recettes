@@ -101,6 +101,32 @@ module.exports = {
                 sans: ['Inter', 'system-ui', 'sans-serif'],
             },
 
+            /* ── Échelle typographique ──────────────────────────────────────
+             *
+             * L'ancienne interface descendait à 8 px et employait 281 fois une
+             * taille de TEXTE inférieure à 13 px. Pour un artisan de 50 ans,
+             * écran à bout de bras dans un laboratoire, ce n'est pas une
+             * question de goût.
+             *
+             * Les noms de Tailwind sont conservés mais leurs valeurs relevées :
+             * c'est ce qui déplace les 443 usages de text-sm et text-xs d'un
+             * seul geste, sans toucher aux templates.
+             *
+             * Les icônes ne suivent pas cette échelle — un glyphe posé à côté
+             * d'un libellé n'a pas les mêmes exigences qu'une phrase. Elles
+             * gardent des valeurs arbitraires, relevées à 11–12 px.
+             */
+            fontSize: {
+                '2xs': ['0.8125rem', { lineHeight: '1.15rem' }],  /* 13 px — plancher absolu du texte */
+                xs:    ['0.875rem',  { lineHeight: '1.25rem' }],  /* 14 px — était 12 */
+                sm:    ['0.9375rem', { lineHeight: '1.375rem' }], /* 15 px — était 14, c'est la base de lecture */
+                base:  ['1.0625rem', { lineHeight: '1.5rem' }],   /* 17 px — était 16 */
+                lg:    ['1.25rem',   { lineHeight: '1.75rem' }],  /* 20 px — était 18 */
+                xl:    ['1.5rem',    { lineHeight: '1.9rem' }],   /* 24 px — était 20 */
+                '2xl': ['1.875rem',  { lineHeight: '2.25rem' }],  /* 30 px — était 24 */
+                '3xl': ['2.375rem',  { lineHeight: '2.6rem' }],   /* 38 px — était 30 */
+            },
+
             minHeight: {
                 /* Cible tactile minimale, employée en phase 2. */
                 cible: '2.25rem',

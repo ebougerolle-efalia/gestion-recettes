@@ -3,7 +3,7 @@
 {% block page_title %}Recettes <span class="ml-2 text-sm font-normal text-ardoise-faible">({{ recipes|length }})</span>{% endblock %}
 {% block page_actions %}
     {% if is_granted('ROLE_EDITOR') %}
-        <button onclick="document.getElementById('createModal').classList.remove('hidden');document.getElementById('createModal').classList.add('flex')" class="inline-flex items-center gap-2 rounded-lg bg-ardoise hover:bg-ardoise-clair px-4 py-2.5 text-sm font-medium text-white transition-colors"><i class="fas fa-plus text-[11px]"></i> Nouvelle recette</button>
+        <button onclick="document.getElementById('createModal').classList.remove('hidden');document.getElementById('createModal').classList.add('flex')" class="inline-flex items-center gap-2 rounded-lg bg-ardoise hover:bg-ardoise-clair px-4 py-2.5 text-sm font-medium text-white transition-colors"><i class="fas fa-plus text-[12px]"></i> Nouvelle recette</button>
     {% endif %}
 {% endblock %}
 
@@ -42,7 +42,7 @@
                         <td class="py-3 px-5">
                             <a href="{{ path('app_recipe_show', {id: r.id}) }}" class="font-medium text-laiton-patine hover:text-ardoise">{{ r.name }}</a>
                         </td>
-                        <td class="py-3 px-3"><span class="inline-flex items-center rounded-full bg-voile px-2.5 py-0.5 text-[11px] font-medium text-ardoise-doux">{{ r.family }}</span></td>
+                        <td class="py-3 px-3"><span class="inline-flex items-center rounded-full bg-voile px-2.5 py-0.5 text-2xs font-medium text-ardoise-doux">{{ r.family }}</span></td>
                         <td class="py-3 px-3 text-center text-ardoise-doux">{{ r.outputValue }} {{ r.outputUnitLabel }}</td>
                         <td class="py-3 px-3 text-right font-semibold text-ardoise">{{ r.costCache ? r.costCache.costPerOutputHt|number_format(2, ',', ' ') ~ ' €' : '—' }}</td>
                         <td class="py-3 px-3 text-right text-ardoise-doux">{{ r.costCache ? r.costCache.advisedSellTtc|number_format(2, ',', ' ') ~ ' €' : '—' }}</td>
@@ -50,7 +50,7 @@
                             {% if r.hasSellPrice %}
                                 <span class="font-semibold text-ardoise">{{ r.sellPriceTtc|number_format(2, ',', ' ') }} €</span>
                                 {% if r.priceGapPercent is not null and r.priceGapPercent < -2 %}
-                                    <span class="block text-[10px] font-semibold text-sang">{{ r.priceGapPercent|number_format(1, ',', ' ') }} %</span>
+                                    <span class="block text-2xs font-semibold text-sang">{{ r.priceGapPercent|number_format(1, ',', ' ') }} %</span>
                                 {% endif %}
                             {% else %}
                                 <span class="text-ardoise-faible">—</span>
@@ -63,7 +63,7 @@
                             {% if markup is not null %}
                                 <span class="font-semibold {{ markup >= 30 ? 'text-pousse' : (markup >= 15 ? 'text-laiton-patine' : 'text-sang') }}">{{ markup|number_format(1, ',', ' ') }}%</span>
                                 {% if r.realMarkupPercent is null %}
-                                    <span class="block text-[10px] text-ardoise-faible">théorique</span>
+                                    <span class="block text-2xs text-ardoise-faible">théorique</span>
                                 {% endif %}
                             {% else %}—{% endif %}
                         </td>
@@ -135,7 +135,7 @@
     <script>
         const allRows=[...document.querySelectorAll('.dt-row')];let filtered=[...allRows],currentPage=1,perPage=parseInt(document.getElementById('perPage').value);
         function applyPagination(){allRows.forEach(r=>r.style.display='none');const s=(currentPage-1)*perPage,e=Math.min(s+perPage,filtered.length);filtered.slice(s,e).forEach(r=>r.style.display='');document.getElementById('paginationInfo').textContent=filtered.length===0?'Aucun résultat':`Affichage de ${s+1} à ${e} sur ${filtered.length}`;renderNav();}
-        function renderNav(){const nav=document.getElementById('paginationNav'),tp=Math.max(1,Math.ceil(filtered.length/perPage));nav.innerHTML='';const bc='w-9 h-9 flex items-center justify-center rounded-lg text-sm transition-colors',ac='bg-ardoise text-white font-medium',nc='border border-trait text-ardoise-doux hover:bg-voile',dc='border border-trait-fin text-ardoise-faible cursor-not-allowed';const prev=Object.assign(document.createElement('button'),{type:'button',className:`${bc} ${currentPage===1?dc:nc}`,innerHTML:'<i class="fas fa-chevron-left text-[10px]"></i>',disabled:currentPage===1});prev.onclick=()=>{if(currentPage>1){currentPage--;applyPagination();}};nav.appendChild(prev);const mx=5;let sp=Math.max(1,currentPage-Math.floor(mx/2)),ep=Math.min(tp,sp+mx-1);if(ep-sp<mx-1)sp=Math.max(1,ep-mx+1);if(sp>1){nav.appendChild(mkB(1));if(sp>2)nav.appendChild(mkD());}for(let i=sp;i<=ep;i++)nav.appendChild(mkB(i));if(ep<tp){if(ep<tp-1)nav.appendChild(mkD());nav.appendChild(mkB(tp));}const next=Object.assign(document.createElement('button'),{type:'button',className:`${bc} ${currentPage===tp?dc:nc}`,innerHTML:'<i class="fas fa-chevron-right text-[10px]"></i>',disabled:currentPage===tp});next.onclick=()=>{if(currentPage<tp){currentPage++;applyPagination();}};nav.appendChild(next);function mkB(p){const b=Object.assign(document.createElement('button'),{type:'button',className:`${bc} ${p===currentPage?ac:nc}`,textContent:p});b.onclick=()=>{currentPage=p;applyPagination();};return b;}function mkD(){const s=document.createElement('span');s.className='w-9 h-9 flex items-center justify-center text-ardoise-faible text-xs';s.textContent='…';return s;}}
+        function renderNav(){const nav=document.getElementById('paginationNav'),tp=Math.max(1,Math.ceil(filtered.length/perPage));nav.innerHTML='';const bc='w-9 h-9 flex items-center justify-center rounded-lg text-sm transition-colors',ac='bg-ardoise text-white font-medium',nc='border border-trait text-ardoise-doux hover:bg-voile',dc='border border-trait-fin text-ardoise-faible cursor-not-allowed';const prev=Object.assign(document.createElement('button'),{type:'button',className:`${bc} ${currentPage===1?dc:nc}`,innerHTML:'<i class="fas fa-chevron-left text-[12px]"></i>',disabled:currentPage===1});prev.onclick=()=>{if(currentPage>1){currentPage--;applyPagination();}};nav.appendChild(prev);const mx=5;let sp=Math.max(1,currentPage-Math.floor(mx/2)),ep=Math.min(tp,sp+mx-1);if(ep-sp<mx-1)sp=Math.max(1,ep-mx+1);if(sp>1){nav.appendChild(mkB(1));if(sp>2)nav.appendChild(mkD());}for(let i=sp;i<=ep;i++)nav.appendChild(mkB(i));if(ep<tp){if(ep<tp-1)nav.appendChild(mkD());nav.appendChild(mkB(tp));}const next=Object.assign(document.createElement('button'),{type:'button',className:`${bc} ${currentPage===tp?dc:nc}`,innerHTML:'<i class="fas fa-chevron-right text-[12px]"></i>',disabled:currentPage===tp});next.onclick=()=>{if(currentPage<tp){currentPage++;applyPagination();}};nav.appendChild(next);function mkB(p){const b=Object.assign(document.createElement('button'),{type:'button',className:`${bc} ${p===currentPage?ac:nc}`,textContent:p});b.onclick=()=>{currentPage=p;applyPagination();};return b;}function mkD(){const s=document.createElement('span');s.className='w-9 h-9 flex items-center justify-center text-ardoise-faible text-xs';s.textContent='…';return s;}}
         document.getElementById('searchInput').addEventListener('input',function(){const q=this.value.toLowerCase().trim();filtered=q===''?[...allRows]:allRows.filter(r=>r.dataset.search.includes(q));currentPage=1;applyPagination();});
         document.getElementById('perPage').addEventListener('change',function(){perPage=parseInt(this.value);currentPage=1;applyPagination();});
         applyPagination();

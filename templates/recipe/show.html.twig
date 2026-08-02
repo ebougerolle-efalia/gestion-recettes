@@ -1,14 +1,14 @@
 {% extends 'base.html.twig' %}
 {% block title %}{{ recipe.name }}{% endblock %}
 {% block page_title %}{{ recipe.name }}{% endblock %}
-{% block page_subtitle %}<span class="inline-flex items-center rounded-full bg-voile px-2 py-0.5 text-[11px] font-medium text-ardoise-doux">{{ recipe.family }}</span> · {{ recipe.outputValue }} {{ recipe.outputUnitLabel }}{% endblock %}
+{% block page_subtitle %}<span class="inline-flex items-center rounded-full bg-voile px-2 py-0.5 text-2xs font-medium text-ardoise-doux">{{ recipe.family }}</span> · {{ recipe.outputValue }} {{ recipe.outputUnitLabel }}{% endblock %}
 {% block page_actions %}
     <div class="flex items-center gap-2">
-        {% if is_granted('ROLE_EDITOR') %}<button type="button" onclick="document.getElementById('paramsModal').classList.remove('hidden');document.getElementById('paramsModal').classList.add('flex')" class="inline-flex items-center gap-1.5 rounded-lg border border-trait px-3 py-2 text-xs text-ardoise-doux hover:bg-voile transition-colors"><i class="fas fa-pen text-[10px]"></i> Modifier</button>{% endif %}
-        <button type="button" onclick="toggleInfo()" class="inline-flex items-center gap-1.5 rounded-lg border border-trait px-3 py-2 text-xs text-ardoise-doux hover:bg-voile transition-colors"><i class="fas fa-table-columns text-[10px]"></i> <span id="infoToggleLabel">Afficher infos</span></button>
-        <button onclick="openPrintModal()" class="inline-flex items-center gap-1.5 rounded-lg border border-trait px-3 py-2 text-xs text-ardoise-doux hover:bg-voile transition-colors"><i class="fas fa-print text-[10px]"></i> Imprimer</button>
+        {% if is_granted('ROLE_EDITOR') %}<button type="button" onclick="document.getElementById('paramsModal').classList.remove('hidden');document.getElementById('paramsModal').classList.add('flex')" class="inline-flex items-center gap-1.5 rounded-lg border border-trait px-3 py-2 text-xs text-ardoise-doux hover:bg-voile transition-colors"><i class="fas fa-pen text-[12px]"></i> Modifier</button>{% endif %}
+        <button type="button" onclick="toggleInfo()" class="inline-flex items-center gap-1.5 rounded-lg border border-trait px-3 py-2 text-xs text-ardoise-doux hover:bg-voile transition-colors"><i class="fas fa-table-columns text-[12px]"></i> <span id="infoToggleLabel">Afficher infos</span></button>
+        <button onclick="openPrintModal()" class="inline-flex items-center gap-1.5 rounded-lg border border-trait px-3 py-2 text-xs text-ardoise-doux hover:bg-voile transition-colors"><i class="fas fa-print text-[12px]"></i> Imprimer</button>
         {% if is_granted('ROLE_EDITOR') %}
-            <button onclick="document.getElementById('dupeModal').classList.remove('hidden');document.getElementById('dupeModal').classList.add('flex')" class="inline-flex items-center gap-1.5 rounded-lg border border-trait px-3 py-2 text-xs text-ardoise-doux hover:bg-voile transition-colors"><i class="fas fa-copy text-[10px]"></i> Dupliquer</button>
+            <button onclick="document.getElementById('dupeModal').classList.remove('hidden');document.getElementById('dupeModal').classList.add('flex')" class="inline-flex items-center gap-1.5 rounded-lg border border-trait px-3 py-2 text-xs text-ardoise-doux hover:bg-voile transition-colors"><i class="fas fa-copy text-[12px]"></i> Dupliquer</button>
         {% endif %}
     </div>
 {% endblock %}
@@ -19,7 +19,7 @@
     {% set canEdit = is_granted('ROLE_EDITOR') %}
 
     <div class="mb-4">
-        <a href="{{ path('app_recipe_index') }}" class="inline-flex items-center gap-1.5 text-sm text-ardoise-doux hover:text-laiton-patine transition-colors"><i class="fas fa-arrow-left text-[10px]"></i> Retour aux recettes</a>
+        <a href="{{ path('app_recipe_index') }}" class="inline-flex items-center gap-1.5 text-sm text-ardoise-doux hover:text-laiton-patine transition-colors"><i class="fas fa-arrow-left text-[12px]"></i> Retour aux recettes</a>
     </div>
 
     {# ══ Bandeau d'alertes : coûts potentiellement faussés ══ #}
@@ -52,27 +52,27 @@
 
         {# Coût de revient #}
         <div class="flex-1 min-w-[120px] px-4 py-1">
-            <p class="text-[11px] text-ardoise-faible">Coût / {{ unitLabel }} HT</p>
-            <p class="text-[17px] font-bold text-laiton-patine">{{ t.cost_per_output_ht|number_format(2, ',', ' ') }} €</p>
-            <p class="text-[10px] text-ardoise-faible">dont matière {{ t.material_per_output_ht|number_format(2, ',', ' ') }} €</p>
+            <p class="text-2xs text-ardoise-faible">Coût / {{ unitLabel }} HT</p>
+            <p class="text-base font-bold text-laiton-patine">{{ t.cost_per_output_ht|number_format(2, ',', ' ') }} €</p>
+            <p class="text-2xs text-ardoise-faible">dont matière {{ t.material_per_output_ht|number_format(2, ',', ' ') }} €</p>
         </div>
 
         {# Prix conseillé : HT et TTC dans une seule tuile #}
         <div class="flex-1 min-w-[120px] px-4 py-1 border-l border-trait-fin">
-            <p class="text-[11px] text-ardoise-faible">PV conseillé TTC</p>
-            <p class="text-[17px] font-bold text-laiton-patine">{{ t.advised_sell_ttc|number_format(2, ',', ' ') }} €</p>
-            <p class="text-[10px] text-ardoise-faible">{{ t.advised_sell_ht|number_format(2, ',', ' ') }} € HT</p>
+            <p class="text-2xs text-ardoise-faible">PV conseillé TTC</p>
+            <p class="text-base font-bold text-laiton-patine">{{ t.advised_sell_ttc|number_format(2, ',', ' ') }} €</p>
+            <p class="text-2xs text-ardoise-faible">{{ t.advised_sell_ht|number_format(2, ',', ' ') }} € HT</p>
         </div>
 
         {# Prix pratiqué : la colonne qui donne la marge opposable #}
         <div class="flex-1 min-w-[130px] px-4 py-1 border-l border-trait-fin {{ t.price_gap_percent is not null and t.price_gap_percent < -2 ? 'bg-sang-voile/60 rounded-lg' : '' }}">
-            <p class="text-[11px] text-ardoise-faible">PV pratiqué TTC</p>
+            <p class="text-2xs text-ardoise-faible">PV pratiqué TTC</p>
             {% if t.real_sell_ttc is null %}
-                <p class="text-[17px] font-bold text-ardoise-faible">—</p>
-                <p class="text-[10px] text-ardoise-faible">à renseigner</p>
+                <p class="text-base font-bold text-ardoise-faible">—</p>
+                <p class="text-2xs text-ardoise-faible">à renseigner</p>
             {% else %}
-                <p class="text-[17px] font-bold text-ardoise">{{ t.real_sell_ttc|number_format(2, ',', ' ') }} €</p>
-                <p class="text-[10px] {{ t.price_gap_percent < -2 ? 'font-semibold text-sang' : (t.price_gap_percent > 2 ? 'text-pousse' : 'text-ardoise-faible') }}">
+                <p class="text-base font-bold text-ardoise">{{ t.real_sell_ttc|number_format(2, ',', ' ') }} €</p>
+                <p class="text-2xs {{ t.price_gap_percent < -2 ? 'font-semibold text-sang' : (t.price_gap_percent > 2 ? 'text-pousse' : 'text-ardoise-faible') }}">
                     {{ t.price_gap_percent > 0 ? '+' : '' }}{{ t.price_gap_percent|number_format(1, ',', ' ') }} % vs conseillé
                 </p>
             {% endif %}
@@ -80,29 +80,29 @@
 
         {# Marge : réelle si le prix pratiqué est connu, conseillée sinon #}
         <div class="flex-1 min-w-[130px] px-4 py-1 border-l border-trait-fin">
-            <p class="text-[11px] text-ardoise-faible">Marge / {{ unitLabel }} {{ hasReal ? 'réelle' : 'conseillée' }}</p>
+            <p class="text-2xs text-ardoise-faible">Marge / {{ unitLabel }} {{ hasReal ? 'réelle' : 'conseillée' }}</p>
             {% set marginValue = hasReal ? t.real_margin_ht : t.margin_ht %}
-            <p class="text-[17px] font-bold {{ marginValue > 0 ? 'text-pousse' : 'text-sang' }}">{{ marginValue|number_format(2, ',', ' ') }} €</p>
-            <p class="text-[10px] text-ardoise-faible">
+            <p class="text-base font-bold {{ marginValue > 0 ? 'text-pousse' : 'text-sang' }}">{{ marginValue|number_format(2, ',', ' ') }} €</p>
+            <p class="text-2xs text-ardoise-faible">
                 marque {{ (hasReal ? t.real_markup_percent : t.markup_percent)|number_format(1, ',', ' ') }} %
             </p>
         </div>
 
         {# Les trois lectures de la même marge, regroupées #}
         <div class="flex-1 min-w-[150px] px-4 py-1 border-l border-trait-fin">
-            <p class="text-[11px] text-ardoise-faible">Repères {{ hasReal ? 'conseillés' : '' }}</p>
+            <p class="text-2xs text-ardoise-faible">Repères {{ hasReal ? 'conseillés' : '' }}</p>
             <div class="flex items-baseline gap-3 mt-0.5">
-                <span class="text-[13px] font-bold text-pousse">{{ t.markup_percent|number_format(1, ',', ' ') }} %<span class="text-[9px] font-normal text-ardoise-faible ml-0.5">marque</span></span>
-                <span class="text-[13px] font-bold text-ardoise">{{ t.margin_on_cost_percent|number_format(1, ',', ' ') }} %<span class="text-[9px] font-normal text-ardoise-faible ml-0.5">marge</span></span>
-                <span class="text-[13px] font-bold text-ardoise">×{{ t.coefficient|number_format(2, ',', ' ') }}</span>
+                <span class="text-xs font-bold text-pousse">{{ t.markup_percent|number_format(1, ',', ' ') }} %<span class="text-2xs font-normal text-ardoise-faible ml-0.5">marque</span></span>
+                <span class="text-xs font-bold text-ardoise">{{ t.margin_on_cost_percent|number_format(1, ',', ' ') }} %<span class="text-2xs font-normal text-ardoise-faible ml-0.5">marge</span></span>
+                <span class="text-xs font-bold text-ardoise">×{{ t.coefficient|number_format(2, ',', ' ') }}</span>
             </div>
         </div>
 
         {# Ratio matière — le food cost de la recette #}
         <div class="flex-1 min-w-[100px] px-4 py-1 border-l border-trait-fin">
-            <p class="text-[11px] text-ardoise-faible">Ratio matière</p>
-            <p class="text-[17px] font-bold {{ t.material_ratio_percent > 40 ? 'text-laiton-patine' : 'text-ardoise' }}">{{ t.material_ratio_percent|number_format(1, ',', ' ') }} %</p>
-            <p class="text-[10px] text-ardoise-faible">cible &lt; 40 %</p>
+            <p class="text-2xs text-ardoise-faible">Ratio matière</p>
+            <p class="text-base font-bold {{ t.material_ratio_percent > 40 ? 'text-laiton-patine' : 'text-ardoise' }}">{{ t.material_ratio_percent|number_format(1, ',', ' ') }} %</p>
+            <p class="text-2xs text-ardoise-faible">cible &lt; 40 %</p>
         </div>
     </div>
 
@@ -113,7 +113,7 @@
         <div class="flex-1 min-w-0 space-y-6">
 
             {# Paramètres — résumé sur une ligne (édition via le bouton « Modifier » de l'en-tête) #}
-            <div class="rounded-xl border border-trait bg-voile/60 px-4 py-2.5 flex items-center flex-wrap gap-x-2 gap-y-1 text-[13px] text-ardoise-doux">
+            <div class="rounded-xl border border-trait bg-voile/60 px-4 py-2.5 flex items-center flex-wrap gap-x-2 gap-y-1 text-xs text-ardoise-doux">
                 <i class="fas fa-sliders text-ardoise-faible text-xs mr-0.5"></i>
                 <span>{{ recipe.outputType == 'weight' ? 'Poids' : 'Portions' }} · sortie <strong class="font-semibold text-ardoise">{{ recipe.outputValue }} {{ unitLabel }}</strong></span>
                 <span class="text-ardoise-faible">|</span>
@@ -138,7 +138,7 @@
                         {% if t.total_cost_ht > 0 %}<button type="button" id="tabBtn-couts" onclick="showRecipeTab('couts')" class="tab-btn px-4 py-3 text-sm font-medium border-b-2 border-transparent text-ardoise-doux transition-colors">Analyse des coûts</button>{% endif %}
                     </div>
                     {% if canEdit %}
-                        <button onclick="document.getElementById('addLineModal').classList.remove('hidden');document.getElementById('addLineModal').classList.add('flex')" class="inline-flex items-center gap-1.5 rounded-lg bg-ardoise hover:bg-ardoise-clair px-3 py-1.5 text-xs font-medium text-white transition-colors"><i class="fas fa-plus text-[10px]"></i> Ajouter</button>
+                        <button onclick="document.getElementById('addLineModal').classList.remove('hidden');document.getElementById('addLineModal').classList.add('flex')" class="inline-flex items-center gap-1.5 rounded-lg bg-ardoise hover:bg-ardoise-clair px-3 py-1.5 text-xs font-medium text-white transition-colors"><i class="fas fa-plus text-[12px]"></i> Ajouter</button>
                     {% endif %}
                 </div>
 
@@ -147,7 +147,7 @@
                     {% if lines|length == 0 %}
                         <div class="py-16 text-center text-ardoise-faible"><i class="fas fa-leaf text-3xl mb-3 block text-ardoise-faible"></i><p class="text-sm">Aucun ingrédient</p></div>
                     {% else %}
-                        <div class="grid grid-cols-[minmax(0,1fr)_70px_90px_92px_36px] gap-2 px-5 py-2 text-[11px] uppercase tracking-wider text-ardoise-faible border-b border-trait-fin">
+                        <div class="grid grid-cols-[minmax(0,1fr)_70px_90px_92px_36px] gap-2 px-5 py-2 text-2xs uppercase tracking-wider text-ardoise-faible border-b border-trait-fin">
                             <div>Ingrédient</div>
                             <div class="text-right">Brut</div>
                             <div class="text-right">Coût HT</div>
@@ -159,20 +159,20 @@
                                 <div class="grid grid-cols-[minmax(0,1fr)_70px_90px_92px_36px] gap-2 px-5 py-2.5 items-center hover:bg-voile/50 transition-colors">
                                     <div class="min-w-0">
                                         <div class="text-sm font-medium text-ardoise">
-                                            {% if l.type == 'ingredient' %}{{ l.ingredient.name }}{% else %}{{ l.sub_recipe.name }} <span class="ml-1 inline-flex items-center rounded-full bg-voile px-1.5 py-px text-[10px] font-medium text-laiton-patine">sous-recette</span>{% endif %}
-                                            {% if 'no_price' in l.warnings %}<span class="ml-1 inline-flex items-center rounded-full bg-sang-voile px-1.5 py-px text-[10px] font-medium text-sang" title="Aucun prix : ligne comptée à 0 €"><i class="fas fa-tag mr-0.5 text-[8px]"></i>sans prix</span>{% endif %}
-                                            {% if 'unit_mismatch' in l.warnings %}<span class="ml-1 inline-flex items-center rounded-full bg-sang-voile px-1.5 py-px text-[10px] font-medium text-sang" title="Unité incompatible : ligne comptée à 0 €"><i class="fas fa-triangle-exclamation mr-0.5 text-[8px]"></i>unité ?</span>{% endif %}
-                                            {% if 'approx_density' in l.warnings %}<span class="ml-1 inline-flex items-center rounded-full bg-laiton-voile px-1.5 py-px text-[10px] font-medium text-laiton-patine" title="Conversion litre↔kg approximative (densité = 1)">≈ densité</span>{% endif %}
+                                            {% if l.type == 'ingredient' %}{{ l.ingredient.name }}{% else %}{{ l.sub_recipe.name }} <span class="ml-1 inline-flex items-center rounded-full bg-voile px-1.5 py-px text-2xs font-medium text-laiton-patine">sous-recette</span>{% endif %}
+                                            {% if 'no_price' in l.warnings %}<span class="ml-1 inline-flex items-center rounded-full bg-sang-voile px-1.5 py-px text-2xs font-medium text-sang" title="Aucun prix : ligne comptée à 0 €"><i class="fas fa-tag mr-0.5 text-[12px]"></i>sans prix</span>{% endif %}
+                                            {% if 'unit_mismatch' in l.warnings %}<span class="ml-1 inline-flex items-center rounded-full bg-sang-voile px-1.5 py-px text-2xs font-medium text-sang" title="Unité incompatible : ligne comptée à 0 €"><i class="fas fa-triangle-exclamation mr-0.5 text-[12px]"></i>unité ?</span>{% endif %}
+                                            {% if 'approx_density' in l.warnings %}<span class="ml-1 inline-flex items-center rounded-full bg-laiton-voile px-1.5 py-px text-2xs font-medium text-laiton-patine" title="Conversion litre↔kg approximative (densité = 1)">≈ densité</span>{% endif %}
                                         </div>
                                         <div class="text-xs text-ardoise-faible mt-0.5">perte {{ l.loss_percent|number_format(1, ',', ' ') }}%<span class="text-ardoise-faible mx-1">·</span>rdt {{ l.yield_percent|number_format(1, ',', ' ') }}%{% if l.note %}<span class="text-ardoise-faible mx-1">·</span><span class="text-laiton-patine italic">{{ l.note }}</span>{% endif %}</div>
                                     </div>
                                     <div class="text-right text-sm text-ardoise-doux">{{ l.qty_brute }} {{ l.unit }}</div>
                                     <div class="text-right text-sm font-semibold text-ardoise">{{ l.line_cost_ht|number_format(2, ',', ' ') }} €</div>
-                                    <div class="text-right text-[11px] text-ardoise-faible">{{ l.price_ht_per_base_unit|number_format(2, ',', ' ') }} €/{% if l.type == 'ingredient' %}{{ l.ingredient.base_unit }}{% else %}{{ unitLabel }}{% endif %}</div>
+                                    <div class="text-right text-2xs text-ardoise-faible">{{ l.price_ht_per_base_unit|number_format(2, ',', ' ') }} €/{% if l.type == 'ingredient' %}{{ l.ingredient.base_unit }}{% else %}{{ unitLabel }}{% endif %}</div>
                                     <div class="text-center">
                                         {% if canEdit %}
                                             <form method="post" action="{{ path('app_recipe_remove_line', {id: recipe.id, lineId: l.line_id}) }}" onsubmit="return confirm('Supprimer ?')">
-                                                <button class="w-7 h-7 inline-flex items-center justify-center rounded-lg text-ardoise-faible hover:text-sang hover:bg-sang-voile transition-colors"><i class="fas fa-trash text-[11px]"></i></button>
+                                                <button class="w-7 h-7 inline-flex items-center justify-center rounded-lg text-ardoise-faible hover:text-sang hover:bg-sang-voile transition-colors"><i class="fas fa-trash text-[12px]"></i></button>
                                             </form>
                                         {% endif %}
                                     </div>
@@ -252,13 +252,13 @@
             <div class="rounded-2xl border border-trait bg-white px-5 py-4">
                 <div class="flex items-center gap-2 mb-3">
                     <div class="w-2 h-2 rounded-full bg-sang"></div>
-                    <h3 class="font-semibold text-[15px] text-ardoise">Allergènes</h3>
+                    <h3 class="font-semibold text-sm text-ardoise">Allergènes</h3>
                 </div>
                 {% if t.allergens is empty and t.traces is empty %}
                     <p class="text-sm text-ardoise-faible">Aucun allergène renseigné sur les ingrédients de cette recette.</p>
                 {% else %}
                     {% if t.allergens is not empty %}
-                        <p class="text-[10px] font-semibold text-ardoise-faible uppercase tracking-wider mb-1.5">Présents</p>
+                        <p class="text-2xs font-semibold text-ardoise-faible uppercase tracking-wider mb-1.5">Présents</p>
                         <div class="flex flex-wrap gap-1.5">
                             {% for code in t.allergens %}
                                 <span class="inline-flex items-center rounded-full bg-sang-voile text-sang text-xs font-semibold px-2.5 py-1">{{ allergen_label(code) }}</span>
@@ -266,7 +266,7 @@
                         </div>
                     {% endif %}
                     {% if t.traces is not empty %}
-                        <p class="text-[10px] font-semibold text-ardoise-faible uppercase tracking-wider mt-3 mb-1.5">Traces</p>
+                        <p class="text-2xs font-semibold text-ardoise-faible uppercase tracking-wider mt-3 mb-1.5">Traces</p>
                         <div class="flex flex-wrap gap-1.5">
                             {% for code in t.traces %}
                                 <span class="inline-flex items-center rounded-full bg-laiton-voile text-laiton-patine text-xs font-medium px-2.5 py-1">{{ allergen_label(code) }}</span>
@@ -281,7 +281,7 @@
             <div class="rounded-2xl border border-trait bg-white px-5 py-4">
                 <div class="flex items-center gap-2 mb-1">
                     <div class="w-2 h-2 rounded-full bg-pousse"></div>
-                    <h3 class="font-semibold text-[15px] text-ardoise">Valeurs nutritionnelles</h3>
+                    <h3 class="font-semibold text-sm text-ardoise">Valeurs nutritionnelles</h3>
                 </div>
                 <p class="text-xs text-ardoise-faible mb-3">pour 100 g — valeurs moyennes calculées (Ciqual / Anses)</p>
                 {% if not n.available %}
@@ -346,12 +346,12 @@
             <div class="px-6 py-4 border-t border-trait-fin flex flex-col gap-2">
                 <button type="button" onclick="generatePrint('lab')"
                         class="w-full inline-flex items-center justify-center gap-2 rounded-lg bg-ardoise hover:bg-ardoise-clair px-5 py-2.5 text-sm font-medium text-white transition-colors">
-                    <i class="fas fa-flask text-[11px]"></i> Fiche labo
+                    <i class="fas fa-flask text-[12px]"></i> Fiche labo
                 </button>
                 {% if canEdit %}
                     <button type="button" onclick="generatePrint('full')"
                             class="w-full inline-flex items-center justify-center gap-2 rounded-lg bg-ardoise hover:bg-ardoise-clair px-5 py-2.5 text-sm font-medium text-white transition-colors">
-                        <i class="fas fa-file-pdf text-[11px]"></i> Fiche technique complète
+                        <i class="fas fa-file-pdf text-[12px]"></i> Fiche technique complète
                     </button>
                 {% endif %}
                 <button type="button"
@@ -382,7 +382,7 @@
             </div>
             <div class="px-6 py-4 border-t border-trait-fin flex justify-end gap-3">
                 <button type="button" onclick="this.closest('.fixed').classList.add('hidden');this.closest('.fixed').classList.remove('flex')" class="rounded-lg border border-trait px-4 py-2 text-sm text-ardoise-doux hover:bg-voile">Annuler</button>
-                <button type="submit" class="rounded-lg bg-ardoise hover:bg-ardoise-clair px-5 py-2 text-sm font-medium text-white"><i class="fas fa-plus text-[10px] mr-1"></i> Ajouter</button>
+                <button type="submit" class="rounded-lg bg-ardoise hover:bg-ardoise-clair px-5 py-2 text-sm font-medium text-white"><i class="fas fa-plus text-[12px] mr-1"></i> Ajouter</button>
             </div>
         </form></div>
 
@@ -407,24 +407,24 @@
                         <div class="sm:col-span-2"><label class="block text-xs font-medium text-ardoise-doux mb-1">Nom</label><input type="text" name="name" value="{{ recipe.name }}" class="w-full rounded-lg border border-trait px-3 py-2 text-sm outline-none focus:border-laiton-patine"></div>
                         <div class="sm:col-span-2"><label class="block text-xs font-medium text-ardoise-doux mb-1">Famille</label><input type="text" name="family" value="{{ recipe.family }}" class="w-full rounded-lg border border-trait px-3 py-2 text-sm outline-none focus:border-laiton-patine"></div>
 
-                        <div class="sm:col-span-2 border-t border-trait-fin pt-3 mt-1"><p class="text-[11px] font-semibold uppercase tracking-wider text-ardoise-faible">Fabrication & rendement</p></div>
+                        <div class="sm:col-span-2 border-t border-trait-fin pt-3 mt-1"><p class="text-2xs font-semibold uppercase tracking-wider text-ardoise-faible">Fabrication & rendement</p></div>
                         <div><label class="block text-xs font-medium text-ardoise-doux mb-1">Type sortie</label><select name="output_type" class="w-full rounded-lg border border-trait px-3 py-2 text-sm outline-none focus:border-laiton-patine bg-white"><option value="weight" {{ recipe.outputType == 'weight' ? 'selected' }}>Poids (kg)</option><option value="portion" {{ recipe.outputType == 'portion' ? 'selected' }}>Portions</option></select></div>
                         <div><label class="block text-xs font-medium text-ardoise-doux mb-1">Sortie</label><input type="number" name="output_value" step="0.001" value="{{ recipe.outputValue }}" class="w-full rounded-lg border border-trait px-3 py-2 text-sm outline-none focus:border-laiton-patine"></div>
                         <div><label class="block text-xs font-medium text-ardoise-doux mb-1">% perte</label><input type="number" name="loss_percent" step="0.01" value="{{ recipe.lossPercent }}" class="w-full rounded-lg border border-trait px-3 py-2 text-sm outline-none focus:border-laiton-patine"></div>
                         <div><label class="block text-xs font-medium text-ardoise-doux mb-1">% rendement</label><input type="number" name="yield_percent" step="0.01" value="{{ recipe.yieldPercent }}" class="w-full rounded-lg border border-trait px-3 py-2 text-sm outline-none focus:border-laiton-patine"></div>
 
-                        <div class="sm:col-span-2 border-t border-trait-fin pt-3 mt-1"><p class="text-[11px] font-semibold uppercase tracking-wider text-ardoise-faible">Coûts & prix de vente</p></div>
+                        <div class="sm:col-span-2 border-t border-trait-fin pt-3 mt-1"><p class="text-2xs font-semibold uppercase tracking-wider text-ardoise-faible">Coûts & prix de vente</p></div>
                         <div>
                             <label class="block text-xs font-medium text-ardoise-doux mb-1">Main d'œuvre (minutes)</label>
                             <input type="number" name="labor_minutes" min="0" step="1" value="{{ recipe.laborMinutes }}" data-taux="{{ boutique().tauxHoraireMo }}" oninput="majCoutMO(this)" class="w-full rounded-lg border border-trait px-3 py-2 text-sm outline-none focus:border-laiton-patine">
-                            <p class="text-[11px] text-ardoise-faible mt-1">≈ <span class="cout-mo">0,00</span> € HT · {{ boutique().tauxHoraireMo }} €/h</p>
+                            <p class="text-2xs text-ardoise-faible mt-1">≈ <span class="cout-mo">0,00</span> € HT · {{ boutique().tauxHoraireMo }} €/h</p>
                         </div>
                         <div><label class="block text-xs font-medium text-ardoise-doux mb-1">Emballage (€ HT)</label><input type="number" name="packaging_cost_ht" step="0.01" value="{{ recipe.packagingCostHt }}" class="w-full rounded-lg border border-trait px-3 py-2 text-sm outline-none focus:border-laiton-patine"></div>
                         <div><label class="block text-xs font-medium text-ardoise-doux mb-1">TVA produit %</label><input type="number" name="product_vat_rate" step="0.01" value="{{ recipe.productVatRate }}" class="w-full rounded-lg border border-trait px-3 py-2 text-sm outline-none focus:border-laiton-patine"></div>
                         <div><label class="block text-xs font-medium text-ardoise-doux mb-1">Mode prix</label><select name="pricing_mode" id="pricingMode" class="w-full rounded-lg border border-trait px-3 py-2 text-sm outline-none focus:border-laiton-patine bg-white"><option value="coef" {{ recipe.pricingMode == 'coef' ? 'selected' }}>Coefficient (× coût HT)</option><option value="margin" {{ recipe.pricingMode == 'margin' ? 'selected' }}>Taux de marque (% du PV)</option></select></div>
                         <div class="sm:col-span-2"><label class="block text-xs font-medium text-ardoise-doux mb-1">Objectif</label><input type="number" name="pricing_value" step="0.01" value="{{ recipe.pricingValue }}" class="w-full rounded-lg border border-trait px-3 py-2 text-sm outline-none focus:border-laiton-patine"></div>
 
-                        <p class="sm:col-span-2 text-[11px] text-ardoise-faible leading-relaxed"><i class="fas fa-circle-info mr-1"></i> <strong>Coefficient</strong> : multiplie le coût HT (TVA ajoutée ensuite). <strong>Taux de marque</strong> : part de la marge dans le prix de vente (marque 30 % ⇔ marge 42,9 % ⇔ coef ×1,43).</p>
+                        <p class="sm:col-span-2 text-2xs text-ardoise-faible leading-relaxed"><i class="fas fa-circle-info mr-1"></i> <strong>Coefficient</strong> : multiplie le coût HT (TVA ajoutée ensuite). <strong>Taux de marque</strong> : part de la marge dans le prix de vente (marque 30 % ⇔ marge 42,9 % ⇔ coef ×1,43).</p>
 
                         <div class="sm:col-span-2">
                             <label class="block text-xs font-medium text-ardoise-doux mb-1">
@@ -434,7 +434,7 @@
                                    value="{{ recipe.sellPriceTtc }}"
                                    placeholder="prix affiché en boutique"
                                    class="w-full rounded-lg border border-trait px-3 py-2 text-sm outline-none focus:border-laiton-patine">
-                            <p class="text-[11px] text-ardoise-faible mt-1">
+                            <p class="text-2xs text-ardoise-faible mt-1">
                                 Votre prix réel, celui de l'étiquette. Renseigné, il donne la <strong>marge réelle</strong> et
                                 signale les recettes vendues sous l'objectif. Laisser vide si le produit n'est pas encore tarifé.
                             </p>
@@ -444,11 +444,11 @@
 
                 <div class="px-6 py-4 border-t border-trait-fin flex items-center justify-between gap-3 shrink-0">
                     <form method="post" action="{{ path('app_recipe_delete', {id: recipe.id}) }}" onsubmit="return confirm('Supprimer définitivement cette recette ?')">
-                        <button type="submit" class="inline-flex items-center gap-1.5 text-xs font-medium text-sang hover:text-sang transition-colors"><i class="fas fa-trash text-[10px]"></i> Supprimer</button>
+                        <button type="submit" class="inline-flex items-center gap-1.5 text-xs font-medium text-sang hover:text-sang transition-colors"><i class="fas fa-trash text-[12px]"></i> Supprimer</button>
                     </form>
                     <div class="flex gap-3">
                         <button type="button" onclick="closeParamsModal()" class="rounded-lg border border-trait px-5 py-2.5 text-sm text-ardoise-doux hover:bg-voile">Annuler</button>
-                        <button type="submit" form="paramsForm" class="rounded-lg bg-ardoise hover:bg-ardoise-clair px-5 py-2.5 text-sm font-medium text-white transition-colors"><i class="fas fa-check text-[11px] mr-1"></i> Enregistrer</button>
+                        <button type="submit" form="paramsForm" class="rounded-lg bg-ardoise hover:bg-ardoise-clair px-5 py-2.5 text-sm font-medium text-white transition-colors"><i class="fas fa-check text-[12px] mr-1"></i> Enregistrer</button>
                     </div>
                 </div>
             </div>

@@ -11,11 +11,11 @@
 {% block page_actions %}
     <a href="{{ path('app_supplier_index') }}"
        class="inline-flex items-center gap-1.5 rounded-xl border border-trait px-4 py-2 text-sm text-ardoise-doux hover:bg-voile transition-colors">
-        <i class="fas fa-arrow-left text-[10px]"></i> Fournisseurs
+        <i class="fas fa-arrow-left text-[12px]"></i> Fournisseurs
     </a>
     <a href="{{ path('app_invoice_import') }}"
        class="inline-flex items-center gap-1.5 rounded-xl bg-ardoise hover:bg-ardoise-clair px-4 py-2 text-sm font-semibold text-white transition-colors">
-        <i class="fas fa-file-import text-[10px]"></i> Importer une facture
+        <i class="fas fa-file-import text-[12px]"></i> Importer une facture
     </a>
 {% endblock %}
 
@@ -30,27 +30,27 @@
                 </div>
                 <div class="flex-1">
                     <h2 class="text-lg font-bold text-ardoise">{{ supplier.name }}</h2>
-                    {% if supplier.fullAddress %}<p class="text-sm text-ardoise-doux mt-0.5"><i class="fas fa-map-marker-alt text-[10px] mr-1"></i>{{ supplier.fullAddress }}</p>{% endif %}
+                    {% if supplier.fullAddress %}<p class="text-sm text-ardoise-doux mt-0.5"><i class="fas fa-map-marker-alt text-[12px] mr-1"></i>{{ supplier.fullAddress }}</p>{% endif %}
                     <div class="flex flex-wrap gap-2 mt-3">
-                        {% if supplier.siret %}<span class="text-[11px] bg-voile border border-trait rounded-lg px-2.5 py-1 font-mono text-ardoise-doux">SIRET {{ supplier.siret }}</span>{% endif %}
-                        {% if supplier.vatNumber %}<span class="text-[11px] bg-voile border border-trait rounded-lg px-2.5 py-1 font-mono text-ardoise-doux">TVA {{ supplier.vatNumber }}</span>{% endif %}
-                        {% if supplier.country %}<span class="text-[11px] bg-voile border border-laiton/30 rounded-lg px-2.5 py-1 text-laiton-patine">{{ supplier.country }}</span>{% endif %}
+                        {% if supplier.siret %}<span class="text-2xs bg-voile border border-trait rounded-lg px-2.5 py-1 font-mono text-ardoise-doux">SIRET {{ supplier.siret }}</span>{% endif %}
+                        {% if supplier.vatNumber %}<span class="text-2xs bg-voile border border-trait rounded-lg px-2.5 py-1 font-mono text-ardoise-doux">TVA {{ supplier.vatNumber }}</span>{% endif %}
+                        {% if supplier.country %}<span class="text-2xs bg-voile border border-laiton/30 rounded-lg px-2.5 py-1 text-laiton-patine">{{ supplier.country }}</span>{% endif %}
                     </div>
                 </div>
             </div>
         </div>
         <div class="grid grid-cols-2 gap-3">
             <div class="rounded-2xl border border-laiton/30 bg-voile/40 px-4 py-4 text-center">
-                <p class="text-[10px] font-semibold uppercase tracking-wider text-laiton-patine">Factures</p>
+                <p class="text-2xs font-semibold uppercase tracking-wider text-laiton-patine">Factures</p>
                 <p class="text-3xl font-bold text-ardoise-fort mt-1">{{ invoices|length }}</p>
             </div>
             <div class="rounded-2xl border border-pousse/30 bg-pousse-voile/40 px-4 py-4 text-center">
-                <p class="text-[10px] font-semibold uppercase tracking-wider text-pousse">Produits</p>
+                <p class="text-2xs font-semibold uppercase tracking-wider text-pousse">Produits</p>
                 <p class="text-3xl font-bold text-pousse mt-1">{{ products|length }}</p>
             </div>
             {% set totalHt = invoices|map(i => i.total_ht)|reduce((carry, v) => carry + v, 0) %}
             <div class="col-span-2 rounded-2xl border border-trait bg-white px-4 py-4 text-center">
-                <p class="text-[10px] font-semibold uppercase tracking-wider text-ardoise-faible">Total achats HT</p>
+                <p class="text-2xs font-semibold uppercase tracking-wider text-ardoise-faible">Total achats HT</p>
                 <p class="text-2xl font-bold text-ardoise mt-1">{{ totalHt|number_format(2, ',', ' ') }} €</p>
             </div>
         </div>
@@ -63,15 +63,15 @@
             <div class="px-5 py-4 border-b border-trait-fin flex items-center justify-between">
                 <div class="flex items-center gap-2">
                     <div class="w-2 h-2 rounded-full bg-ardoise"></div>
-                    <h3 class="font-semibold text-[15px] text-ardoise">Factures importées</h3>
+                    <h3 class="font-semibold text-sm text-ardoise">Factures importées</h3>
                 </div>
                 {% if filter_invoice %}
                     <a href="{{ path('app_supplier_show', {id: supplier.id}) }}"
                        class="inline-flex items-center gap-1.5 rounded-lg bg-laiton-voile border border-laiton/40 px-3 py-1.5 text-xs font-semibold text-laiton-patine hover:bg-laiton-voile transition-colors">
-                        <i class="fas fa-times text-[9px]"></i> Tout afficher
+                        <i class="fas fa-times text-[12px]"></i> Tout afficher
                     </a>
                 {% else %}
-                    <span class="text-[11px] text-ardoise-faible">Cliquez pour filtrer</span>
+                    <span class="text-2xs text-ardoise-faible">Cliquez pour filtrer</span>
                 {% endif %}
             </div>
 
@@ -86,22 +86,22 @@
 
                         <div class="flex-shrink-0 w-8 h-8 rounded-lg flex items-center justify-center
                         {{ isActive ? 'bg-ardoise text-white' : 'bg-voile text-ardoise-faible group-hover:bg-trait' }} transition-colors">
-                            <i class="fas fa-file-invoice text-[11px]"></i>
+                            <i class="fas fa-file-invoice text-[12px]"></i>
                         </div>
 
                         <div class="flex-1 min-w-0">
                             <p class="font-semibold text-sm {{ isActive ? 'text-ardoise-fort' : 'text-ardoise' }}">{{ inv.invoice_id }}</p>
-                            <p class="text-[11px] text-ardoise-faible">{{ inv.invoice_date }} · importée {{ inv.imported_at|date('d/m/Y') }}</p>
+                            <p class="text-2xs text-ardoise-faible">{{ inv.invoice_date }} · importée {{ inv.imported_at|date('d/m/Y') }}</p>
                         </div>
 
                         <div class="flex-shrink-0 text-right flex items-center gap-2">
                             {% if inv.total_ht %}
                                 <div>
                                     <p class="font-bold text-sm {{ isActive ? 'text-ardoise-fort' : 'text-ardoise' }}">{{ inv.total_ht|number_format(2, ',', ' ') }} €</p>
-                                    <p class="text-[10px] text-ardoise-faible">HT</p>
+                                    <p class="text-2xs text-ardoise-faible">HT</p>
                                 </div>
                             {% endif %}
-                            <i class="fas fa-{{ isActive ? 'times text-laiton-patine' : 'filter text-ardoise-faible group-hover:text-laiton-patine' }} text-[10px] ml-1"></i>
+                            <i class="fas fa-{{ isActive ? 'times text-laiton-patine' : 'filter text-ardoise-faible group-hover:text-laiton-patine' }} text-[12px] ml-1"></i>
                         </div>
                     </a>
                 {% else %}
@@ -115,7 +115,7 @@
             <div class="px-5 py-4 border-b {{ filter_invoice ? 'border-laiton/30 bg-voile/30' : 'border-trait-fin' }} flex items-center justify-between">
                 <div class="flex items-center gap-2">
                     <div class="w-2 h-2 rounded-full {{ filter_invoice ? 'bg-ardoise' : 'bg-pousse' }}"></div>
-                    <h3 class="font-semibold text-[15px] text-ardoise">
+                    <h3 class="font-semibold text-sm text-ardoise">
                         {% if filter_invoice %}
                             {% for inv in invoices %}{% if inv.id == filter_invoice %}Produits · {{ inv.invoice_id }}{% endif %}{% endfor %}
                         {% else %}
@@ -123,7 +123,7 @@
                         {% endif %}
                     </h3>
                 </div>
-                <span class="text-[11px] {{ filter_invoice ? 'text-laiton-patine font-semibold' : 'text-ardoise-faible' }}">
+                <span class="text-2xs {{ filter_invoice ? 'text-laiton-patine font-semibold' : 'text-ardoise-faible' }}">
                 {{ products|length }} article{{ products|length > 1 ? 's' : '' }}
             </span>
             </div>
@@ -141,7 +141,7 @@
                                        class="font-medium text-sm text-ardoise hover:text-laiton-patine transition-colors truncate block">
                                         {{ p.ingredient_name }}
                                     </a>
-                                    <p class="text-[11px] text-ardoise-faible mt-0.5">
+                                    <p class="text-2xs text-ardoise-faible mt-0.5">
                                         {{ p.purchase_count }} achat{{ p.purchase_count > 1 ? 's' : '' }}
                                         · {{ p.base_unit }}
                                         · {{ p.last_purchase_date }}
@@ -151,24 +151,24 @@
                                     <p class="font-bold text-sm text-ardoise">{{ p.last_price|number_format(4, ',', ' ') }} €/{{ p.base_unit }}</p>
                                     {% if variation is not null and not filter_invoice %}
                                         {% if variation > 5 %}
-                                            <span class="text-[11px] font-semibold text-sang"><i class="fas fa-arrow-up text-[9px]"></i> +{{ variation }}%</span>
+                                            <span class="text-2xs font-semibold text-sang"><i class="fas fa-arrow-up text-[12px]"></i> +{{ variation }}%</span>
                                         {% elseif variation < -5 %}
-                                            <span class="text-[11px] font-semibold text-pousse"><i class="fas fa-arrow-down text-[9px]"></i> {{ variation }}%</span>
+                                            <span class="text-2xs font-semibold text-pousse"><i class="fas fa-arrow-down text-[12px]"></i> {{ variation }}%</span>
                                         {% else %}
-                                            <span class="text-[11px] text-ardoise-faible">{{ variation > 0 ? '+' : '' }}{{ variation }}%</span>
+                                            <span class="text-2xs text-ardoise-faible">{{ variation > 0 ? '+' : '' }}{{ variation }}%</span>
                                         {% endif %}
                                     {% endif %}
                                 </div>
                             </div>
                             {% if not filter_invoice and p.price_min and p.price_max and p.price_min != p.price_max %}
                                 <div class="mt-2 flex items-center gap-2">
-                                    <span class="text-[10px] text-ardoise-faible">{{ p.price_min|number_format(2, ',', ' ') }} €</span>
+                                    <span class="text-2xs text-ardoise-faible">{{ p.price_min|number_format(2, ',', ' ') }} €</span>
                                     <div class="flex-1 h-1 bg-voile rounded-full overflow-hidden">
                                         {% set range = p.price_max - p.price_min %}
                                         {% set pos = range > 0 ? ((p.last_price - p.price_min) / range * 100)|round : 100 %}
                                         <div class="h-full rounded-full {{ variation > 5 ? 'bg-sang' : (variation < -5 ? 'bg-pousse' : 'bg-ardoise') }}" style="width: {{ pos }}%"></div>
                                     </div>
-                                    <span class="text-[10px] text-ardoise-faible">{{ p.price_max|number_format(2, ',', ' ') }} €</span>
+                                    <span class="text-2xs text-ardoise-faible">{{ p.price_max|number_format(2, ',', ' ') }} €</span>
                                 </div>
                             {% endif %}
                         </div>

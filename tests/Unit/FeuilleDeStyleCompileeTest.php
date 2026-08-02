@@ -99,6 +99,56 @@ class FeuilleDeStyleCompileeTest extends TestCase
         ));
     }
 
+    /**
+     * Aucun TEXTE ne descend sous le plancher de 13 px.
+     *
+     * L'ancienne interface descendait à 8 px et employait 281 fois une taille
+     * inférieure. Le public de l'application — des artisans de 45 à 60 ans,
+     * écran à bout de bras dans un laboratoire — ne peut pas lire ça.
+     *
+     * Les icônes sont exclues : un glyphe posé à côté d'un libellé n'a pas les
+     * mêmes exigences qu'une phrase, et les relever au même plancher
+     * déformerait les boutons. On les reconnaît à leur classe FontAwesome.
+     */
+    public function testAucunTexteSousLePlancherDeTreizePixels(): void
+    {
+        $fautifs = [];
+
+        foreach ($this->fichiersTwig() as $fichier) {
+            // La page de référence des jetons montre volontairement l'ancienne
+            // échelle à côté de la nouvelle : l'aligner viderait la
+            // démonstration de son objet.
+            if (str_contains(str_replace('\\', '/', $fichier->getPathname()), '/templates/_design/')) {
+                continue;
+            }
+
+            $contenu = preg_replace('/\{#.*?#\}/s', '', (string) file_get_contents($fichier->getPathname())) ?? '';
+
+            preg_match_all('/class="([^"]*)"/', $contenu, $attributs);
+
+            foreach ($attributs[1] as $classes) {
+                // Icône : exclue du plancher.
+                if (preg_match('/\bfa[srb]\b/', $classes)) {
+                    continue;
+                }
+
+                if (preg_match_all('/\btext-\[(\d+)px\]/', $classes, $tailles)) {
+                    foreach ($tailles[1] as $px) {
+                        if ((int) $px < 13) {
+                            $fautifs[] = sprintf('%s : %spx', $fichier->getFilename(), $px);
+                        }
+                    }
+                }
+            }
+        }
+
+        self::assertSame([], $fautifs, sprintf(
+            "Du texte descend sous le plancher de 13 px :\n  %s\n\n"
+            . "Employer les jetons nommés : text-2xs (13), text-xs (14), text-sm (15).",
+            implode("\n  ", $fautifs)
+        ));
+    }
+
     /** La feuille ne doit pas être vide ni tronquée par une compilation interrompue. */
     public function testLaFeuilleCompileeNEstPasTronquee(): void
     {

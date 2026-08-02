@@ -32,15 +32,15 @@
                         <h1 class="text-xl font-bold tracking-tight truncate">{{ boutique().nomEtablissement ?: 'Mon établissement' }}</h1>
                         {# Mention de version : visible sur chaque écran tant que le produit
                            est en évaluation, pour qu'un testeur sache ce qu'il manipule. #}
-                        <span class="shrink-0 rounded-full bg-laiton/15 text-laiton text-[9px] font-bold uppercase tracking-wider px-2 py-0.5 border border-laiton/30">Alpha</span>
+                        <span class="shrink-0 rounded-full bg-laiton/15 text-laiton text-2xs font-bold uppercase tracking-wider px-2 py-0.5 border border-laiton/30">Alpha</span>
                     </span>
-                    <p class="text-[11px] text-trait mt-0.5">{{ boutique().sousTitre ?: 'Gestion des recettes & coûts' }}</p>
+                    <p class="text-2xs text-trait mt-0.5">{{ boutique().sousTitre ?: 'Gestion des recettes & coûts' }}</p>
                 </span>
             </a>
         </div>
 
         <nav class="flex-1 overflow-y-auto px-5 py-5 space-y-1.5">
-            <p class="text-[11px] font-semibold uppercase tracking-wider text-trait px-3 mb-2">Production</p>
+            <p class="text-2xs font-semibold uppercase tracking-wider text-trait px-3 mb-2">Production</p>
 
             {# Le tableau de bord ouvre le menu : c'est la page d'accueil et le
                point de départ d'une journée — ce qui a bougé, ce qui attend. #}
@@ -62,7 +62,7 @@
             </a>
 
             {% if is_granted('ROLE_EDITOR') %}
-                <p class="text-[11px] font-semibold uppercase tracking-wider text-trait px-3 mt-5 mb-2">Achats</p>
+                <p class="text-2xs font-semibold uppercase tracking-wider text-trait px-3 mt-5 mb-2">Achats</p>
 
                 {# La file d'attente est le point d'entrée : des factures peuvent
                    y arriver sans qu'on soit passé par l'écran d'import. #}
@@ -74,7 +74,7 @@
                            claire, le blanc n'y atteint que 2,6:1. L'ardoise donne
                            6,3:1. Le défaut préexistait — c'était bg-amber-500
                            text-white, tout aussi illisible. #}
-                        <span class="ml-auto rounded-full bg-laiton px-1.5 py-0.5 text-[10px] font-bold text-ardoise">{{ invoice_pending_count() }}</span>
+                        <span class="ml-auto rounded-full bg-laiton px-1.5 py-0.5 text-2xs font-bold text-ardoise">{{ invoice_pending_count() }}</span>
                     {% endif %}
                 </a>
 
@@ -85,7 +85,7 @@
             {% endif %}
 
             {% if is_granted('ROLE_ADMIN') %}
-                <p class="text-[11px] font-semibold uppercase tracking-wider text-trait px-3 mt-5 mb-2">Administration</p>
+                <p class="text-2xs font-semibold uppercase tracking-wider text-trait px-3 mt-5 mb-2">Administration</p>
 
                 <a href="{{ path('app_admin_categories') }}" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors
                 {{ app.request.attributes.get('_route') == 'app_admin_categories' ? 'bg-white/[.08] text-white' : 'text-trait hover:text-white hover:bg-white/[.04]' }}">
@@ -109,8 +109,8 @@
 
         <div class="border-t border-white/[.06] px-7 py-4">
             {% if app.user %}
-                <p class="text-[12px] text-trait">{{ app.user.username }} <span class="text-trait">({{ app.user.role }})</span></p>
-                <a href="{{ path('app_logout') }}" class="text-[11px] text-sang-clair hover:text-white">Déconnexion</a>
+                <p class="text-xs text-trait">{{ app.user.username }} <span class="text-trait">({{ app.user.role }})</span></p>
+                <a href="{{ path('app_logout') }}" class="text-2xs text-sang-clair hover:text-white">Déconnexion</a>
             {% endif %}
         </div>
     </aside>
