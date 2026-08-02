@@ -69,19 +69,42 @@
         {% set inclinaison = ecart < -14 ? -7 : (ecart > 14 ? 7 : ecart / 2) %}
     {% endif %}
 
-    {# Deux signaux, deux canaux : la COULEUR dit si la recette gagne de
-       l'argent, l'INCLINAISON dit l'écart au prix conseillé. Les confondre
-       affichait en rouge des recettes à 52 % de marque parce qu'elles étaient
-       vendues 3 % sous le conseillé — alarmiste et faux. L'écart garde sa
-       propre mention, dans le plateau de droite. #}
-    {% set sain = marge > 0 %}
+    {# Trois états, et non deux.
+
+       Colorer selon le seul écart affichait en rouge des recettes à 52 % de
+       marque vendues 3 % sous le conseillé — alarmiste et faux. Mais s'en tenir
+       au signe de la marge rendait la couleur muette : verte presque toujours.
+
+       Le laiton dit « à regarder », pas « au secours ». Le rouge reste réservé
+       à la perte réelle. Le seuil est à 5 % : en deçà, l'écart relève de
+       l'arrondi à l'étiquette ou du prix psychologique, pas d'une dérive. #}
+    {% set etat = 'sain' %}
+    {% if marge <= 0 %}
+        {% set etat = 'perte' %}
+    {% elseif hasReal and ecart is not null and ecart < -5 %}
+        {% set etat = 'vigilance' %}
+    {% endif %}
+
+    {% set teinteTexte  = {'perte': 'text-sang',   'vigilance': 'text-laiton-patine', 'sain': 'text-pousse'}[etat] %}
+    {% set teinteTrait  = {'perte': 'stroke-sang', 'vigilance': 'stroke-laiton',      'sain': 'stroke-pousse'}[etat] %}
+    {% set teinteFond   = {'perte': 'fill-sang/15','vigilance': 'fill-laiton/20',     'sain': 'fill-pousse/15'}[etat] %}
+    {% set teintePleine = {'perte': 'fill-sang',   'vigilance': 'fill-laiton',        'sain': 'fill-pousse'}[etat] %}
+
+    {# Libellé de la fournée. « 30 portion » se lisait comme une faute ; et un
+       poids de sortie décimal (2,4 kg) doit garder la virgule française. #}
+    {% set sortieNombre = recipe.outputValue|number_format(recipe.outputValue == recipe.outputValue|round ? 0 : 2, ',', ' ') %}
+    {% set unitPluriel  = (unitLabel == 'portion' and recipe.outputValue > 1) ? 'portions' : unitLabel %}
+    {% set fournee      = sortieNombre ~ ' ' ~ unitPluriel %}
 
     <div class="rounded-2xl border border-trait bg-white mb-4 overflow-hidden">
         <div class="grid grid-cols-1 lg:grid-cols-[1fr_auto_1fr]">
 
             {# ── Plateau gauche : ce que ça coûte ── #}
             <div class="px-5 py-4">
-                <p class="text-2xs font-semibold uppercase tracking-[0.14em] text-ardoise-faible mb-2.5">Ce que ça coûte</p>
+                <div class="flex items-baseline justify-between gap-3 mb-2.5">
+                    <p class="text-2xs font-semibold uppercase tracking-[0.14em] text-ardoise-faible">Ce que ça coûte</p>
+                    <p class="text-2xs text-ardoise-faible">pour {{ fournee }}</p>
+                </div>
 
                 <dl class="space-y-1.5 text-sm">
                     <div class="flex justify-between gap-3">
@@ -103,7 +126,7 @@
                     <span class="text-xl font-bold tabular-nums text-ardoise">{{ t.total_cost_ht|number_format(2, ',', ' ') }} €</span>
                 </div>
                 <p class="text-2xs text-ardoise-faible mt-1 text-right">
-                    {{ t.cost_per_output_ht|number_format(2, ',', ' ') }} € / {{ unitLabel }} ·
+                    soit {{ t.cost_per_output_ht|number_format(2, ',', ' ') }} € / {{ unitLabel }} ·
                     ratio matière <span class="{{ t.material_ratio_percent > 40 ? 'font-semibold text-laiton-patine' : '' }}">{{ t.material_ratio_percent|number_format(1, ',', ' ') }} %</span>
                 </p>
             </div>
@@ -115,32 +138,32 @@
                     {# Fléau et suspentes : un seul groupe, il pivote d'un bloc. #}
                     <g style="transform: rotate({{ inclinaison }}deg); transform-origin: 75px 26px;"
                        fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"
-                       class="{{ sain ? 'text-pousse' : 'text-sang' }}">
+                       class="{{ teinteTexte }}">
                         <path d="M28 26h94"/>
                         <path d="M34 26v7"/>
                         <path d="M116 26v7"/>
                     </g>
                     {# Colonne et socle : fixes. #}
                     <g fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"
-                       class="{{ sain ? 'text-pousse' : 'text-sang' }}">
+                       class="{{ teinteTexte }}">
                         <path d="M75 26v40"/>
                         <path d="M60 66h30"/>
                     </g>
-                    <circle cx="75" cy="23" r="3.4" class="{{ sain ? 'fill-pousse' : 'fill-sang' }}"/>
+                    <circle cx="75" cy="23" r="3.4" class="{{ teintePleine }}"/>
                     {# Plateaux : ils suivent les extrémités du fléau. 120 px de
                        demi-fléau, sin(7°) ≈ 0,122 → 7,3 px au maximum. #}
                     <path d="M20 36h28l-14 15z" stroke-width="2.4" stroke-linejoin="round"
-                          class="{{ sain ? 'stroke-pousse fill-pousse/15' : 'stroke-sang fill-sang/15' }}"
+                          class="{{ teinteTrait }} {{ teinteFond }}"
                           style="transform: translateY({{ (inclinaison * -1.04)|round(1) }}px);"/>
                     <path d="M102 36h28l-14 15z" stroke-width="2.4" stroke-linejoin="round"
-                          class="{{ sain ? 'stroke-pousse fill-pousse/15' : 'stroke-sang fill-sang/15' }}"
+                          class="{{ teinteTrait }} {{ teinteFond }}"
                           style="transform: translateY({{ (inclinaison * 1.04)|round(1) }}px);"/>
                 </svg>
 
                 <p class="text-2xs font-semibold uppercase tracking-[0.14em] text-ardoise-faible mt-1">
                     Marque {{ hasReal ? 'réelle' : 'conseillée' }}
                 </p>
-                <p class="text-3xl font-extrabold tabular-nums leading-none mt-0.5 {{ sain ? 'text-pousse' : 'text-sang' }}">
+                <p class="text-3xl font-extrabold tabular-nums leading-none mt-0.5 {{ teinteTexte }}">
                     {{ marque|number_format(1, ',', ' ') }} %
                 </p>
                 <p class="text-2xs text-ardoise-faible mt-1 text-center">
@@ -150,8 +173,31 @@
 
             {# ── Plateau droit : ce que ça rapporte ── #}
             <div class="px-5 py-4 border-t lg:border-t-0 border-trait-fin">
-                <p class="text-2xs font-semibold uppercase tracking-[0.14em] text-ardoise-faible mb-2.5">Ce que ça rapporte</p>
+                <div class="flex items-baseline justify-between gap-3 mb-2.5">
+                    <p class="text-2xs font-semibold uppercase tracking-[0.14em] text-ardoise-faible">Ce que ça rapporte</p>
+                    <p class="text-2xs text-ardoise-faible">pour {{ fournee }}</p>
+                </div>
 
+                {# Les deux plateaux doivent peser la même chose. Celui de gauche
+                   totalise la fournée ; celui-ci mêlait des prix à l'unité et un
+                   total, si bien qu'on lisait 98,92 € face à 6,33 € sans savoir
+                   ce qui se comparait à quoi.
+
+                   Un prix de vente n'a de sens qu'à l'unité : on ne vend pas la
+                   fournée. Plutôt que de le convertir, les deux natures sont
+                   séparées — le tarif d'abord, puis ce que la fournée encaisse
+                   et laisse. Le grand chiffre du bas est alors homogène au coût
+                   de revient d'en face. #}
+                {% set pvUnitaireHt  = hasReal ? t.real_sell_ht : t.advised_sell_ht %}
+                {% set recetteTotale = pvUnitaireHt * recipe.outputValue %}
+                {# Par différence, et non « marge unitaire × sortie » : la marge
+                   unitaire est arrondie au centime, et 2,70 × 30 donnait 81,00
+                   sous une soustraction affichée qui vaut 81,08. Une addition
+                   visible doit tomber juste. #}
+                {% set margeTotale   = recetteTotale - t.total_cost_ht %}
+                {% set margeUnitaire = recipe.outputValue > 0 ? margeTotale / recipe.outputValue : 0 %}
+
+                <p class="text-2xs text-ardoise-faible mb-1">Tarif, par {{ unitLabel }}</p>
                 <dl class="space-y-1.5 text-sm">
                     <div class="flex justify-between gap-3">
                         <dt class="text-ardoise-doux">Prix conseillé TTC</dt>
@@ -160,25 +206,41 @@
                     <div class="flex justify-between gap-3">
                         <dt class="text-ardoise-doux">Prix pratiqué TTC</dt>
                         <dd class="tabular-nums {{ t.real_sell_ttc is null ? 'text-ardoise-faible' : 'text-ardoise font-semibold' }}">
-                            {{ t.real_sell_ttc is null ? '— à renseigner' : t.real_sell_ttc|number_format(2, ',', ' ') ~ ' €' }}
+                            {% if t.real_sell_ttc is null %}
+                                — à renseigner
+                            {% else %}
+                                {{ t.real_sell_ttc|number_format(2, ',', ' ') }} €
+                            {% endif %}
                         </dd>
                     </div>
                     {% if hasReal and ecart is not null %}
                         <div class="flex justify-between gap-3">
                             <dt class="text-ardoise-doux">Écart au conseillé</dt>
-                            <dd class="tabular-nums font-semibold {{ ecart < -2 ? 'text-sang' : (ecart > 2 ? 'text-pousse' : 'text-ardoise') }}">
+                            <dd class="tabular-nums font-semibold {{ ecart < -5 ? 'text-laiton-patine' : (ecart > 2 ? 'text-pousse' : 'text-ardoise') }}">
                                 {{ ecart > 0 ? '+' : '' }}{{ ecart|number_format(1, ',', ' ') }} %
                             </dd>
                         </div>
                     {% endif %}
                 </dl>
 
+                <p class="text-2xs text-ardoise-faible mt-3 mb-1 pt-2.5 border-t border-trait-fin">Sur la fournée de {{ fournee }}</p>
+                <dl class="space-y-1.5 text-sm">
+                    <div class="flex justify-between gap-3">
+                        <dt class="text-ardoise-doux">Chiffre d'affaires HT</dt>
+                        <dd class="tabular-nums text-ardoise">{{ recetteTotale|number_format(2, ',', ' ') }} €</dd>
+                    </div>
+                    <div class="flex justify-between gap-3">
+                        <dt class="text-ardoise-doux">Coût de revient</dt>
+                        <dd class="tabular-nums text-ardoise">− {{ t.total_cost_ht|number_format(2, ',', ' ') }} €</dd>
+                    </div>
+                </dl>
+
                 <div class="mt-2.5 pt-2.5 border-t border-trait flex justify-between items-baseline gap-3">
                     <span class="text-sm font-semibold text-ardoise">Marge {{ hasReal ? 'réelle' : 'conseillée' }}</span>
-                    <span class="text-xl font-bold tabular-nums {{ marge > 0 ? 'text-pousse' : 'text-sang' }}">{{ marge|number_format(2, ',', ' ') }} €</span>
+                    <span class="text-xl font-bold tabular-nums {{ margeTotale > 0 ? 'text-pousse' : 'text-sang' }}">{{ margeTotale|number_format(2, ',', ' ') }} €</span>
                 </div>
                 <p class="text-2xs text-ardoise-faible mt-1 text-right">
-                    pour {{ recipe.outputValue }} {{ unitLabel }}
+                    soit {{ margeUnitaire|number_format(2, ',', ' ') }} € / {{ unitLabel }}
                     {% if not hasReal %} · aucun prix pratiqué renseigné{% endif %}
                 </p>
             </div>
@@ -215,6 +277,13 @@
                     <div class="flex">
                         <button type="button" id="tabBtn-compo" onclick="showRecipeTab('compo')" class="tab-btn px-4 py-2.5 text-sm font-medium border-b-2 border-transparent text-ardoise-doux transition-colors">Composition <span class="text-xs text-ardoise-faible ml-0.5">({{ lines|length }})</span></button>
                         {% if t.total_cost_ht > 0 %}<button type="button" id="tabBtn-couts" onclick="showRecipeTab('couts')" class="tab-btn px-4 py-2.5 text-sm font-medium border-b-2 border-transparent text-ardoise-doux transition-colors">Analyse des coûts</button>{% endif %}
+                        {# Onglet toujours présent, même sans étape saisie : c'est
+                           ainsi qu'on découvre que la fiche peut en porter. Le
+                           panneau invite alors à en écrire. #}
+                        <button type="button" id="tabBtn-process" onclick="showRecipeTab('process')" class="tab-btn px-4 py-2.5 text-sm font-medium border-b-2 border-transparent text-ardoise-doux transition-colors">
+                            Mode opératoire
+                            {% if recipe.processSteps is not empty %}<span class="text-xs text-ardoise-faible ml-0.5">({{ recipe.processSteps|length }})</span>{% endif %}
+                        </button>
                     </div>
                     {% if canEdit %}
                         <button onclick="document.getElementById('addLineModal').classList.remove('hidden');document.getElementById('addLineModal').classList.add('flex')" class="inline-flex items-center gap-1.5 rounded-lg bg-ardoise hover:bg-ardoise-clair px-3 py-1.5 text-xs font-medium text-white transition-colors"><i class="fas fa-plus text-[12px]"></i> Ajouter</button>
@@ -226,7 +295,7 @@
                     {% if lines|length == 0 %}
                         <div class="py-16 text-center text-ardoise-faible"><i class="fas fa-leaf text-3xl mb-3 block text-ardoise-faible"></i><p class="text-sm">Aucun ingrédient</p></div>
                     {% else %}
-                        <div class="grid grid-cols-[minmax(0,1fr)_70px_90px_92px_36px] gap-2 px-5 py-2 text-2xs uppercase tracking-wider text-ardoise-faible border-b border-trait-fin">
+                        <div class="grid grid-cols-[minmax(0,1fr)_70px_90px_92px_68px] gap-2 px-5 py-2 text-2xs uppercase tracking-wider text-ardoise-faible border-b border-trait-fin">
                             <div>Ingrédient</div>
                             <div class="text-right">Brut</div>
                             <div class="text-right">Coût HT</div>
@@ -235,7 +304,7 @@
                         </div>
                         <div class="divide-y divide-trait-fin">
                             {% for l in lines %}
-                                <div class="grid grid-cols-[minmax(0,1fr)_70px_90px_92px_36px] gap-2 px-5 py-2.5 items-center hover:bg-voile/50 transition-colors">
+                                <div class="grid grid-cols-[minmax(0,1fr)_70px_90px_92px_68px] gap-2 px-5 py-2.5 items-center hover:bg-voile/50 transition-colors">
                                     <div class="min-w-0">
                                         <div class="text-sm font-medium text-ardoise">
                                             {% if l.type == 'ingredient' %}{{ l.ingredient.name }}{% else %}{{ l.sub_recipe.name }} <span class="ml-1 inline-flex items-center rounded-full bg-voile px-1.5 py-px text-2xs font-medium text-laiton-patine">sous-recette</span>{% endif %}
@@ -248,17 +317,33 @@
                                     <div class="text-right text-sm text-ardoise-doux">{{ l.qty_brute }} {{ l.unit }}</div>
                                     <div class="text-right text-sm font-semibold text-ardoise">{{ l.line_cost_ht|number_format(2, ',', ' ') }} €</div>
                                     <div class="text-right text-2xs text-ardoise-faible">{{ l.price_ht_per_base_unit|number_format(2, ',', ' ') }} €/{% if l.type == 'ingredient' %}{{ l.ingredient.base_unit }}{% else %}{{ unitLabel }}{% endif %}</div>
-                                    <div class="text-center">
+                                    <div class="flex items-center justify-end gap-1">
                                         {% if canEdit %}
+                                            {# Les données de la ligne voyagent dans les attributs : le
+                                               formulaire de modification est unique et se remplit à
+                                               l'ouverture, plutôt que d'être répété pour chaque ligne. #}
+                                            <button type="button"
+                                                    onclick="openEditLine(this)"
+                                                    data-id="{{ l.line_id }}"
+                                                    data-nom="{{ l.type == 'ingredient' ? l.ingredient.name : l.sub_recipe.name }}"
+                                                    data-qty="{{ l.qty_brute }}"
+                                                    data-unit="{{ l.unit }}"
+                                                    data-perte="{{ l.loss_percent }}"
+                                                    data-rdt="{{ l.yield_percent }}"
+                                                    data-note="{{ l.note }}"
+                                                    title="Modifier cette ligne"
+                                                    class="w-7 h-7 inline-flex items-center justify-center rounded-lg text-ardoise-faible hover:text-laiton-patine hover:bg-laiton-voile transition-colors">
+                                                <i class="fas fa-pen text-[12px]"></i>
+                                            </button>
                                             <form method="post" action="{{ path('app_recipe_remove_line', {id: recipe.id, lineId: l.line_id}) }}" onsubmit="return confirm('Supprimer ?')">
-                                                <button class="w-7 h-7 inline-flex items-center justify-center rounded-lg text-ardoise-faible hover:text-sang hover:bg-sang-voile transition-colors"><i class="fas fa-trash text-[12px]"></i></button>
+                                                <button title="Supprimer cette ligne" class="w-7 h-7 inline-flex items-center justify-center rounded-lg text-ardoise-faible hover:text-sang hover:bg-sang-voile transition-colors"><i class="fas fa-trash text-[12px]"></i></button>
                                             </form>
                                         {% endif %}
                                     </div>
                                 </div>
                             {% endfor %}
                         </div>
-                        <div class="grid grid-cols-[minmax(0,1fr)_70px_90px_92px_36px] gap-2 px-5 py-2.5 border-t border-trait bg-voile/50 rounded-b-2xl items-center">
+                        <div class="grid grid-cols-[minmax(0,1fr)_70px_90px_92px_68px] gap-2 px-5 py-2.5 border-t border-trait bg-voile/50 rounded-b-2xl items-center">
                             <div class="text-sm font-semibold text-ardoise-doux">Total matière HT</div>
                             <div></div>
                             <div class="text-right text-base font-bold text-ardoise">{{ t.material_cost_ht|number_format(2, ',', ' ') }} €</div>
@@ -320,29 +405,45 @@
                         </div>
                     </div>
                 {% endif %}
-            </div>
 
-            {# ── Mode opératoire ────────────────────────────────────────────
-               Affiché seulement s'il est renseigné : une carte vide sur chaque
-               recette non documentée n'apprendrait rien et allongerait l'écran
-               pour rien. Le bouton « Modifier » de l'en-tête ouvre la saisie. #}
-            {% if recipe.processSteps is not empty %}
-                <div class="rounded-2xl border border-trait bg-white mt-4">
-                    <div class="px-5 py-2.5 border-b border-trait-fin flex items-center gap-2">
-                        <div class="w-2 h-2 rounded-full bg-laiton"></div>
-                        <h3 class="font-semibold text-sm text-ardoise">Mode opératoire</h3>
-                        <span class="text-2xs text-ardoise-faible ml-auto">{{ recipe.processSteps|length }} étape(s)</span>
-                    </div>
-                    <ol class="px-5 py-3 space-y-2">
-                        {% for etape in recipe.processSteps %}
-                            <li class="flex gap-3 text-sm text-ardoise">
-                                <span class="shrink-0 w-6 h-6 rounded-full bg-voile border border-trait flex items-center justify-center text-2xs font-bold text-laiton-patine tabular-nums">{{ loop.index }}</span>
-                                <span class="pt-0.5">{{ etape }}</span>
-                            </li>
-                        {% endfor %}
-                    </ol>
+                {# Panneau : Mode opératoire #}
+                <div id="tab-process" class="hidden">
+                    {% if recipe.processSteps is empty %}
+                        {# Un écran vide est une invitation à agir, pas un constat.
+                           On dit donc quoi faire et pourquoi. #}
+                        <div class="py-14 px-6 text-center">
+                            <i class="fas fa-list-ol text-3xl mb-3 block text-ardoise-faible"></i>
+                            <p class="text-sm font-medium text-ardoise">Aucune étape de fabrication</p>
+                            <p class="text-sm text-ardoise-doux mt-1.5 max-w-md mx-auto">
+                                La fiche labo ne porte pour l'instant que des pesées. Les étapes, les temps
+                                et les températures s'ajoutent depuis <strong>Modifier les paramètres</strong>,
+                                et s'impriment avec une case à cocher chacune.
+                            </p>
+                            {% if canEdit %}
+                                <button type="button" onclick="openParamsModal()"
+                                        class="mt-4 inline-flex items-center gap-2 rounded-xl bg-ardoise hover:bg-ardoise-clair px-5 py-2.5 text-sm font-semibold text-white transition-colors">
+                                    <i class="fas fa-pen text-[12px]"></i> Écrire le mode opératoire
+                                </button>
+                            {% endif %}
+                        </div>
+                    {% else %}
+                        <ol class="divide-y divide-trait-fin">
+                            {% for etape in recipe.processSteps %}
+                                <li class="flex gap-3 px-5 py-3">
+                                    <span class="shrink-0 w-7 h-7 rounded-full bg-voile border border-trait flex items-center justify-center text-2xs font-bold text-laiton-patine tabular-nums">{{ loop.index }}</span>
+                                    <span class="text-sm text-ardoise pt-1">{{ etape }}</span>
+                                </li>
+                            {% endfor %}
+                        </ol>
+                        {% if canEdit %}
+                            <div class="px-5 py-2.5 border-t border-trait bg-voile/50 rounded-b-2xl flex items-center justify-between gap-3">
+                                <p class="text-2xs text-ardoise-faible">Ces étapes s'impriment sur la fiche labo, avec une case à cocher chacune.</p>
+                                <button type="button" onclick="openParamsModal()" class="text-xs font-semibold text-laiton-patine hover:underline shrink-0">Modifier</button>
+                            </div>
+                        {% endif %}
+                    {% endif %}
                 </div>
-            {% endif %}
+            </div>
 
         </div>
 
@@ -480,12 +581,74 @@
                     <div><label class="block text-sm font-medium text-ardoise-doux mb-1.5">% perte</label><input type="number" name="loss_percent" step="0.01" value="0" class="w-full rounded-lg border border-trait px-4 py-2.5 text-sm outline-none focus:border-laiton-patine"></div>
                     <div><label class="block text-sm font-medium text-ardoise-doux mb-1.5">% rendement</label><input type="number" name="yield_percent" step="0.01" value="100" class="w-full rounded-lg border border-trait px-4 py-2.5 text-sm outline-none focus:border-laiton-patine"></div>
                 </div>
+                {# L'annotation existait en base et s'affichait sur les fiches, mais
+                   ce formulaire ne la proposait pas : les « Parage » du jeu de
+                   démonstration n'étaient atteignables par aucun écran. #}
+                <div>
+                    <label class="block text-sm font-medium text-ardoise-doux mb-1.5">Annotation <span class="text-ardoise-faible font-normal">(facultatif)</span></label>
+                    <input type="text" name="note" maxlength="120" placeholder="Parage, dorure, à tempérer…"
+                           class="w-full rounded-lg border border-trait px-4 py-2.5 text-sm outline-none focus:border-laiton-patine">
+                    <p class="text-2xs text-ardoise-faible mt-1">Apparaît sous l'élément, sur l'écran et sur les fiches imprimées.</p>
+                </div>
             </div>
             <div class="px-6 py-2.5 border-t border-trait-fin flex justify-end gap-3">
                 <button type="button" onclick="this.closest('.fixed').classList.add('hidden');this.closest('.fixed').classList.remove('flex')" class="rounded-lg border border-trait px-4 py-2 text-sm text-ardoise-doux hover:bg-voile">Annuler</button>
                 <button type="submit" class="rounded-lg bg-ardoise hover:bg-ardoise-clair px-5 py-2 text-sm font-medium text-white"><i class="fas fa-plus text-[12px] mr-1"></i> Ajouter</button>
             </div>
         </form></div>
+
+    {# Modal : modifier une ligne existante ────────────────────────────────
+       Un seul formulaire pour toutes les lignes, rempli à l'ouverture depuis
+       les attributs du bouton. Le répéter pour chaque ligne alourdirait la
+       page d'autant de formulaires qu'il y a d'ingrédients.
+
+       L'ingrédient n'y figure pas : le changer ne corrige pas une ligne, il en
+       fait une autre. #}
+    <div id="editLineModal" class="fixed inset-0 z-[9999] hidden items-center justify-center bg-black/50">
+        <form method="post" id="editLineForm" class="bg-white rounded-2xl shadow-xl w-full max-w-lg mx-4">
+            <div class="px-6 py-2.5 border-b border-trait-fin">
+                <h3 class="font-semibold text-ardoise"><i class="fas fa-pen text-laiton-patine mr-2 text-sm"></i>Modifier <span id="editLineNom" class="text-ardoise-doux font-normal"></span></h3>
+            </div>
+            <div class="p-6 space-y-4">
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-sm font-medium text-ardoise-doux mb-1.5" for="editQty">Quantité brute</label>
+                        <input type="number" name="qty_brute" id="editQty" step="0.001" min="0.001" required
+                               class="w-full rounded-lg border border-trait px-4 py-2.5 text-sm outline-none focus:border-laiton-patine">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-ardoise-doux mb-1.5" for="editUnit">Unité</label>
+                        <select name="unit" id="editUnit" class="w-full rounded-lg border border-trait px-4 py-2.5 text-sm outline-none focus:border-laiton-patine bg-white">
+                            <option value="kg">kg</option><option value="g">g</option>
+                            <option value="piece">pièce</option><option value="litre">litre</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-sm font-medium text-ardoise-doux mb-1.5" for="editPerte">% perte</label>
+                        <input type="number" name="loss_percent" id="editPerte" step="0.01" min="0" max="100"
+                               class="w-full rounded-lg border border-trait px-4 py-2.5 text-sm outline-none focus:border-laiton-patine">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-ardoise-doux mb-1.5" for="editRdt">% rendement</label>
+                        <input type="number" name="yield_percent" id="editRdt" step="0.01" min="0" max="100"
+                               class="w-full rounded-lg border border-trait px-4 py-2.5 text-sm outline-none focus:border-laiton-patine">
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-ardoise-doux mb-1.5" for="editNote">Annotation <span class="text-ardoise-faible font-normal">(facultatif)</span></label>
+                    <input type="text" name="note" id="editNote" maxlength="120" placeholder="Parage, dorure, à tempérer…"
+                           class="w-full rounded-lg border border-trait px-4 py-2.5 text-sm outline-none focus:border-laiton-patine">
+                    <p class="text-2xs text-ardoise-faible mt-1">Vider le champ efface l'annotation.</p>
+                </div>
+            </div>
+            <div class="px-6 py-2.5 border-t border-trait-fin flex justify-end gap-3">
+                <button type="button" onclick="closeEditLine()" class="rounded-lg border border-trait px-4 py-2 text-sm text-ardoise-doux hover:bg-voile">Annuler</button>
+                <button type="submit" class="rounded-lg bg-ardoise hover:bg-ardoise-clair px-5 py-2 text-sm font-medium text-white"><i class="fas fa-check text-[12px] mr-1"></i> Enregistrer</button>
+            </div>
+        </form>
+    </div>
 
     {# Modal dupliquer #}
     <div id="dupeModal" class="fixed inset-0 z-[9999] hidden items-center justify-center bg-black/50">
@@ -589,6 +752,22 @@
             try{ localStorage.setItem('recipeInfoHidden', hidden ? '1':'0'); }catch(e){}
         }
         function closeParamsModal(){ const m=document.getElementById('paramsModal'); if(m){m.classList.add('hidden');m.classList.remove('flex');} }
+
+        // Ouvre les paramètres. Appelée depuis l'onglet Mode opératoire, qui
+        // amène le curseur directement sur la zone d'étapes — sans quoi on
+        // arrive en haut d'un formulaire long sans savoir où écrire.
+        function openParamsModal(surProcess){
+            const m = document.getElementById('paramsModal');
+            if (!m) return;
+            m.classList.remove('hidden');
+            m.classList.add('flex');
+
+            const champ = document.getElementById('process');
+            if (champ) {
+                champ.scrollIntoView({ block: 'center' });
+                champ.focus();
+            }
+        }
         (function(){ try{ if(localStorage.getItem('recipeInfoHidden')==='0'){ const sb=document.getElementById('infoSidebar'); const lbl=document.getElementById('infoToggleLabel'); if(sb){sb.classList.remove('hidden'); if(lbl) lbl.textContent='Masquer infos';} } }catch(e){} })();
         function toggleLineType(){const t=document.getElementById('lineTypeSelect').value;document.getElementById('ingredientField').style.display=t==='ingredient'?'':'none';document.getElementById('subRecipeField').style.display=t==='sub_recipe'?'':'none';}
 
@@ -612,8 +791,39 @@
             }
             _costChartDone = true;
         }
+        // Modification d'une ligne : un seul formulaire, rempli depuis les
+        // attributs du bouton cliqué. L'action est reconstruite à chaque
+        // ouverture pour viser la bonne ligne.
+        const URL_EDIT_LINE = '{{ path("app_recipe_edit_line", {id: recipe.id, lineId: "LIGNE"}) }}';
+
+        function openEditLine(bouton){
+            const d = bouton.dataset;
+            const f = document.getElementById('editLineForm');
+            f.action = URL_EDIT_LINE.replace('LIGNE', d.id);
+
+            document.getElementById('editLineNom').textContent = '— ' + d.nom;
+            document.getElementById('editQty').value   = d.qty;
+            document.getElementById('editUnit').value  = d.unit;
+            document.getElementById('editPerte').value = d.perte;
+            document.getElementById('editRdt').value   = d.rdt;
+            document.getElementById('editNote').value  = d.note || '';
+
+            const m = document.getElementById('editLineModal');
+            m.classList.remove('hidden');
+            m.classList.add('flex');
+            // Le curseur va sur la quantité : c'est la correction la plus fréquente.
+            document.getElementById('editQty').focus();
+            document.getElementById('editQty').select();
+        }
+
+        function closeEditLine(){
+            const m = document.getElementById('editLineModal');
+            m.classList.add('hidden');
+            m.classList.remove('flex');
+        }
+
         function showRecipeTab(name){
-            ['compo','couts'].forEach(function(tn){
+            ['compo','couts','process'].forEach(function(tn){
                 const panel=document.getElementById('tab-'+tn);
                 const btn=document.getElementById('tabBtn-'+tn);
                 if(!panel||!btn) return;

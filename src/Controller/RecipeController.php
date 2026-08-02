@@ -151,6 +151,55 @@ class RecipeController extends AbstractController
         return $this->redirectToRoute('app_recipe_show', ['id' => $id]);
     }
 
+    /**
+     * Modifie une ligne existante.
+     *
+     * Corriger une quantité obligeait à supprimer la ligne puis à la recréer —
+     * ce qui faisait perdre au passage l'annotation, la perte, le rendement et
+     * la position dans la liste. L'annotation était même totalement
+     * inaccessible : saisie à la création, plus jamais modifiable ensuite.
+     *
+     * L'ingrédient, lui, reste figé : le changer ne corrige pas une ligne, il
+     * en fait une autre. Supprimer puis ajouter reste alors le geste juste.
+     */
+    #[Route('/recettes/{id}/lignes/{lineId}/modifier', name: 'app_recipe_edit_line', methods: ['POST'])]
+    #[IsGranted('ROLE_EDITOR')]
+    public function editLine(int $id, int $lineId, Request $request, EntityManagerInterface $em, CostCalculator $calc): Response
+    {
+        $line = $em->getRepository(RecipeLine::class)->find($lineId);
+
+        // Le contrôle d'appartenance n'est pas cosmétique : sans lui, l'identifiant
+        // d'une ligne suffirait à modifier la recette d'un autre utilisateur.
+        if (!$line || $line->getRecipe()->getId() !== $id) {
+            throw $this->createNotFoundException();
+        }
+
+        $qty = (float) str_replace(',', '.', (string) $request->request->get('qty_brute', 0));
+
+        if ($qty <= 0) {
+            $this->addFlash('danger', 'La quantité doit être supérieure à zéro. Pour retirer cet élément, utilisez Supprimer.');
+            return $this->redirectToRoute('app_recipe_show', ['id' => $id]);
+        }
+
+        $clamp = static fn (float $v) => max(0.0, min(100.0, $v));
+
+        $line->setQtyBrute($qty);
+        $line->setUnit((string) $request->request->get('unit', $line->getUnit()));
+        $line->setLossPercent($clamp((float) str_replace(',', '.', (string) $request->request->get('loss_percent', 0))));
+        $line->setYieldPercent($clamp((float) str_replace(',', '.', (string) $request->request->get('yield_percent', 100))));
+
+        // Champ vidé volontairement : on efface l'annotation.
+        $note = trim((string) $request->request->get('note', ''));
+        $line->setNote($note !== '' ? $note : null);
+
+        $em->flush();
+        $calc->updateCache($id);
+
+        $this->addFlash('success', 'Ligne modifiée.');
+
+        return $this->redirectToRoute('app_recipe_show', ['id' => $id]);
+    }
+
     #[Route('/recettes/{id}/lignes/{lineId}/supprimer', name: 'app_recipe_remove_line', methods: ['POST'])]
     #[IsGranted('ROLE_EDITOR')]
     public function removeLine(int $id, int $lineId, EntityManagerInterface $em, CostCalculator $calc): Response
