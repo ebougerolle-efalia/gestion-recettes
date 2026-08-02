@@ -39,70 +39,149 @@
         </div>
     {% endif %}
 
-    {# ── Ruban d'indicateurs ────────────────────────────────────────────────
-       Six tuiles au lieu de dix : la marge et la marque étaient affichées deux
-       fois, une fois réelles une fois théoriques, sans que rien ne les
-       distingue. Quand le prix pratiqué est connu, ce sont les valeurs RÉELLES
-       qui priment ; les trois lectures (marque, marge sur coût, coefficient)
-       sont regroupées dans une seule tuile de repères.
+    {# ── La balance ─────────────────────────────────────────────────────────
+
+       L'écran central prend la forme de l'instrument du métier, qui est aussi
+       la marque de l'application : deux plateaux, ce que ça coûte à gauche, ce
+       que ça rapporte à droite, et la marque au milieu comme l'aiguille.
+
+       Ce n'est pas une illustration posée sur des chiffres. Le fléau penche
+       réellement selon l'écart entre le prix pratiqué et le prix conseillé :
+       vendre en dessous alourdit le plateau du coût. Sans prix pratiqué, la
+       balance reste à l'équilibre et montre le conseillé — elle ne prétend pas
+       savoir ce qu'on ignore.
+
        Tous les nombres passent par des séparateurs français explicites : sans
        eux, number_format rend « 61.5 % » à côté de « 1,67 € ». ── #}
     {% set hasReal = t.real_markup_percent is not null %}
-    <div class="rounded-2xl border border-trait bg-white px-2 py-2.5 mb-4 flex flex-wrap">
+    {% set marque  = hasReal ? t.real_markup_percent : t.markup_percent %}
+    {% set marge   = hasReal ? t.real_margin_ht : t.margin_ht %}
+    {% set ecart   = t.price_gap_percent %}
 
-        {# Coût de revient #}
-        <div class="flex-1 min-w-[120px] px-4 py-1">
-            <p class="text-2xs text-ardoise-faible">Coût / {{ unitLabel }} HT</p>
-            <p class="text-base font-bold text-laiton-patine">{{ t.cost_per_output_ht|number_format(2, ',', ' ') }} €</p>
-            <p class="text-2xs text-ardoise-faible">dont matière {{ t.material_per_output_ht|number_format(2, ',', ' ') }} €</p>
-        </div>
+    {# Inclinaison, bornée à ±7° pour qu'un écart extrême ne renverse pas le
+       dessin. En SVG l'axe Y descend : une rotation NÉGATIVE fait descendre le
+       bras gauche. Vendre sous le conseillé (écart négatif) alourdit donc bien
+       le plateau du coût, et vendre au-dessus fait pencher celui de la recette.
+       L'angle suit directement le signe de l'écart — pas de négation, elle
+       inversait le sens. #}
+    {% set inclinaison = 0 %}
+    {% if hasReal and ecart is not null %}
+        {% set inclinaison = ecart < -14 ? -7 : (ecart > 14 ? 7 : ecart / 2) %}
+    {% endif %}
 
-        {# Prix conseillé : HT et TTC dans une seule tuile #}
-        <div class="flex-1 min-w-[120px] px-4 py-1 border-l border-trait-fin">
-            <p class="text-2xs text-ardoise-faible">PV conseillé TTC</p>
-            <p class="text-base font-bold text-laiton-patine">{{ t.advised_sell_ttc|number_format(2, ',', ' ') }} €</p>
-            <p class="text-2xs text-ardoise-faible">{{ t.advised_sell_ht|number_format(2, ',', ' ') }} € HT</p>
-        </div>
+    {# Deux signaux, deux canaux : la COULEUR dit si la recette gagne de
+       l'argent, l'INCLINAISON dit l'écart au prix conseillé. Les confondre
+       affichait en rouge des recettes à 52 % de marque parce qu'elles étaient
+       vendues 3 % sous le conseillé — alarmiste et faux. L'écart garde sa
+       propre mention, dans le plateau de droite. #}
+    {% set sain = marge > 0 %}
 
-        {# Prix pratiqué : la colonne qui donne la marge opposable #}
-        <div class="flex-1 min-w-[130px] px-4 py-1 border-l border-trait-fin {{ t.price_gap_percent is not null and t.price_gap_percent < -2 ? 'bg-sang-voile/60 rounded-lg' : '' }}">
-            <p class="text-2xs text-ardoise-faible">PV pratiqué TTC</p>
-            {% if t.real_sell_ttc is null %}
-                <p class="text-base font-bold text-ardoise-faible">—</p>
-                <p class="text-2xs text-ardoise-faible">à renseigner</p>
-            {% else %}
-                <p class="text-base font-bold text-ardoise">{{ t.real_sell_ttc|number_format(2, ',', ' ') }} €</p>
-                <p class="text-2xs {{ t.price_gap_percent < -2 ? 'font-semibold text-sang' : (t.price_gap_percent > 2 ? 'text-pousse' : 'text-ardoise-faible') }}">
-                    {{ t.price_gap_percent > 0 ? '+' : '' }}{{ t.price_gap_percent|number_format(1, ',', ' ') }} % vs conseillé
+    <div class="rounded-2xl border border-trait bg-white mb-4 overflow-hidden">
+        <div class="grid grid-cols-1 lg:grid-cols-[1fr_auto_1fr]">
+
+            {# ── Plateau gauche : ce que ça coûte ── #}
+            <div class="px-5 py-4">
+                <p class="text-2xs font-semibold uppercase tracking-[0.14em] text-ardoise-faible mb-2.5">Ce que ça coûte</p>
+
+                <dl class="space-y-1.5 text-sm">
+                    <div class="flex justify-between gap-3">
+                        <dt class="text-ardoise-doux">Matières</dt>
+                        <dd class="tabular-nums text-ardoise">{{ t.material_cost_ht|number_format(2, ',', ' ') }} €</dd>
+                    </div>
+                    <div class="flex justify-between gap-3">
+                        <dt class="text-ardoise-doux">Main d'œuvre</dt>
+                        <dd class="tabular-nums text-ardoise">{{ t.labor_cost_ht|number_format(2, ',', ' ') }} €</dd>
+                    </div>
+                    <div class="flex justify-between gap-3">
+                        <dt class="text-ardoise-doux">Emballage</dt>
+                        <dd class="tabular-nums text-ardoise">{{ t.packaging_cost_ht|number_format(2, ',', ' ') }} €</dd>
+                    </div>
+                </dl>
+
+                <div class="mt-2.5 pt-2.5 border-t border-trait flex justify-between items-baseline gap-3">
+                    <span class="text-sm font-semibold text-ardoise">Coût de revient</span>
+                    <span class="text-xl font-bold tabular-nums text-ardoise">{{ t.total_cost_ht|number_format(2, ',', ' ') }} €</span>
+                </div>
+                <p class="text-2xs text-ardoise-faible mt-1 text-right">
+                    {{ t.cost_per_output_ht|number_format(2, ',', ' ') }} € / {{ unitLabel }} ·
+                    ratio matière <span class="{{ t.material_ratio_percent > 40 ? 'font-semibold text-laiton-patine' : '' }}">{{ t.material_ratio_percent|number_format(1, ',', ' ') }} %</span>
                 </p>
-            {% endif %}
-        </div>
-
-        {# Marge : réelle si le prix pratiqué est connu, conseillée sinon #}
-        <div class="flex-1 min-w-[130px] px-4 py-1 border-l border-trait-fin">
-            <p class="text-2xs text-ardoise-faible">Marge / {{ unitLabel }} {{ hasReal ? 'réelle' : 'conseillée' }}</p>
-            {% set marginValue = hasReal ? t.real_margin_ht : t.margin_ht %}
-            <p class="text-base font-bold {{ marginValue > 0 ? 'text-pousse' : 'text-sang' }}">{{ marginValue|number_format(2, ',', ' ') }} €</p>
-            <p class="text-2xs text-ardoise-faible">
-                marque {{ (hasReal ? t.real_markup_percent : t.markup_percent)|number_format(1, ',', ' ') }} %
-            </p>
-        </div>
-
-        {# Les trois lectures de la même marge, regroupées #}
-        <div class="flex-1 min-w-[150px] px-4 py-1 border-l border-trait-fin">
-            <p class="text-2xs text-ardoise-faible">Repères {{ hasReal ? 'conseillés' : '' }}</p>
-            <div class="flex items-baseline gap-3 mt-0.5">
-                <span class="text-xs font-bold text-pousse">{{ t.markup_percent|number_format(1, ',', ' ') }} %<span class="text-2xs font-normal text-ardoise-faible ml-0.5">marque</span></span>
-                <span class="text-xs font-bold text-ardoise">{{ t.margin_on_cost_percent|number_format(1, ',', ' ') }} %<span class="text-2xs font-normal text-ardoise-faible ml-0.5">marge</span></span>
-                <span class="text-xs font-bold text-ardoise">×{{ t.coefficient|number_format(2, ',', ' ') }}</span>
             </div>
-        </div>
 
-        {# Ratio matière — le food cost de la recette #}
-        <div class="flex-1 min-w-[100px] px-4 py-1 border-l border-trait-fin">
-            <p class="text-2xs text-ardoise-faible">Ratio matière</p>
-            <p class="text-base font-bold {{ t.material_ratio_percent > 40 ? 'text-laiton-patine' : 'text-ardoise' }}">{{ t.material_ratio_percent|number_format(1, ',', ' ') }} %</p>
-            <p class="text-2xs text-ardoise-faible">cible &lt; 40 %</p>
+            {# ── L'aiguille ── #}
+            <div class="px-5 py-4 border-t lg:border-t-0 lg:border-x border-trait-fin bg-voile/40 flex flex-col items-center justify-center min-w-[190px]">
+                <svg viewBox="0 0 150 84" width="150" height="84" role="img" class="balance-recette"
+                     aria-label="Balance : {{ hasReal ? 'prix pratiqué' : 'prix conseillé' }}, marque {{ marque|number_format(1, ',', ' ') }} %">
+                    {# Fléau et suspentes : un seul groupe, il pivote d'un bloc. #}
+                    <g style="transform: rotate({{ inclinaison }}deg); transform-origin: 75px 26px;"
+                       fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"
+                       class="{{ sain ? 'text-pousse' : 'text-sang' }}">
+                        <path d="M28 26h94"/>
+                        <path d="M34 26v7"/>
+                        <path d="M116 26v7"/>
+                    </g>
+                    {# Colonne et socle : fixes. #}
+                    <g fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"
+                       class="{{ sain ? 'text-pousse' : 'text-sang' }}">
+                        <path d="M75 26v40"/>
+                        <path d="M60 66h30"/>
+                    </g>
+                    <circle cx="75" cy="23" r="3.4" class="{{ sain ? 'fill-pousse' : 'fill-sang' }}"/>
+                    {# Plateaux : ils suivent les extrémités du fléau. 120 px de
+                       demi-fléau, sin(7°) ≈ 0,122 → 7,3 px au maximum. #}
+                    <path d="M20 36h28l-14 15z" stroke-width="2.4" stroke-linejoin="round"
+                          class="{{ sain ? 'stroke-pousse fill-pousse/15' : 'stroke-sang fill-sang/15' }}"
+                          style="transform: translateY({{ (inclinaison * -1.04)|round(1) }}px);"/>
+                    <path d="M102 36h28l-14 15z" stroke-width="2.4" stroke-linejoin="round"
+                          class="{{ sain ? 'stroke-pousse fill-pousse/15' : 'stroke-sang fill-sang/15' }}"
+                          style="transform: translateY({{ (inclinaison * 1.04)|round(1) }}px);"/>
+                </svg>
+
+                <p class="text-2xs font-semibold uppercase tracking-[0.14em] text-ardoise-faible mt-1">
+                    Marque {{ hasReal ? 'réelle' : 'conseillée' }}
+                </p>
+                <p class="text-3xl font-extrabold tabular-nums leading-none mt-0.5 {{ sain ? 'text-pousse' : 'text-sang' }}">
+                    {{ marque|number_format(1, ',', ' ') }} %
+                </p>
+                <p class="text-2xs text-ardoise-faible mt-1 text-center">
+                    marge {{ t.margin_on_cost_percent|number_format(1, ',', ' ') }} % · coef ×{{ t.coefficient|number_format(2, ',', ' ') }}
+                </p>
+            </div>
+
+            {# ── Plateau droit : ce que ça rapporte ── #}
+            <div class="px-5 py-4 border-t lg:border-t-0 border-trait-fin">
+                <p class="text-2xs font-semibold uppercase tracking-[0.14em] text-ardoise-faible mb-2.5">Ce que ça rapporte</p>
+
+                <dl class="space-y-1.5 text-sm">
+                    <div class="flex justify-between gap-3">
+                        <dt class="text-ardoise-doux">Prix conseillé TTC</dt>
+                        <dd class="tabular-nums text-ardoise">{{ t.advised_sell_ttc|number_format(2, ',', ' ') }} €</dd>
+                    </div>
+                    <div class="flex justify-between gap-3">
+                        <dt class="text-ardoise-doux">Prix pratiqué TTC</dt>
+                        <dd class="tabular-nums {{ t.real_sell_ttc is null ? 'text-ardoise-faible' : 'text-ardoise font-semibold' }}">
+                            {{ t.real_sell_ttc is null ? '— à renseigner' : t.real_sell_ttc|number_format(2, ',', ' ') ~ ' €' }}
+                        </dd>
+                    </div>
+                    {% if hasReal and ecart is not null %}
+                        <div class="flex justify-between gap-3">
+                            <dt class="text-ardoise-doux">Écart au conseillé</dt>
+                            <dd class="tabular-nums font-semibold {{ ecart < -2 ? 'text-sang' : (ecart > 2 ? 'text-pousse' : 'text-ardoise') }}">
+                                {{ ecart > 0 ? '+' : '' }}{{ ecart|number_format(1, ',', ' ') }} %
+                            </dd>
+                        </div>
+                    {% endif %}
+                </dl>
+
+                <div class="mt-2.5 pt-2.5 border-t border-trait flex justify-between items-baseline gap-3">
+                    <span class="text-sm font-semibold text-ardoise">Marge {{ hasReal ? 'réelle' : 'conseillée' }}</span>
+                    <span class="text-xl font-bold tabular-nums {{ marge > 0 ? 'text-pousse' : 'text-sang' }}">{{ marge|number_format(2, ',', ' ') }} €</span>
+                </div>
+                <p class="text-2xs text-ardoise-faible mt-1 text-right">
+                    pour {{ recipe.outputValue }} {{ unitLabel }}
+                    {% if not hasReal %} · aucun prix pratiqué renseigné{% endif %}
+                </p>
+            </div>
         </div>
     </div>
 
