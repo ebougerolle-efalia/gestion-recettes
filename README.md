@@ -254,20 +254,10 @@ Les données vivent dans PostgreSQL, une base par client (`recettes_dupont`), et
 non plus dans un fichier de l'arborescence. **Sauvegarder revient donc à faire un
 `pg_dump`** : copier `/srv` à chaud ne suffit plus.
 
-**Origine git auto-réparée.** Une instance clonée avant le passage des dépôts
-en privé garde un `origin` HTTPS anonyme dans son `.git/config` : renseigner
-`REPO_URL` dans `setup.conf` ne la corrige pas rétroactivement, et le premier
-`git fetch` suivant échouerait. `deploy.sh` compare l'origine réelle à
-`REPO_URL` (lu dans `.env.local`, ou passé explicitement en variable
-d'environnement) à chaque déploiement, et la corrige elle-même quand elle est
-encore en HTTPS — même principe que la réparation des droits de `.env.local`
-juste après. Un client déjà provisionné reçoit `REPO_URL` dans son
-`.env.local` dès la prochaine relance de `setup-server.sh` (voir
-`gestion-recettes-ops`) ; pour un déploiement manuel entre-temps :
-
-```bash
-REPO_URL="$(grep REPO_URL= .env.local | cut -d= -f2- | tr -d '"')" sudo ./deploy.sh
-```
+**Propriétaires.** `root` possède le code (`src/`, `vendor/`, `.git/`), que
+l'application lit pour s'exécuter sans pouvoir le réécrire. `www-data` ne
+possède que ce dans quoi l'application écrit vraiment : `var/` et
+`public/uploads/`. `deploy.sh` rétablit ce partage à chaque passage.
 
 ## Fichiers de référence
 
