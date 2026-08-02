@@ -165,3 +165,79 @@ else
     log " Commit : $(git log -1 --format='%h - %s' 2>/dev/null || echo 'n/a')"
 fi
 log "============================================"
+
+# --- Controle des ressources reellement servies -----------------------------
+# Les tests fonctionnels traversent le noyau Symfony, jamais nginx : ils sont
+# structurellement incapables de voir une regle de vhost qui bloque une feuille
+# de style. C'est arrive — une expression « location ~ /vendor/ » non ancree
+# refusait /assets/vendor/inter/inter.css en 403 : plus de mise en forme, plus
+# de graphiques, et 45 tests au vert. Seul un vrai navigateur l'avait vu.
+#
+# Les chemins ne sont pas recopies ici mais extraits des templates : une
+# ressource ajoutee demain est controlee sans que personne n'y pense.
+#
+# Le code est deja deploye a ce stade : l'echec ci-dessous ne dit pas que la
+# mise a jour a rate, mais que le serveur web ne sert pas ce qu'il devrait.
+# Le piege ERR est donc retire, son message serait trompeur.
+trap - ERR
+
+if ! command -v curl >/dev/null 2>&1; then
+    warn "curl absent : controle des ressources ignore."
+    exit 0
+fi
+
+# Le vhost de CETTE instance est celui dont la racine pointe ici. Plus fiable
+# qu'une convention de nommage, que deploy.sh ne connait pas.
+VHOST="$(grep -lF "root ${APP_DIR}/public;" /etc/nginx/sites-enabled/* 2>/dev/null | head -1)"
+
+if [ -z "$VHOST" ]; then
+    # Cas normal du tout premier deploiement : setup-server.sh ecrit le vhost
+    # APRES avoir appele deploy.sh. Rien a controler, rien a signaler.
+    exit 0
+fi
+
+SMOKE_DOMAIN="$(sed -n 's/^[[:space:]]*server_name[[:space:]]\{1,\}\([^;]*\);.*/\1/p' "$VHOST" \
+    | head -1 | awk '{print $1}')"
+
+if [ -z "$SMOKE_DOMAIN" ]; then
+    warn "Domaine introuvable dans $VHOST : controle des ressources ignore."
+    exit 0
+fi
+
+# Chemins extraits des templates, dedupliques. Seules les ressources statiques
+# nous interessent : les routes applicatives sont deja couvertes par les tests.
+ASSETS="$(grep -rhoE "asset\('[^']+'\)" templates/ 2>/dev/null \
+    | sed -E "s/asset\('(.*)'\)/\1/" | sort -u)"
+
+if [ -z "$ASSETS" ]; then
+    warn "Aucune ressource detectee dans les templates : controle ignore."
+    exit 0
+fi
+
+log "Controle des ressources servies par nginx ($SMOKE_DOMAIN)..."
+
+SMOKE_FAILED=0
+for asset in $ASSETS; do
+    # --resolve : on interroge le vhost local sans dependre du DNS public ni
+    # d'une sortie internet. -L pour suivre la redirection vers HTTPS posee
+    # par certbot.
+    CODE="$(curl -sS -L --max-time 10 -o /dev/null -w '%{http_code}' \
+        --resolve "${SMOKE_DOMAIN}:80:127.0.0.1" \
+        --resolve "${SMOKE_DOMAIN}:443:127.0.0.1" \
+        "http://${SMOKE_DOMAIN}/${asset}" 2>/dev/null || echo "000")"
+
+    if [ "$CODE" != "200" ]; then
+        warn "  $CODE  /$asset"
+        SMOKE_FAILED=1
+    fi
+done
+
+if [ "$SMOKE_FAILED" = "1" ]; then
+    echo ""
+    err "Le code est a jour, mais nginx ne sert pas toutes les ressources.
+       L'application s'affichera sans mise en forme ou sans graphiques.
+       Verifiez le vhost : /etc/nginx/sites-available/$(basename "$VHOST")
+       Piste la plus frequente : une regle « deny » non ancree sur ^."
+fi
+
+log "Ressources servies : $(echo "$ASSETS" | wc -l | tr -d ' ') sur $(echo "$ASSETS" | wc -l | tr -d ' '), toutes en 200."

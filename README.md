@@ -234,6 +234,29 @@ jour une instance est un geste explicite, en SSH :
 cd /srv/gestion-recettes/<slug> && sudo ./deploy.sh
 ```
 
+### Contrôle des ressources servies
+
+En fin de déploiement, `deploy.sh` interroge **le vhost réel** et vérifie que
+chaque ressource statique référencée par les templates répond 200 — polices,
+icônes, Chart.js, favicon.
+
+Ce contrôle comble un angle mort : les tests fonctionnels traversent le noyau
+Symfony, jamais nginx. Une règle de vhost qui bloque une feuille de style les
+laisse tous au vert. C'est arrivé — une expression `location ~ /vendor/` non
+ancrée refusait `/assets/vendor/inter/inter.css` en 403 : plus de mise en
+forme, plus de graphiques, et 45 tests satisfaits. Seul un humain devant son
+navigateur l'a vu.
+
+Les chemins sont **extraits des templates**, pas recopiés : une ressource
+ajoutée demain est contrôlée sans que personne n'y pense. L'interrogation
+passe par `--resolve` vers `127.0.0.1`, donc sans dépendre du DNS public ni
+d'une sortie internet.
+
+Un échec ici ne signifie pas que la mise à jour a raté — le code est déployé —
+mais que le serveur web ne sert pas ce qu'il devrait. Le message le dit, et
+pointe le vhost concerné. Au tout premier déploiement le contrôle se tait :
+`setup-server.sh` écrit le vhost *après* avoir appelé `deploy.sh`.
+
 ---
 
 ## Structure d'un déploiement
