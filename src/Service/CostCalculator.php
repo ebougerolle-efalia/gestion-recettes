@@ -23,6 +23,9 @@ class CostCalculator
     ) {}
 
     private function r2(float $n): float { return round($n, 2); }
+
+    /** Les quantités se comptent au gramme : 0,022 kg de sel arrondi à 0,02 fausserait la pesée. */
+    private function r3(float $n): float { return round($n, 3); }
     private function clampPct(float $n): float { return max(0.0, min(100.0, $n)); }
 
     /** Dédoublonne et range une liste de codes allergènes dans l'ordre réglementaire. */
@@ -218,18 +221,36 @@ class CostCalculator
                     $lineData['warnings'][] = 'sub_recipe_warning';
                 }
 
+                // Part de la sous-recette réellement consommée ici. Une farce
+                // fabriquée par bâches de 10 kg dont on prélève 2,6 kg donne
+                // 0,26 : c'est ce coefficient qui rend les quantités et les
+                // coûts des composants comparables au reste de la fiche.
+                $subOutputValue = (float) $subComputed['recipe']->getOutputValue();
+                $subRatio       = $subOutputValue > 0 ? $qtyInSubUnit / $subOutputValue : 0.0;
+
                 $subComponents = [];
                 foreach ($subComputed['lines'] as $sl) {
                     $subComponents[] = [
                         'type'          => $sl['type'],
                         'name'          => $sl['type'] === 'ingredient' ? ($sl['ingredient']['name'] ?? '') : ($sl['sub_recipe']['name'] ?? ''),
-                        'qty_brute'     => $sl['qty_brute'] ?? null,
                         'unit'          => $sl['unit'] ?? '',
-                        'qty_net'       => $sl['qty_net'] ?? null,
                         'loss_percent'  => $sl['loss_percent'] ?? 0,
                         'yield_percent' => $sl['yield_percent'] ?? 0,
-                        'line_cost_ht'  => $sl['line_cost_ht'] ?? 0,
                         'note'          => $sl['note'] ?? null,
+
+                        // Quantités de la sous-recette entière — sa propre fiche.
+                        'qty_brute'     => $sl['qty_brute'] ?? null,
+                        'qty_net'       => $sl['qty_net'] ?? null,
+                        'line_cost_ht'  => $sl['line_cost_ht'] ?? 0,
+
+                        // Quantités ramenées à ce qui est consommé DANS cette
+                        // recette. Ce sont celles que les fiches affichent :
+                        // lire 5 kg de gorge quand il en faut 1,3 conduit tout
+                        // droit à peser la bâche entière, et la somme des
+                        // composants ne correspondait pas au coût de la ligne.
+                        'qty_brute_used'    => $this->r3(($sl['qty_brute'] ?? 0) * $subRatio),
+                        'qty_net_used'      => $this->r3(($sl['qty_net'] ?? 0) * $subRatio),
+                        'line_cost_ht_used' => $this->r2(($sl['line_cost_ht'] ?? 0) * $subRatio),
                     ];
                 }
 

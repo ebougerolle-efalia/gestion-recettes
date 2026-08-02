@@ -34,6 +34,21 @@ class Recipe
     #[ORM\Column(name: 'product_vat_rate', type: 'decimal', precision: 5, scale: 2)]
     private string $productVatRate = '5.50';
 
+    /**
+     * Mode opératoire : les étapes de fabrication, une par ligne.
+     *
+     * La fiche s'appelle « fiche labo » mais ne portait que des pesées. Un
+     * professionnel y cherche d'abord l'ordre, les temps et les températures —
+     * sans quoi elle n'est pas exploitable au poste de travail.
+     *
+     * Texte libre plutôt que lignes structurées : on ne sait pas encore ce
+     * qu'un artisan y écrit vraiment. Une saisie contrainte trop tôt
+     * l'empêcherait d'y mettre ce qui lui sert. Le découpage en étapes se fait
+     * à l'affichage, sur les retours à la ligne.
+     */
+    #[ORM\Column(type: 'text', nullable: true)]
+    private ?string $process = null;
+
     /** Durée de main d'œuvre en minutes (saisie utilisateur). */
     #[ORM\Column(name: 'labor_minutes', type: 'integer', options: ['default' => 0])]
     private int $laborMinutes = 0;
@@ -100,6 +115,31 @@ class Recipe
 
     public function getProductVatRate(): float { return (float) $this->productVatRate; }
     public function setProductVatRate(float $v): static { $this->productVatRate = number_format($v, 2, '.', ''); return $this; }
+
+    public function getProcess(): ?string { return $this->process; }
+    public function setProcess(?string $v): static { $this->process = $v !== null && trim($v) !== '' ? $v : null; return $this; }
+
+    /**
+     * Étapes du mode opératoire, une par ligne non vide.
+     *
+     * Les lignes vides servent à aérer la saisie ; elles ne doivent pas
+     * produire d'étape numérotée fantôme sur la fiche imprimée.
+     *
+     * @return list<string>
+     */
+    public function getProcessSteps(): array
+    {
+        if ($this->process === null) {
+            return [];
+        }
+
+        $lignes = preg_split('/\R/', $this->process) ?: [];
+
+        return array_values(array_filter(
+            array_map(static fn (string $l) => trim($l), $lignes),
+            static fn (string $l) => $l !== ''
+        ));
+    }
 
     public function getLaborMinutes(): int { return $this->laborMinutes; }
     public function setLaborMinutes(int $v): static { $this->laborMinutes = max(0, $v); return $this; }

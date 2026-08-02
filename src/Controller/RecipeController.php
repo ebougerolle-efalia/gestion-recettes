@@ -315,5 +315,11 @@ class RecipeController extends AbstractController
             $raw = trim((string) $request->request->get('sell_price_ttc'));
             $recipe->setSellPriceTtc($raw === '' ? null : (float) str_replace(',', '.', $raw));
         }
+
+        // Même règle pour le mode opératoire : un formulaire qui ne le porte
+        // pas ne doit pas effacer des étapes déjà saisies.
+        if ($request->request->has('process')) {
+            $recipe->setProcess((string) $request->request->get('process'));
+        }
     }
 }

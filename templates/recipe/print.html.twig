@@ -177,17 +177,35 @@
             <tr>
                 <td colspan="5" style="padding:3px 8px 8px 22px; background:#EFF2F0; border-bottom:1px solid #DFE4E1;">
                     <div style="font-size:10pt; color:#475761; margin-bottom:3px;">
-                        Composition de « {{ l.sub_recipe.name }} » — pour {{ l.sub_recipe.output_value|number_format(3, ',', ' ') }} {{ l.sub_recipe.output_unit }}
-                        <span style="color:#5B6B73;">(utilisé ici : {{ (l.sub_recipe.qty_used * f)|number_format(3, ',', ' ') }} {{ l.sub_recipe.output_unit }})</span>
+                        Détail de « {{ l.sub_recipe.name }} » — <strong>pour les {{ (l.sub_recipe.qty_used * f)|number_format(3, ',', ' ') }} {{ l.sub_recipe.output_unit }} utilisés ici</strong>
+                        <span style="color:#5B6B73;">(recette de base : {{ l.sub_recipe.output_value|number_format(3, ',', ' ') }} {{ l.sub_recipe.output_unit }})</span>
                     </div>
+                    {% set matiereSousRecette = 0 %}
+                    {% for c in l.sub_recipe.components %}
+                        {% set matiereSousRecette = matiereSousRecette + c.line_cost_ht_used %}
+                    {% endfor %}
+
                     <table style="width:100%; border-collapse:collapse; font-size:10pt;">
                         {% for c in l.sub_recipe.components %}
                             <tr>
                                 <td style="padding:1px 0; color:#33434E;">– {{ c.name }}{% if c.note %} <span style="color:#5B6B73;">({{ c.note }})</span>{% endif %}</td>
-                                <td style="text-align:right; width:130px; color:#475761;">{{ c.qty_brute|number_format(3, ',', ' ') }} {{ c.unit }}</td>
-                                <td style="text-align:right; width:90px; color:#33434E;">{{ c.line_cost_ht|number_format(2, ',', ' ') }} €</td>
+                                <td style="text-align:right; width:130px; color:#475761; font-variant-numeric:tabular-nums;">{{ (c.qty_brute_used * f)|number_format(3, ',', ' ') }} {{ c.unit }}</td>
+                                <td style="text-align:right; width:90px; color:#33434E; font-variant-numeric:tabular-nums;">{{ (c.line_cost_ht_used * f)|number_format(2, ',', ' ') }} €</td>
                             </tr>
                         {% endfor %}
+
+                        {# Le coût de la ligne repose sur le coût de revient COMPLET de la
+                           sous-recette : sa matière, mais aussi son temps de fabrication et
+                           son emballage. Sans cette ligne, additionner les composants ne
+                           tombait pas juste et laissait croire à une erreur. #}
+                        {% set ecart = (l.line_cost_ht - matiereSousRecette) * f %}
+                        {% if ecart > 0.01 %}
+                            <tr>
+                                <td style="padding:4px 0 1px; color:#5B6B73; font-style:italic;">— main d'œuvre et emballage de la sous-recette</td>
+                                <td></td>
+                                <td style="text-align:right; padding:4px 0 1px; color:#5B6B73; font-variant-numeric:tabular-nums;">{{ ecart|number_format(2, ',', ' ') }} €</td>
+                            </tr>
+                        {% endif %}
                     </table>
                 </td>
             </tr>

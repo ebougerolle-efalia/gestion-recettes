@@ -77,6 +77,19 @@
         .encart strong { color: #16202B; }
         .encart .secondaire { color: #5B6B73; }
 
+        /* Mode opératoire — la partie qu'on suit en fabriquant. Elle est donc
+           composée plus grand que la composition : on la lit debout, en
+           s'interrompant, et on doit retrouver sa ligne du regard. */
+        .etapes { width: 100%; border-collapse: collapse; }
+        .etapes td { padding: 9px 6px; border-bottom: 1px solid #DFE4E1; vertical-align: top; }
+        .etapes .case { width: 26px; }
+        .etapes .carre { width: 15px; height: 15px; border: 1.5px solid #16202B; border-radius: 2px; }
+        .etapes .num {
+            width: 26px; font-weight: bold; color: #7E5B1E;
+            font-size: 12pt; text-align: right; padding-right: 10px;
+        }
+        .etapes .texte { font-size: 13pt; color: #16202B; line-height: 1.35; }
+
         .footer { margin-top: 30px; padding-top: 8px; border-top: 1px solid #CBD2CE; font-size: 10pt; color: #5B6B73; text-align: center; }
 
         /* Rien ne doit se couper au milieu d'une ligne d'ingrédient : on relit
@@ -158,16 +171,20 @@
         {% if l.type == 'sub_recipe' and l.sub_recipe.components is not empty %}
             <tr>
                 <td colspan="4" style="padding:3px 8px 8px 22px; background:#EFF2F0; border-bottom:1px solid #DFE4E1;">
+                    {# Quantités PRORATISÉES : ce qu'il faut peser pour cette
+                       recette, pas la bâche entière de sous-recette. Afficher
+                       5 kg de gorge quand il en faut 1,3 conduit tout droit à
+                       fabriquer quatre fois trop. #}
                     <div style="font-size:11pt; color:#475761; margin-bottom:3px;">
-                        Composition de « {{ l.sub_recipe.name }} » — pour {{ l.sub_recipe.output_value|number_format(3, ',', ' ') }} {{ l.sub_recipe.output_unit }}
-                        <span style="color:#5B6B73;">(utilisé ici : {{ (l.sub_recipe.qty_used * f)|number_format(3, ',', ' ') }} {{ l.sub_recipe.output_unit }})</span>
+                        Détail de « {{ l.sub_recipe.name }} » — <strong>pour les {{ (l.sub_recipe.qty_used * f)|number_format(3, ',', ' ') }} {{ l.sub_recipe.output_unit }} utilisés ici</strong>
+                        <span style="color:#5B6B73;">(recette de base : {{ l.sub_recipe.output_value|number_format(3, ',', ' ') }} {{ l.sub_recipe.output_unit }})</span>
                     </div>
                     <table style="width:100%; border-collapse:collapse; font-size:11pt;">
                         {% for c in l.sub_recipe.components %}
                             <tr>
                                 <td style="padding:1px 0; color:#33434E;">– {{ c.name }}{% if c.note %} <span style="color:#5B6B73;">({{ c.note }})</span>{% endif %}</td>
-                                <td style="text-align:right; width:120px; color:#33434E;">{{ c.qty_brute|number_format(3, ',', ' ') }} {{ c.unit }}</td>
-                                <td style="text-align:right; width:120px; color:#5B6B73;">net {{ c.qty_net|number_format(3, ',', ' ') }}</td>
+                                <td style="text-align:right; width:120px; color:#33434E; font-variant-numeric:tabular-nums;">{{ (c.qty_brute_used * f)|number_format(3, ',', ' ') }} {{ c.unit }}</td>
+                                <td style="text-align:right; width:120px; color:#5B6B73; font-variant-numeric:tabular-nums;">net {{ (c.qty_net_used * f)|number_format(3, ',', ' ') }}</td>
                             </tr>
                         {% endfor %}
                     </table>
@@ -177,6 +194,23 @@
     {% endfor %}
     </tbody>
 </table>
+
+<!-- MODE OPÉRATOIRE -->
+{% if recipe.processSteps is not empty %}
+    <h2 style="margin-top:20px;">Mode opératoire</h2>
+    <table class="etapes">
+        {% for etape in recipe.processSteps %}
+            <tr>
+                {# Case à cocher imprimée, pas un caractère Unicode : elle doit
+                   rester visible sur une photocopie et se cocher au crayon en
+                   cours de fabrication. #}
+                <td class="case"><div class="carre"></div></td>
+                <td class="num">{{ loop.index }}</td>
+                <td class="texte">{{ etape }}</td>
+            </tr>
+        {% endfor %}
+    </table>
+{% endif %}
 
 <!-- ALLERGÈNES -->
 {% if totals.allergens is not empty or totals.traces is not empty %}

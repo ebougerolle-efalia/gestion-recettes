@@ -322,6 +322,28 @@
                 {% endif %}
             </div>
 
+            {# ── Mode opératoire ────────────────────────────────────────────
+               Affiché seulement s'il est renseigné : une carte vide sur chaque
+               recette non documentée n'apprendrait rien et allongerait l'écran
+               pour rien. Le bouton « Modifier » de l'en-tête ouvre la saisie. #}
+            {% if recipe.processSteps is not empty %}
+                <div class="rounded-2xl border border-trait bg-white mt-4">
+                    <div class="px-5 py-2.5 border-b border-trait-fin flex items-center gap-2">
+                        <div class="w-2 h-2 rounded-full bg-laiton"></div>
+                        <h3 class="font-semibold text-sm text-ardoise">Mode opératoire</h3>
+                        <span class="text-2xs text-ardoise-faible ml-auto">{{ recipe.processSteps|length }} étape(s)</span>
+                    </div>
+                    <ol class="px-5 py-3 space-y-2">
+                        {% for etape in recipe.processSteps %}
+                            <li class="flex gap-3 text-sm text-ardoise">
+                                <span class="shrink-0 w-6 h-6 rounded-full bg-voile border border-trait flex items-center justify-center text-2xs font-bold text-laiton-patine tabular-nums">{{ loop.index }}</span>
+                                <span class="pt-0.5">{{ etape }}</span>
+                            </li>
+                        {% endfor %}
+                    </ol>
+                </div>
+            {% endif %}
+
         </div>
 
         {# ── Barre latérale DROITE : Allergènes + Nutrition (masquée par défaut) ── #}
@@ -516,6 +538,24 @@
                             <p class="text-2xs text-ardoise-faible mt-1">
                                 Votre prix réel, celui de l'étiquette. Renseigné, il donne la <strong>marge réelle</strong> et
                                 signale les recettes vendues sous l'objectif. Laisser vide si le produit n'est pas encore tarifé.
+                            </p>
+                        </div>
+
+                        {# Mode opératoire — texte libre, une étape par ligne.
+                           Saisie volontairement non contrainte : on ne sait pas
+                           encore ce qu'un artisan y écrit vraiment, et un
+                           formulaire trop cadré l'empêcherait d'y mettre ce qui
+                           lui sert. Le découpage se fait à l'affichage. #}
+                        <div class="sm:col-span-2">
+                            <label class="block text-xs font-medium text-ardoise-doux mb-1" for="process">
+                                Mode opératoire <span class="text-ardoise-faible font-normal">(une étape par ligne)</span>
+                            </label>
+                            <textarea name="process" id="process" rows="7"
+                                      placeholder="Désosser l'épaule, parer les nerfs&#10;Hacher grille 8 mm, réserver au froid&#10;Mêler la farce 3 min, saler à 18 g/kg&#10;Cuisson 2 h à 78 °C à cœur&#10;Refroidir en cellule, 3 h maximum"
+                                      class="w-full rounded-lg border border-trait px-3 py-2 text-sm leading-relaxed outline-none focus:border-laiton-patine">{{ recipe.process }}</textarea>
+                            <p class="text-2xs text-ardoise-faible mt-1">
+                                Les étapes apparaissent numérotées sur la <strong>fiche labo</strong>, avec une case à cocher
+                                par étape. Temps et températures se saisissent ici, dans le texte.
                             </p>
                         </div>
                     </div>
