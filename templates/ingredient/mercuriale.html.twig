@@ -4,47 +4,63 @@
     <meta charset="UTF-8">
     <title>Mercuriale — {{ boutique().nomEtablissement }}</title>
     <style>
-        body { font-family: Arial, Helvetica, sans-serif; font-size: 9.5pt; color: #333; margin: 0; padding: 0; }
+        /*
+         * MERCURIALE — la liste de prix qu'on emporte en tournée d'achats.
+         *
+         * Elle se consulte debout, souvent pliée en deux dans une poche : les
+         * gris pâles y disparaissent encore plus vite que sur une fiche posée
+         * à plat. Mêmes jetons que le reste, aucun ton trop clair.
+         *
+         * Arial et non Inter : la police de marque n'est pas embarquée dans le
+         * rendu Gotenberg. Inter est proposée en tête si elle est disponible.
+         */
+        body { font-family: Inter, Arial, Helvetica, sans-serif; font-size: 11pt; color: #16202B; margin: 0; padding: 0; -webkit-print-color-adjust: exact; }
 
-        .header-table { width: 100%; border-bottom: 3px solid #1c2434; padding-bottom: 10px; margin-bottom: 16px; }
+        /* Les en-têtes de colonne se répètent en haut de chaque page — sans
+           cela, une mercuriale de trois pages devient illisible dès la
+           deuxième. */
+        thead { display: table-header-group; }
+        tr { page-break-inside: avoid; }
+
+        .header-table { width: 100%; border-bottom: 3px solid #16202B; padding-bottom: 10px; margin-bottom: 16px; }
         .header-table td { vertical-align: bottom; padding: 0; }
-        .header-title { font-size: 22pt; font-weight: bold; color: #1c2434; letter-spacing: 1px; }
-        .header-subtitle { font-size: 10pt; color: #555; margin-top: 4px; }
-        .header-company { font-size: 9pt; color: #999; text-align: right; }
+        .header-title { font-size: 22pt; font-weight: bold; color: #16202B; letter-spacing: 1px; }
+        .header-subtitle { font-size: 11pt; color: #475761; margin-top: 4px; }
+        .header-company { font-size: 10.5pt; color: #5B6B73; text-align: right; }
 
         .summary { width: 100%; margin-bottom: 16px; border-spacing: 8px; border-collapse: separate; }
-        .summary-cell { border: 1px solid #e2e8f0; border-radius: 4px; padding: 7px 12px; background: #fff; width: 25%; }
-        .summary-label { font-size: 7pt; text-transform: uppercase; letter-spacing: 0.8px; color: #94a3b8; font-weight: bold; }
-        .summary-value { font-size: 14pt; font-weight: bold; color: #1c2434; margin-top: 2px; }
-        .summary-red { color: #dc2626; }
+        .summary-cell { border: 1px solid #CBD2CE; border-radius: 4px; padding: 7px 12px; background: #fff; width: 25%; }
+        .summary-label { font-size: 9pt; text-transform: uppercase; letter-spacing: 0.8px; color: #5B6B73; font-weight: bold; }
+        .summary-value { font-size: 14pt; font-weight: bold; color: #16202B; margin-top: 2px; }
+        .summary-red { color: #A8342A; }
 
         table.data { width: 100%; border-collapse: collapse; margin-bottom: 4px; }
         table.data th {
-            background: #f1f5f9; font-size: 7.5pt; text-transform: uppercase; letter-spacing: 0.5px;
-            color: #64748b; text-align: left; padding: 5px 8px; border-bottom: 1px solid #cbd5e1;
+            background: #EFF2F0; font-size: 9pt; text-transform: uppercase; letter-spacing: 0.5px;
+            color: #33434E; text-align: left; padding: 5px 8px; border-bottom: 1px solid #CBD2CE;
         }
-        table.data td { padding: 5px 8px; border-bottom: 1px solid #f1f5f9; font-size: 9pt; }
-        table.data tr:nth-child(even) td { background: #fafbfc; }
+        table.data td { padding: 5px 8px; border-bottom: 1px solid #EFF2F0; font-size: 10.5pt; }
+        table.data tr:nth-child(even) td { background: #FBFCFB; }
 
         .cat-title {
-            font-size: 10pt; font-weight: bold; color: #1c2434; background: #e2e8f0;
-            padding: 5px 8px; margin-top: 12px; border-left: 3px solid #1c2434;
+            font-size: 11pt; font-weight: bold; color: #16202B; background: #CBD2CE;
+            padding: 5px 8px; margin-top: 12px; border-left: 3px solid #16202B;
         }
 
         .num { text-align: right; white-space: nowrap; }
-        .supplier { font-size: 8pt; white-space: nowrap; }
-        .price { font-weight: bold; color: #1c2434; }
-        .up { color: #dc2626; font-weight: bold; }
+        .supplier { font-size: 9.5pt; white-space: nowrap; }
+        .price { font-weight: bold; color: #16202B; }
+        .up { color: #A8342A; font-weight: bold; }
         .down { color: #16a34a; }
-        .muted { color: #94a3b8; }
-        .missing { color: #b45309; font-style: italic; }
+        .muted { color: #5B6B73; }
+        .missing { color: #7E5B1E; font-style: italic; }
 
         /* Une catégorie ne doit pas être coupée juste après son titre. */
         .cat-block { page-break-inside: auto; }
         .cat-title { page-break-after: avoid; }
         table.data thead { display: table-header-group; }
 
-        .footer { margin-top: 18px; padding-top: 8px; border-top: 1px solid #e2e8f0; font-size: 7.5pt; color: #94a3b8; }
+        .footer { margin-top: 18px; padding-top: 8px; border-top: 1px solid #CBD2CE; font-size: 9pt; color: #5B6B73; }
     </style>
 </head>
 <body>
@@ -90,7 +106,7 @@
 
 {% for category, items in byCategory %}
     <div class="cat-block">
-        <div class="cat-title">{{ category }} <span style="font-weight:normal;color:#64748b;">— {{ items|length }} ingrédient{{ items|length > 1 ? 's' : '' }}</span></div>
+        <div class="cat-title">{{ category }} <span style="font-weight:normal;color:#33434E;">— {{ items|length }} ingrédient{{ items|length > 1 ? 's' : '' }}</span></div>
         <table class="data">
             <thead>
             <tr>
