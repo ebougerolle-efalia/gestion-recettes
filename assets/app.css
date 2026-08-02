@@ -20,6 +20,26 @@
  * aucun rendu.
  */
 @layer base {
+    /* Échelle générale de l'interface.
+     *
+     * Toutes les tailles du thème — polices, marges, espacements, rayons — sont
+     * exprimées en rem. Les rapporter à une racine de 90 % réduit l'ensemble
+     * dans les mêmes proportions, exactement comme le zoom navigateur à 90 %
+     * auquel il fallait recourir à la main. Un seul réglage, aucune retouche de
+     * gabarit, aucune mise en page déplacée.
+     *
+     * Les valeurs écrites en pixels (bordures, quelques icônes) ne suivent pas :
+     * c'est voulu, un filet de 1 px doit rester un filet de 1 px.
+     *
+     * Conséquence à connaître : le plancher typographique de 13 px devient
+     * 11,7 px à l'écran. Le seuil de 13 px protégeait la lisibilité du texte
+     * secondaire ; il reste vrai en unités de thème, mais l'échelle finale
+     * relève désormais d'un choix assumé, vérifié sur l'écran de travail réel.
+     */
+    html {
+        font-size: 90%;
+    }
+
     body {
         font-family: 'Inter', sans-serif;
     }
