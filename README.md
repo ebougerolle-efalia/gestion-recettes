@@ -136,22 +136,39 @@ restaurer un client complet.
 
 ## Ressources externes
 
-Police, icônes et bibliothèque de graphiques sont **hébergées par l'application**
-(`public/assets/vendor/`, voir son `LISEZMOI.md`). Elles étaient auparavant
-appelées chez Google et Cloudflare : l'adresse IP de chaque utilisateur partait
-vers deux entreprises américaines à chaque page, et un script tiers s'exécutait
-avec accès complet au DOM d'une session affichant marges et prix fournisseurs.
+**L'application ne contacte aucun serveur tiers.** Police, icônes, graphiques et
+feuille de style sont servis par l'application elle-même. Elles étaient
+auparavant appelées chez Google et Cloudflare : l'adresse IP de chaque
+utilisateur partait vers deux entreprises américaines à chaque page, et un
+script tiers s'exécutait avec accès complet au DOM d'une session affichant
+marges et prix fournisseurs.
 
 Un test échoue si une adresse externe réapparaît dans une page rendue —
-`tests/Functional/RessourcesExternesTest.php`. C'est le seul garde-fou : recoller
-un lien de CDN tient en une ligne, marche immédiatement, et ne se voit pas.
+`tests/Functional/RessourcesExternesTest.php`, dont la liste de tolérance est
+vide. C'est le seul garde-fou : recoller un lien de CDN tient en une ligne,
+marche immédiatement, et ne se voit pas.
 
-**Reste au CDN : Tailwind, et lui seul.** Les templates emploient une quarantaine
-de valeurs arbitraires (`text-[11px]` 85 fois, `text-[#1c2434]` 75 fois) que son
-moteur fabrique à la volée en lisant le DOM ; aucun fichier Tailwind prégénéré ne
-les contient. S'en passer impose une étape de compilation, donc Node en
-développement et le CSS produit versionné. Le jour où c'est fait, vider
-`RessourcesExternesTest::TOLERES`.
+### Compiler la feuille de style
+
+Tailwind est compilé localement, plus chargé depuis un CDN.
+
+```bash
+npm install          # une fois
+npm run build:css    # après toute modification de classe dans un template
+npm run watch:css    # ou en continu pendant le développement
+```
+
+Le CSS produit (`public/assets/app.css`) est **versionné** : le déploiement n'a
+besoin ni de Node ni de npm. La contrepartie est qu'une classe ajoutée dans un
+template n'existe pas tant qu'on n'a pas recompilé — l'oubli ne casse rien de
+visible côté serveur, la page répond 200 et les tests passent, seul un humain
+devant son navigateur voit l'élément sans mise en forme.
+`tests/Unit/FeuilleDeStyleCompileeTest.php` est le garde-fou : il échoue en
+nommant les classes manquantes et la commande à lancer.
+
+Tailwind **3** et non 4, délibérément : la v4 fait passer la couleur de bordure
+par défaut de `gray-200` à `currentColor`, ce qui modifierait silencieusement
+des dizaines de bordures. La migration se fera une fois la refonte stabilisée.
 
 ---
 

@@ -5,22 +5,20 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% block title %}Gestion des recettes{% endblock %}</title>
     <link rel="icon" href="{{ asset('favicon.svg') }}" type="image/svg+xml">
-    {# Tailwind reste au CDN pour l'instant : les templates emploient des valeurs
-       arbitraires (text-[11px], text-[#1c2434]…) que seul le moteur du CDN sait
-       fabriquer à la volée. S'en passer impose une étape de compilation, donc
-       une décision d'outillage à part. Voir README, « Ressources externes ». #}
-    <script src="https://cdn.tailwindcss.com?plugins=forms"></script>
+    {# Feuille compilée par Tailwind CLI, plus aucun CDN — l'application ne fait
+       désormais AUCUNE requête vers un serveur tiers.
+
+       Elle contient aussi les règles qui vivaient ici dans une balise <style>
+       (police, chevrons) : voir assets/app.css. Après toute modification de
+       classe dans un template, recompiler avec « npm run build:css ». Un test
+       échoue si on l'oublie. #}
+    <link rel="stylesheet" href="{{ asset('assets/app.css') }}">
 
     {# Police et icônes hébergées ici : sans cela, l'adresse IP de chaque
        utilisateur partait vers Google et Cloudflare à chaque page. #}
     <link rel="stylesheet" href="{{ asset('assets/vendor/inter/inter.css') }}">
     <link rel="stylesheet" href="{{ asset('assets/vendor/fontawesome/css/fontawesome.min.css') }}">
     <link rel="stylesheet" href="{{ asset('assets/vendor/fontawesome/css/solid.min.css') }}">
-    <style>
-        body { font-family: 'Inter', sans-serif; }
-        .chevron-icon { transition: transform 0.2s; }
-        .chevron-icon.open { transform: rotate(90deg); }
-    </style>
 </head>
 <body class="h-full overflow-hidden bg-[#f1f5f9]">
 <div class="flex h-full">

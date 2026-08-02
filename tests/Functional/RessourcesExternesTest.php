@@ -20,14 +20,14 @@ use Symfony\Bundle\FrameworkBundle\Test\WebTestCase;
 class RessourcesExternesTest extends WebTestCase
 {
     /**
-     * Hôtes tolérés, à vider.
+     * Hôtes tolérés — vide, et cela doit le rester.
      *
-     * Tailwind reste au CDN parce que les templates emploient des valeurs
-     * arbitraires — text-[11px], text-[#1c2434] — que seul son moteur fabrique
-     * à la volée. S'en passer impose une étape de compilation. Le jour où elle
-     * existe, cette liste doit redevenir vide et ce commentaire disparaître.
+     * Tailwind était le dernier appel externe. Il est désormais compilé
+     * localement (voir tailwind.config.js), donc plus aucune page ne contacte
+     * de serveur tiers. Ajouter une entrée ici revient à rouvrir la brèche
+     * fermée en connaissance de cause : ne le faire qu'avec une raison écrite.
      */
-    private const TOLERES = ['cdn.tailwindcss.com'];
+    private const TOLERES = [];
 
     public static function pagesFournies(): array
     {

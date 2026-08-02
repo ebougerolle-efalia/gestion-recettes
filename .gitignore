@@ -19,6 +19,11 @@
 # e-mail).
 /setup.conf
 
+# === Outillage front ===
+# Le CSS produit (public/assets/app.css) est VERSIONNÉ, lui : le déploiement
+# n'a besoin ni de Node ni de npm. Seules les dépendances sont ignorées.
+/node_modules/
+
 # === Tests ===
 /.phpunit.cache/
 

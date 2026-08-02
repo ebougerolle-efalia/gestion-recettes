@@ -1,0 +1,36 @@
+/**
+ * Feuille source de l'application — compilée vers public/assets/app.css.
+ *
+ *   npm run build:css     compilation unique, minifiée
+ *   npm run watch:css     recompilation à chaque modification de template
+ *
+ * Le résultat est VERSIONNÉ : le déploiement n'a besoin ni de Node ni de npm,
+ * il se contente du CSS produit. La contrepartie est qu'il faut recompiler après
+ * avoir touché un template — un test échoue si on l'oublie.
+ */
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ── Règles reprises telles quelles de base.html.twig ────────────────────────
+ *
+ * Elles y vivaient dans une balise <style> en dur. Les déplacer ici ne change
+ * rien à leur effet : même sélecteurs, mêmes valeurs. La phase 1 ne modifie
+ * aucun rendu.
+ */
+@layer base {
+    body {
+        font-family: 'Inter', sans-serif;
+    }
+}
+
+@layer components {
+    .chevron-icon {
+        transition: transform 0.2s;
+    }
+
+    .chevron-icon.open {
+        transform: rotate(90deg);
+    }
+}

@@ -1,0 +1,13 @@
+{
+  "name": "gestion-recettes",
+  "private": true,
+  "description": "Compilation de la feuille de style. Le CSS produit est versionné : le déploiement n'a besoin ni de Node ni de npm.",
+  "scripts": {
+    "build:css": "tailwindcss -i assets/app.css -o public/assets/app.css --minify",
+    "watch:css": "tailwindcss -i assets/app.css -o public/assets/app.css --watch"
+  },
+  "devDependencies": {
+    "@tailwindcss/forms": "^0.5.11",
+    "tailwindcss": "^3.4.19"
+  }
+}
