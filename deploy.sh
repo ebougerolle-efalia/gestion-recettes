@@ -17,25 +17,22 @@ err()  { echo -e "${RED}[ERROR]${NC} $1"; exit 1; }
 # Toute commande qui echoue stoppe net le deploiement (avec le n de ligne).
 trap 'err "Echec du deploiement a la ligne $LINENO - site NON mis a jour."' ERR
 
-# Pas de deploiement automatique pour l'instant (pas de webhook, trop tot
-# dans le projet pour un push = mise en prod sans revue) : deploy.sh est
-# toujours lance a la main, en root, via SSH. Mais il ecrit dans une
-# arborescence lue en permanence par nginx/PHP-FPM sous www-data — sans
-# normalisation, un premier clone reste root-owned au-dela de var/, .git/
-# compris, et le jour ou un outil quelconque (cron, futur webhook) tente d'y
-# ecrire sous www-data, il echoue sans rapport avec l'authentification. Un
-# seul point de passage pour php, composer et git garantit un proprietaire
-# unique, quel que soit l'utilisateur qui a lance deploy.sh.
-run_as() {
-    if [ "$(id -un)" = "$WEB_USER" ]; then
-        "$@"
-    elif command -v sudo >/dev/null 2>&1 && id "$WEB_USER" &>/dev/null; then
-        sudo -u "$WEB_USER" "$@"
-    else
-        warn "Utilisateur '$WEB_USER' indisponible : execution en $(id -un)."
-        "$@"
-    fi
-}
+# Repartition des droits : root possede le CODE, www-data possede les DONNEES.
+#
+# Tout ce script s'execute donc sous l'utilisateur qui l'a lance (root, en
+# pratique) : git, composer et la console. Le code, vendor/ et .git/ restent
+# root-owned, lisibles par www-data (755) mais NON modifiables par lui — une
+# application compromise ne peut pas reecrire les fichiers PHP qu'elle
+# execute. Seuls var/ et public/uploads/, ou l'application ecrit reellement,
+# sont rendus a www-data en fin de course.
+#
+# Consequence directe : une seule cle de deploiement SSH suffit, celle de
+# root. www-data n'a aucune raison de parler a GitHub.
+#
+# (Une version anterieure forcait tout sous www-data via un helper run_as,
+# pour que la cle fonctionne aussi depuis le webhook, qui tournait sous
+# PHP-FPM. Le webhook supprime, cette contrainte disparait et le partage
+# ci-dessus, plus sur, redevient possible.)
 
 command -v "$PHP_BIN" >/dev/null 2>&1      || err "PHP non trouve."
 command -v "$COMPOSER_BIN" >/dev/null 2>&1 || err "Composer non trouve."
@@ -77,33 +74,34 @@ fi
 # .env.local un peu plus bas — la panne s'est deja produite une fois pour
 # .env.local, elle guette pareillement ici tant que l'instance n'est pas migree.
 if [ -d ".git" ] && [ -n "${REPO_URL:-}" ]; then
-    CURRENT_ORIGIN="$(run_as git remote get-url origin 2>/dev/null || echo '')"
+    CURRENT_ORIGIN="$(git remote get-url origin 2>/dev/null || echo '')"
     if [ "$CURRENT_ORIGIN" != "$REPO_URL" ] && [[ "$CURRENT_ORIGIN" == https://* || "$CURRENT_ORIGIN" == http://* ]]; then
         warn "Origin git en HTTPS anonyme ($CURRENT_ORIGIN) - bascule vers $REPO_URL."
-        run_as git remote set-url origin "$REPO_URL"
+        git remote set-url origin "$REPO_URL"
     fi
 fi
 
 # --- Recuperation du code (synchro complete avec le depot) -----------------
 if [ -d ".git" ]; then
     log "Git pull (branche: $GIT_BRANCH)..."
-    run_as git fetch origin \
-        || err "git fetch a echoue. Depot prive : verifiez la cle de deploiement SSH de \$WEB_USER (README, section Depots prives)."
-    run_as git reset --hard "origin/$GIT_BRANCH"
+    git fetch origin \
+        || err "git fetch a echoue. Depot prive : verifiez la cle de deploiement SSH de root (voir gestion-recettes-ops, section Cles de deploiement)."
+    git reset --hard "origin/$GIT_BRANCH"
     log "Code a jour ($(git log -1 --format='%h - %s'))"
 fi
 
 # --- Dependances -----------------------------------------------------------
 log "Composer install..."
-run_as "$COMPOSER_BIN" config allow-plugins.symfony/runtime true --no-interaction >/dev/null 2>&1 || true
-run_as "$COMPOSER_BIN" install --no-dev --optimize-autoloader --no-interaction
+"$COMPOSER_BIN" config allow-plugins.symfony/runtime true --no-interaction >/dev/null 2>&1 || true
+"$COMPOSER_BIN" install --no-dev --optimize-autoloader --no-interaction
 
 # --- .env.local lisible par l'utilisateur web ------------------------------
-# La console tourne sous $WEB_USER : un .env.local en root:root la fait echouer
-# sur « Unable to read the .env.local environment file ». Le controle vit ici et
-# pas seulement dans setup-server.sh, parce que deploy.sh est livre par le clone
-# a chaque nouvelle instance : il est donc toujours a jour, meme quand la copie
-# locale du script de provisionnement est perimee — ce qui est deja arrive.
+# L'application le lit a chaque requete sous $WEB_USER : un .env.local en
+# root:root la fait echouer sur « Unable to read the .env.local environment
+# file ». Le controle vit ici et pas seulement dans setup-server.sh, parce que
+# deploy.sh est livre par le clone a chaque nouvelle instance : il est donc
+# toujours a jour, meme quand la copie locale du script de provisionnement est
+# perimee — ce qui est deja arrive.
 if [ -f ".env.local" ] && [ "$(id -u)" = "0" ] && id "$WEB_USER" &>/dev/null; then
     if ! sudo -u "$WEB_USER" test -r .env.local 2>/dev/null; then
         warn ".env.local illisible par $WEB_USER - droits corriges."
@@ -112,10 +110,11 @@ if [ -f ".env.local" ] && [ "$(id -u)" = "0" ] && id "$WEB_USER" &>/dev/null; th
     fi
 fi
 
-# --- Dossiers inscriptibles AVANT tout appel a la console ------------------
-# La console est executee sous $WEB_USER : sans ces droits, la premiere
-# commande echoue sur « Unable to create the cache directory ». Le bloc
-# Permissions en fin de script arrive trop tard pour ce premier appel.
+# --- Dossiers de donnees ----------------------------------------------------
+# Crees avant les commandes console, qui y ecrivent leur cache. Le chown vers
+# $WEB_USER est refait en fin de script : la console tourne ici sous root et
+# laisse donc des fichiers root-owned que l'application, elle, doit pouvoir
+# reecrire a chaque requete.
 log "Preparation des dossiers var/..."
 mkdir -p var/cache var/log var/data var/backups var/invoices public/uploads/boutique
 if id "$WEB_USER" &>/dev/null; then
@@ -127,7 +126,7 @@ fi
 # doctrine_migration_versions. schema:update est proscrit ici, il peut
 # supprimer une colonne sans prevenir sur une base contenant des donnees.
 log "Migrations..."
-run_as "$PHP_BIN" bin/console doctrine:migrations:migrate --no-interaction --allow-no-migration
+"$PHP_BIN" bin/console doctrine:migrations:migrate --no-interaction --allow-no-migration
 
 # Le seed depend de l'etat de la BASE, pas de la presence de vendor/ : un
 # premier deploiement interrompu apres composer install faisait basculer tous
@@ -147,7 +146,7 @@ fi
 
 if [ "$NEEDS_SEED" = "1" ]; then
     log "Seed initial (aucun utilisateur en base)..."
-    run_as "$PHP_BIN" bin/console app:seed
+    "$PHP_BIN" bin/console app:seed
 fi
 
 # --- Cache : reconstruction propre, echec bloquant -------------------------
@@ -156,15 +155,19 @@ fi
 # deploiement s'arrete (au lieu de livrer un site casse en silence).
 log "Reconstruction du cache..."
 rm -rf var/cache/* 2>/dev/null || true
-run_as "$PHP_BIN" bin/console cache:warmup --env=prod --no-interaction
+"$PHP_BIN" bin/console cache:warmup --env=prod --no-interaction
 
-# --- Permissions (filet de securite) ---------------------------------------
+# --- Permissions : rendre les DONNEES a www-data ----------------------------
+# Le code reste root-owned, lisible mais non modifiable par l'application.
+# Seuls ces deux emplacements lui sont rendus, parce qu'elle y ecrit vraiment :
+#   var/            cache, journaux, factures recues, sauvegardes
+#   public/uploads/ logo de l'etablissement, televerse depuis l'interface
 log "Permissions..."
-mkdir -p var/cache var/log var/data var/invoices
+mkdir -p var/cache var/log var/data var/invoices public/uploads/boutique
 if id "$WEB_USER" &>/dev/null; then
-    chown -R "$WEB_USER:$WEB_USER" var/ 2>/dev/null || warn "chown impossible."
+    chown -R "$WEB_USER:$WEB_USER" var/ public/uploads/ 2>/dev/null || warn "chown impossible."
 fi
-chmod -R u+rwX,g+rwX var/
+chmod -R u+rwX,g+rwX var/ public/uploads/
 
 echo ""
 log "============================================"
