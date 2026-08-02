@@ -5,14 +5,14 @@
 
 {% block body %}
 
-    <div class="rounded-2xl border border-orange-200 bg-orange-50/50 px-6 py-4 mb-6">
-        <p class="text-sm text-orange-900">
+    <div class="rounded-2xl border border-laiton/40 bg-laiton-voile/50 px-6 py-4 mb-6">
+        <p class="text-sm text-laiton-patine">
             <i class="fas fa-triangle-exclamation mr-1"></i>
             Cette pièce ne contient pas de données Factur-X : rien n'a pu en être lu automatiquement.
             Le fichier est conservé — saisis les lignes en le gardant sous les yeux.
         </p>
         {% if purchaseInvoice.mailSubject %}
-            <p class="text-[11px] text-orange-700/80 mt-1">Objet du message : {{ purchaseInvoice.mailSubject }}</p>
+            <p class="text-[11px] text-laiton-patine/80 mt-1">Objet du message : {{ purchaseInvoice.mailSubject }}</p>
         {% endif %}
     </div>
 
@@ -21,24 +21,24 @@
 
             {# ── Pièce d'origine ── #}
             <div class="lg:col-span-1">
-                <div class="rounded-2xl border border-gray-200 bg-white sticky top-6">
-                    <div class="px-6 py-4 border-b border-gray-100">
-                        <h3 class="font-semibold text-[15px] text-[#1c2434]">Pièce reçue</h3>
+                <div class="rounded-2xl border border-trait bg-white sticky top-6">
+                    <div class="px-6 py-4 border-b border-trait-fin">
+                        <h3 class="font-semibold text-[15px] text-ardoise">Pièce reçue</h3>
                     </div>
                     <div class="p-6 space-y-4">
                         {% if purchaseInvoice.hasAttachment %}
-                            <p class="text-xs text-gray-500 break-all">{{ purchaseInvoice.attachmentName }}</p>
+                            <p class="text-xs text-ardoise-doux break-all">{{ purchaseInvoice.attachmentName }}</p>
                             <a href="{{ path('app_invoice_attachment', {id: purchaseInvoice.id}) }}" target="_blank"
-                               class="inline-flex items-center gap-2 rounded-xl bg-gray-100 hover:bg-gray-200 px-4 py-2 text-sm font-medium text-gray-700">
+                               class="inline-flex items-center gap-2 rounded-xl bg-voile hover:bg-trait px-4 py-2 text-sm font-medium text-ardoise">
                                 <i class="fas fa-up-right-from-square text-[11px]"></i> Ouvrir dans un onglet
                             </a>
                             {% if purchaseInvoice.attachmentMime == 'application/pdf' %}
                                 <iframe src="{{ path('app_invoice_attachment', {id: purchaseInvoice.id}) }}"
-                                        class="w-full h-[520px] rounded-xl border border-gray-200"
+                                        class="w-full h-[520px] rounded-xl border border-trait"
                                         title="Facture reçue"></iframe>
                             {% endif %}
                         {% else %}
-                            <p class="text-sm text-gray-400">Aucun fichier conservé pour cette facture.</p>
+                            <p class="text-sm text-ardoise-faible">Aucun fichier conservé pour cette facture.</p>
                         {% endif %}
                     </div>
                 </div>
@@ -47,15 +47,15 @@
             {# ── Saisie ── #}
             <div class="lg:col-span-2 space-y-6">
 
-                <div class="rounded-2xl border border-gray-200 bg-white">
-                    <div class="px-6 py-4 border-b border-gray-100">
-                        <h3 class="font-semibold text-[15px] text-[#1c2434]">En-tête</h3>
+                <div class="rounded-2xl border border-trait bg-white">
+                    <div class="px-6 py-4 border-b border-trait-fin">
+                        <h3 class="font-semibold text-[15px] text-ardoise">En-tête</h3>
                     </div>
                     <div class="p-6 grid grid-cols-1 sm:grid-cols-3 gap-4">
                         <div class="sm:col-span-3">
-                            <label class="block text-[11px] font-semibold uppercase tracking-wider text-gray-400 mb-1">Fournisseur</label>
+                            <label class="block text-[11px] font-semibold uppercase tracking-wider text-ardoise-faible mb-1">Fournisseur</label>
                             <select name="supplier_id" required
-                                    class="w-full rounded-xl border border-gray-200 px-3 py-2 text-sm">
+                                    class="w-full rounded-xl border border-trait px-3 py-2 text-sm">
                                 <option value="">— choisir —</option>
                                 {% for supplier in suppliers %}
                                     <option value="{{ supplier.id }}"
@@ -65,39 +65,39 @@
                                 {% endfor %}
                             </select>
                             {% if purchaseInvoice.senderEmail and not purchaseInvoice.supplier %}
-                                <p class="text-[11px] text-gray-400 mt-1">
+                                <p class="text-[11px] text-ardoise-faible mt-1">
                                     L'adresse <span class="font-mono">{{ purchaseInvoice.senderEmail }}</span> sera retenue :
                                     les prochaines factures venues de là se rattacheront seules.
                                 </p>
                             {% endif %}
                         </div>
                         <div>
-                            <label class="block text-[11px] font-semibold uppercase tracking-wider text-gray-400 mb-1">N° de facture</label>
+                            <label class="block text-[11px] font-semibold uppercase tracking-wider text-ardoise-faible mb-1">N° de facture</label>
                             <input type="text" name="invoice_id"
                                    value="{{ purchaseInvoice.invoiceId starts with 'PJ-' ? '' : purchaseInvoice.invoiceId }}"
                                    placeholder="tel qu'il figure sur la pièce"
-                                   class="w-full rounded-xl border border-gray-200 px-3 py-2 text-sm">
+                                   class="w-full rounded-xl border border-trait px-3 py-2 text-sm">
                         </div>
                         <div>
-                            <label class="block text-[11px] font-semibold uppercase tracking-wider text-gray-400 mb-1">Date</label>
+                            <label class="block text-[11px] font-semibold uppercase tracking-wider text-ardoise-faible mb-1">Date</label>
                             <input type="date" name="invoice_date" value="{{ purchaseInvoice.invoiceDate|date('Y-m-d') }}"
-                                   class="w-full rounded-xl border border-gray-200 px-3 py-2 text-sm">
+                                   class="w-full rounded-xl border border-trait px-3 py-2 text-sm">
                         </div>
                     </div>
                 </div>
 
-                <div class="rounded-2xl border border-gray-200 bg-white">
-                    <div class="px-6 py-4 border-b border-gray-100 flex items-center justify-between">
-                        <h3 class="font-semibold text-[15px] text-[#1c2434]">Lignes</h3>
+                <div class="rounded-2xl border border-trait bg-white">
+                    <div class="px-6 py-4 border-b border-trait-fin flex items-center justify-between">
+                        <h3 class="font-semibold text-[15px] text-ardoise">Lignes</h3>
                         <button type="button" id="add-line"
-                                class="text-[11px] font-semibold text-blue-600 hover:underline">
+                                class="text-[11px] font-semibold text-laiton-patine hover:underline">
                             <i class="fas fa-plus mr-1"></i>Ajouter une ligne
                         </button>
                     </div>
 
                     <div class="overflow-x-auto">
                         <table class="w-full text-sm">
-                            <thead class="bg-gray-50/70 text-[11px] uppercase tracking-wider text-gray-400">
+                            <thead class="bg-voile/70 text-[11px] uppercase tracking-wider text-ardoise-faible">
                                 <tr>
                                     <th class="px-6 py-3 text-left font-semibold">Libellé sur la facture</th>
                                     <th class="px-3 py-3 text-right font-semibold w-24">Quantité</th>
@@ -106,29 +106,29 @@
                                     <th class="px-6 py-3 text-right font-semibold w-24">TVA %</th>
                                 </tr>
                             </thead>
-                            <tbody id="lines" class="divide-y divide-gray-50">
+                            <tbody id="lines" class="divide-y divide-trait-fin">
                                 {% for i in 0..4 %}
                                     <tr>
                                         <td class="px-6 py-2">
                                             <input type="text" name="lines[{{ i }}][description]"
                                                    placeholder="Épaule de porc sans os"
-                                                   class="w-full rounded-lg border border-gray-200 px-2 py-1.5 text-sm">
+                                                   class="w-full rounded-lg border border-trait px-2 py-1.5 text-sm">
                                         </td>
                                         <td class="px-3 py-2">
                                             <input type="text" name="lines[{{ i }}][qty]" inputmode="decimal"
-                                                   class="w-full rounded-lg border border-gray-200 px-2 py-1.5 text-sm text-right">
+                                                   class="w-full rounded-lg border border-trait px-2 py-1.5 text-sm text-right">
                                         </td>
                                         <td class="px-3 py-2">
                                             <input type="text" name="lines[{{ i }}][unit]" value="kg" list="unites"
-                                                   class="w-full rounded-lg border border-gray-200 px-2 py-1.5 text-sm">
+                                                   class="w-full rounded-lg border border-trait px-2 py-1.5 text-sm">
                                         </td>
                                         <td class="px-3 py-2">
                                             <input type="text" name="lines[{{ i }}][price_ht]" inputmode="decimal"
-                                                   class="w-full rounded-lg border border-gray-200 px-2 py-1.5 text-sm text-right">
+                                                   class="w-full rounded-lg border border-trait px-2 py-1.5 text-sm text-right">
                                         </td>
                                         <td class="px-6 py-2">
                                             <input type="text" name="lines[{{ i }}][vat_rate]" value="5,5" inputmode="decimal"
-                                                   class="w-full rounded-lg border border-gray-200 px-2 py-1.5 text-sm text-right">
+                                                   class="w-full rounded-lg border border-trait px-2 py-1.5 text-sm text-right">
                                         </td>
                                     </tr>
                                 {% endfor %}
@@ -140,13 +140,13 @@
                         <option value="kg"><option value="g"><option value="l"><option value="ml"><option value="pièce">
                     </datalist>
 
-                    <div class="px-6 py-4 border-t border-gray-100 flex items-center justify-between">
-                        <p class="text-[11px] text-gray-400">
+                    <div class="px-6 py-4 border-t border-trait-fin flex items-center justify-between">
+                        <p class="text-[11px] text-ardoise-faible">
                             Le prix est celui de l'unité indiquée. Les lignes vides sont ignorées.
                             Chaque libellé passe ensuite par le rapprochement habituel : ce qui a déjà été tranché une fois est reconnu.
                         </p>
                         <button type="submit"
-                                class="inline-flex items-center gap-2 rounded-xl bg-blue-500 hover:bg-blue-600 px-5 py-2.5 text-sm font-medium text-white flex-shrink-0 ml-4">
+                                class="inline-flex items-center gap-2 rounded-xl bg-ardoise hover:bg-ardoise-clair px-5 py-2.5 text-sm font-medium text-white flex-shrink-0 ml-4">
                             Continuer <i class="fas fa-arrow-right text-[11px]"></i>
                         </button>
                     </div>
@@ -159,7 +159,7 @@
        une facture. Formulaire distinct — il ne doit pas embarquer la saisie. #}
     <form method="post" action="{{ path('app_invoice_reject', {id: purchaseInvoice.id}) }}" class="mt-4">
         <input type="hidden" name="reason" value="Pièce écartée depuis l'écran de saisie.">
-        <button type="submit" class="text-[11px] text-gray-400 hover:text-red-600">
+        <button type="submit" class="text-[11px] text-ardoise-faible hover:text-sang">
             <i class="fas fa-ban mr-1"></i>Écarter cette pièce
         </button>
     </form>

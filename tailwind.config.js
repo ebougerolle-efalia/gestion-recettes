@@ -34,11 +34,29 @@ module.exports = {
              * supposés.
              */
             colors: {
-                /* Fond sombre et couleur de texte principale. 16,0:1 sur craie. */
+                /* ── Textes ─────────────────────────────────────────────────
+                 *
+                 * Nommés par RÔLE et non par numéro, délibérément : il n'existe
+                 * aucun ton de texte qui échoue au seuil AA, donc aucun moyen
+                 * d'en employer un par accident. L'ancienne échelle en offrait
+                 * trois (gray-200/300/400, 233 usages à 2,5:1 ou moins).
+                 *
+                 * Les quatre tons passent 4,5:1 sur craie ET sur inox.
+                 */
                 ardoise: {
-                    DEFAULT: '#16202B',
-                    clair: '#243447',
+                    DEFAULT: '#16202B', /* texte principal — 16,0:1 / 13,7:1 */
+                    fort:    '#33434E', /* titres secondaires — 9,9:1 / 8,5:1 */
+                    doux:    '#475761', /* texte courant secondaire — 7,3:1 / 6,2:1 */
+                    faible:  '#5B6B73', /* mentions, légendes — 5,4:1 / 4,6:1 */
+                    clair:   '#243447', /* survol sur fond sombre */
                 },
+
+                /* ── Structure ──────────────────────────────────────────────
+                 * Jamais de texte : ces tons ne passent aucun seuil, et c'est
+                 * normal — ce sont des traits et des fonds.
+                 */
+                trait:  { DEFAULT: '#CBD2CE', fin: '#DFE4E1' },
+                voile:  '#EFF2F0',
 
                 /* Surface de l'application : gris légèrement VERT, comme l'inox
                    brossé d'un laboratoire — et non le gris bleuté de Tailwind
@@ -53,18 +71,22 @@ module.exports = {
                        fond sombre. 6,3:1 sur ardoise, mais 2,6:1 sur clair —
                        ne jamais l'employer pour du texte sur fond clair. */
                     DEFAULT: '#C9973F',
-                    /* Le laiton quand il doit porter du TEXTE sur fond clair.
-                       6,0:1 sur craie. C'est ce jeton qui règle le défaut
-                       d'accessibilité de la marque sans renoncer à sa couleur —
-                       l'actuel #E3B558 plafonne à 1,91:1 sur blanc. */
+                    /* Le laiton quand il doit porter du TEXTE sur fond clair,
+                       et l'anneau de focus : 6,0:1 sur craie. Un focus doit
+                       atteindre 3:1 (WCAG 1.4.11), que le laiton ornemental
+                       n'atteint pas. */
                     patine: '#7E5B1E',
+                    /* Fond d'alerte douce, remplace bg-amber-50. */
+                    voile:  '#F6EEDF',
                 },
 
-                /* Hausse de prix, marge sous l'objectif. 6,4:1 sur craie. */
-                sang: '#A8342A',
+                /* Hausse de prix, marge sous l'objectif. 6,4:1 sur craie.
+                   « clair » est la même alerte posée sur fond SOMBRE : le sang
+                   ordinaire n'y atteint que 2,5:1, illisible. 5,9:1 sur ardoise. */
+                sang:   { DEFAULT: '#A8342A', clair: '#E08074', voile: '#F7EAE8' },
 
                 /* Marge saine. 5,9:1 sur craie. */
-                pousse: '#3F6B52',
+                pousse: { DEFAULT: '#3F6B52', voile: '#E9F0EC' },
             },
 
             fontFamily: {

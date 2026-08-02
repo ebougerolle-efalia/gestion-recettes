@@ -1,55 +1,55 @@
 {% extends 'base.html.twig' %}
 {% block title %}Ingrédients{% endblock %}
-{% block page_title %}Ingrédients <span class="ml-2 text-sm font-normal text-gray-400">({{ ingredients|length }})</span>{% endblock %}
+{% block page_title %}Ingrédients <span class="ml-2 text-sm font-normal text-ardoise-faible">({{ ingredients|length }})</span>{% endblock %}
 {% block page_actions %}
     {% if is_granted('ROLE_EDITOR') %}
         <div class="flex items-center gap-2">
             <a href="{{ path('app_ingredient_mercuriale_pdf') }}" target="_blank"
-               class="inline-flex items-center gap-2 rounded-lg border border-gray-200 px-4 py-2.5 text-sm font-medium text-gray-600 hover:bg-gray-50 transition-colors">
+               class="inline-flex items-center gap-2 rounded-lg border border-trait px-4 py-2.5 text-sm font-medium text-ardoise-doux hover:bg-voile transition-colors">
                 <i class="fas fa-file-pdf text-[11px]"></i> Mercuriale PDF
             </a>
-            <button onclick="document.getElementById('addModal').classList.remove('hidden');document.getElementById('addModal').classList.add('flex')" class="inline-flex items-center gap-2 rounded-lg bg-blue-500 hover:bg-blue-600 px-4 py-2.5 text-sm font-medium text-white transition-colors"><i class="fas fa-plus text-[11px]"></i> Ajouter</button>
+            <button onclick="document.getElementById('addModal').classList.remove('hidden');document.getElementById('addModal').classList.add('flex')" class="inline-flex items-center gap-2 rounded-lg bg-ardoise hover:bg-ardoise-clair px-4 py-2.5 text-sm font-medium text-white transition-colors"><i class="fas fa-plus text-[11px]"></i> Ajouter</button>
         </div>
     {% endif %}
 {% endblock %}
 
 {% block body %}
-    <div class="rounded-2xl border border-gray-200 bg-white">
-        <div class="px-5 py-4 border-b border-gray-100 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-            <div class="relative"><input type="text" id="searchInput" placeholder="Rechercher…" class="w-60 pl-9 pr-3 py-2 rounded-lg border border-gray-200 text-sm outline-none focus:border-blue-400 bg-gray-50 placeholder-gray-400"><i class="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-xs"></i></div>
+    <div class="rounded-2xl border border-trait bg-white">
+        <div class="px-5 py-4 border-b border-trait-fin flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <div class="relative"><input type="text" id="searchInput" placeholder="Rechercher…" class="w-60 pl-9 pr-3 py-2 rounded-lg border border-trait text-sm outline-none focus:border-laiton-patine bg-voile placeholder-ardoise-faible"><i class="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-ardoise-faible text-xs"></i></div>
             <div class="flex items-center gap-3">
-                <label class="text-sm text-gray-500">Afficher</label>
-                <select id="perPage" class="rounded-lg border border-gray-200 px-3 py-1.5 text-sm bg-white outline-none focus:border-blue-400"><option value="10" selected>10</option><option value="25">25</option><option value="50">50</option></select>
+                <label class="text-sm text-ardoise-doux">Afficher</label>
+                <select id="perPage" class="rounded-lg border border-trait px-3 py-1.5 text-sm bg-white outline-none focus:border-laiton-patine"><option value="10" selected>10</option><option value="25">25</option><option value="50">50</option></select>
             </div>
         </div>
         <div class="overflow-x-auto">
             <table class="w-full text-sm">
-                <thead><tr class="border-b border-gray-100">
-                    <th class="py-3 px-5 text-left text-xs font-medium uppercase tracking-wider text-gray-400">Nom</th>
-                    <th class="py-3 px-3 text-left text-xs font-medium uppercase tracking-wider text-gray-400">Catégorie</th>
-                    <th class="py-3 px-3 text-center text-xs font-medium uppercase tracking-wider text-gray-400">Unité</th>
-                    <th class="py-3 px-3 text-right text-xs font-medium uppercase tracking-wider text-gray-400">Dernier prix HT</th>
-                    <th class="py-3 px-3 text-left text-xs font-medium uppercase tracking-wider text-gray-400">Fournisseur</th>
-                    <th class="py-3 px-5 text-center text-xs font-medium uppercase tracking-wider text-gray-400" style="min-width:80px">Actions</th>
+                <thead><tr class="border-b border-trait-fin">
+                    <th class="py-3 px-5 text-left text-xs font-medium uppercase tracking-wider text-ardoise-faible">Nom</th>
+                    <th class="py-3 px-3 text-left text-xs font-medium uppercase tracking-wider text-ardoise-faible">Catégorie</th>
+                    <th class="py-3 px-3 text-center text-xs font-medium uppercase tracking-wider text-ardoise-faible">Unité</th>
+                    <th class="py-3 px-3 text-right text-xs font-medium uppercase tracking-wider text-ardoise-faible">Dernier prix HT</th>
+                    <th class="py-3 px-3 text-left text-xs font-medium uppercase tracking-wider text-ardoise-faible">Fournisseur</th>
+                    <th class="py-3 px-5 text-center text-xs font-medium uppercase tracking-wider text-ardoise-faible" style="min-width:80px">Actions</th>
                 </tr></thead>
-                <tbody class="divide-y divide-gray-50">
+                <tbody class="divide-y divide-trait-fin">
                 {% for i in ingredients %}
-                    <tr class="dt-row hover:bg-gray-50/50" data-search="{{ i.name|lower }} {{ i.category ? i.category.name|lower : '' }} {{ i.defaultSupplier|lower|default('') }}">
-                        <td class="py-3 px-5"><a href="{{ path('app_ingredient_show', {id: i.id}) }}" class="font-medium text-blue-600 hover:text-blue-800">{{ i.name }}</a></td>
-                        <td class="py-3 px-3"><span class="inline-flex items-center rounded-full bg-gray-100 px-2.5 py-0.5 text-[11px] font-medium text-gray-600">{{ i.category ? i.category.name : '—' }}</span></td>
-                        <td class="py-3 px-3 text-center text-gray-500">{{ i.baseUnit }}</td>
-                        <td class="py-3 px-3 text-right font-semibold text-gray-700">{{ i.latestPriceHt is not null ? i.latestPriceHt|number_format(4, ',', ' ') ~ ' €' : '—' }}</td>
-                        <td class="py-3 px-3 text-gray-500">{{ i.latestPrice ? i.latestPrice.supplier|default('—') : '—' }}</td>
+                    <tr class="dt-row hover:bg-voile/50" data-search="{{ i.name|lower }} {{ i.category ? i.category.name|lower : '' }} {{ i.defaultSupplier|lower|default('') }}">
+                        <td class="py-3 px-5"><a href="{{ path('app_ingredient_show', {id: i.id}) }}" class="font-medium text-laiton-patine hover:text-ardoise">{{ i.name }}</a></td>
+                        <td class="py-3 px-3"><span class="inline-flex items-center rounded-full bg-voile px-2.5 py-0.5 text-[11px] font-medium text-ardoise-doux">{{ i.category ? i.category.name : '—' }}</span></td>
+                        <td class="py-3 px-3 text-center text-ardoise-doux">{{ i.baseUnit }}</td>
+                        <td class="py-3 px-3 text-right font-semibold text-ardoise">{{ i.latestPriceHt is not null ? i.latestPriceHt|number_format(4, ',', ' ') ~ ' €' : '—' }}</td>
+                        <td class="py-3 px-3 text-ardoise-doux">{{ i.latestPrice ? i.latestPrice.supplier|default('—') : '—' }}</td>
                         <td class="py-3 px-5 text-center">
-                            <a href="{{ path('app_ingredient_show', {id: i.id}) }}" class="w-8 h-8 inline-flex items-center justify-center rounded-lg text-gray-400 hover:text-blue-500 hover:bg-blue-50" title="Détail"><i class="fas fa-eye text-xs"></i></a>
+                            <a href="{{ path('app_ingredient_show', {id: i.id}) }}" class="w-8 h-8 inline-flex items-center justify-center rounded-lg text-ardoise-faible hover:text-laiton-patine hover:bg-voile" title="Détail"><i class="fas fa-eye text-xs"></i></a>
                         </td>
                     </tr>
-                {% else %}<tr><td colspan="6" class="py-16 text-center text-gray-400 text-sm">Aucun ingrédient.</td></tr>{% endfor %}
+                {% else %}<tr><td colspan="6" class="py-16 text-center text-ardoise-faible text-sm">Aucun ingrédient.</td></tr>{% endfor %}
                 </tbody>
             </table>
         </div>
-        <div class="px-5 py-4 border-t border-gray-100 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-            <p class="text-sm text-gray-500" id="paginationInfo">—</p>
+        <div class="px-5 py-4 border-t border-trait-fin flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <p class="text-sm text-ardoise-doux" id="paginationInfo">—</p>
             <nav class="flex items-center gap-1" id="paginationNav"></nav>
         </div>
     </div>
@@ -57,25 +57,25 @@
     {# Add Modal #}
     <div id="addModal" class="fixed inset-0 z-[9999] hidden items-center justify-center bg-black/50">
         <form method="post" action="{{ path('app_ingredient_create') }}" class="bg-white rounded-2xl shadow-xl w-full max-w-md mx-4">
-            <div class="px-6 py-4 border-b border-gray-100"><h3 class="font-semibold text-[#1c2434]"><i class="fas fa-plus text-blue-500 mr-2 text-sm"></i>Nouvel ingrédient</h3></div>
+            <div class="px-6 py-4 border-b border-trait-fin"><h3 class="font-semibold text-ardoise"><i class="fas fa-plus text-laiton-patine mr-2 text-sm"></i>Nouvel ingrédient</h3></div>
             <div class="p-6 space-y-4">
-                <div><label class="block text-sm font-medium text-gray-600 mb-1.5">Nom *</label><input type="text" name="name" required class="w-full rounded-lg border border-gray-200 px-4 py-2.5 text-sm outline-none focus:border-blue-400 focus:ring-2 focus:ring-blue-500/20"></div>
+                <div><label class="block text-sm font-medium text-ardoise-doux mb-1.5">Nom *</label><input type="text" name="name" required class="w-full rounded-lg border border-trait px-4 py-2.5 text-sm outline-none focus:border-laiton-patine focus:ring-2 focus:ring-laiton/40/20"></div>
                 <div class="grid grid-cols-2 gap-4">
-                    <div><label class="block text-sm font-medium text-gray-600 mb-1.5">Catégorie</label><select name="category_id" class="w-full rounded-lg border border-gray-200 px-4 py-2.5 text-sm outline-none focus:border-blue-400 bg-white">{% for c in categories %}<option value="{{ c.id }}">{{ c.name }}</option>{% endfor %}</select></div>
-                    <div><label class="block text-sm font-medium text-gray-600 mb-1.5">Unité de base</label><select name="base_unit" class="w-full rounded-lg border border-gray-200 px-4 py-2.5 text-sm outline-none focus:border-blue-400 bg-white"><option value="kg">kg</option><option value="g">g</option><option value="piece">pièce</option><option value="litre">litre</option></select></div>
+                    <div><label class="block text-sm font-medium text-ardoise-doux mb-1.5">Catégorie</label><select name="category_id" class="w-full rounded-lg border border-trait px-4 py-2.5 text-sm outline-none focus:border-laiton-patine bg-white">{% for c in categories %}<option value="{{ c.id }}">{{ c.name }}</option>{% endfor %}</select></div>
+                    <div><label class="block text-sm font-medium text-ardoise-doux mb-1.5">Unité de base</label><select name="base_unit" class="w-full rounded-lg border border-trait px-4 py-2.5 text-sm outline-none focus:border-laiton-patine bg-white"><option value="kg">kg</option><option value="g">g</option><option value="piece">pièce</option><option value="litre">litre</option></select></div>
                 </div>
                 <div class="grid grid-cols-2 gap-4">
-                    <div><label class="block text-sm font-medium text-gray-600 mb-1.5">TVA %</label><input type="number" name="vat_rate" step="0.01" value="5.5" class="w-full rounded-lg border border-gray-200 px-4 py-2.5 text-sm outline-none focus:border-blue-400"></div>
-                    <div><label class="block text-sm font-medium text-gray-600 mb-1.5">Fournisseur</label><input type="text" name="default_supplier" class="w-full rounded-lg border border-gray-200 px-4 py-2.5 text-sm outline-none focus:border-blue-400"></div>
+                    <div><label class="block text-sm font-medium text-ardoise-doux mb-1.5">TVA %</label><input type="number" name="vat_rate" step="0.01" value="5.5" class="w-full rounded-lg border border-trait px-4 py-2.5 text-sm outline-none focus:border-laiton-patine"></div>
+                    <div><label class="block text-sm font-medium text-ardoise-doux mb-1.5">Fournisseur</label><input type="text" name="default_supplier" class="w-full rounded-lg border border-trait px-4 py-2.5 text-sm outline-none focus:border-laiton-patine"></div>
                 </div>
-                <hr class="border-gray-100">
-                <p class="text-xs text-gray-400">Prix initial (optionnel) — le fournisseur par défaut ci-dessus sera utilisé.</p>
+                <hr class="border-trait-fin">
+                <p class="text-xs text-ardoise-faible">Prix initial (optionnel) — le fournisseur par défaut ci-dessus sera utilisé.</p>
                 <div>
-                    <label class="block text-sm font-medium text-gray-600 mb-1.5">Prix HT / unité</label>
-                    <input type="number" name="initial_price_ht" step="0.0001" class="w-full rounded-lg border border-gray-200 px-4 py-2.5 text-sm outline-none focus:border-blue-400" placeholder="0.0000">
+                    <label class="block text-sm font-medium text-ardoise-doux mb-1.5">Prix HT / unité</label>
+                    <input type="number" name="initial_price_ht" step="0.0001" class="w-full rounded-lg border border-trait px-4 py-2.5 text-sm outline-none focus:border-laiton-patine" placeholder="0.0000">
                 </div>
             </div>
-            <div class="px-6 py-4 border-t border-gray-100 flex justify-end gap-3"><button type="button" onclick="this.closest('.fixed').classList.add('hidden');this.closest('.fixed').classList.remove('flex')" class="rounded-lg border border-gray-200 px-4 py-2 text-sm text-gray-600 hover:bg-gray-50">Annuler</button><button type="submit" class="rounded-lg bg-blue-500 hover:bg-blue-600 px-5 py-2 text-sm font-medium text-white">Ajouter</button></div>
+            <div class="px-6 py-4 border-t border-trait-fin flex justify-end gap-3"><button type="button" onclick="this.closest('.fixed').classList.add('hidden');this.closest('.fixed').classList.remove('flex')" class="rounded-lg border border-trait px-4 py-2 text-sm text-ardoise-doux hover:bg-voile">Annuler</button><button type="submit" class="rounded-lg bg-ardoise hover:bg-ardoise-clair px-5 py-2 text-sm font-medium text-white">Ajouter</button></div>
         </form></div>
 {% endblock %}
 
@@ -83,7 +83,7 @@
     <script>
         const allRows=[...document.querySelectorAll('.dt-row')];let filtered=[...allRows],currentPage=1,perPage=parseInt(document.getElementById('perPage').value);
         function applyPagination(){allRows.forEach(r=>r.style.display='none');const s=(currentPage-1)*perPage,e=Math.min(s+perPage,filtered.length);filtered.slice(s,e).forEach(r=>r.style.display='');document.getElementById('paginationInfo').textContent=filtered.length===0?'Aucun résultat':`Affichage de ${s+1} à ${e} sur ${filtered.length}`;renderNav();}
-        function renderNav(){const nav=document.getElementById('paginationNav'),tp=Math.max(1,Math.ceil(filtered.length/perPage));nav.innerHTML='';const bc='w-9 h-9 flex items-center justify-center rounded-lg text-sm transition-colors',ac='bg-blue-500 text-white font-medium',nc='border border-gray-200 text-gray-600 hover:bg-gray-50',dc='border border-gray-100 text-gray-300 cursor-not-allowed';const prev=Object.assign(document.createElement('button'),{type:'button',className:`${bc} ${currentPage===1?dc:nc}`,innerHTML:'<i class="fas fa-chevron-left text-[10px]"></i>',disabled:currentPage===1});prev.onclick=()=>{if(currentPage>1){currentPage--;applyPagination();}};nav.appendChild(prev);for(let i=1;i<=tp;i++){const b=Object.assign(document.createElement('button'),{type:'button',className:`${bc} ${i===currentPage?ac:nc}`,textContent:i});b.onclick=()=>{currentPage=i;applyPagination();};nav.appendChild(b);}const next=Object.assign(document.createElement('button'),{type:'button',className:`${bc} ${currentPage===tp?dc:nc}`,innerHTML:'<i class="fas fa-chevron-right text-[10px]"></i>',disabled:currentPage===tp});next.onclick=()=>{if(currentPage<tp){currentPage++;applyPagination();}};nav.appendChild(next);}
+        function renderNav(){const nav=document.getElementById('paginationNav'),tp=Math.max(1,Math.ceil(filtered.length/perPage));nav.innerHTML='';const bc='w-9 h-9 flex items-center justify-center rounded-lg text-sm transition-colors',ac='bg-ardoise text-white font-medium',nc='border border-trait text-ardoise-doux hover:bg-voile',dc='border border-trait-fin text-ardoise-faible cursor-not-allowed';const prev=Object.assign(document.createElement('button'),{type:'button',className:`${bc} ${currentPage===1?dc:nc}`,innerHTML:'<i class="fas fa-chevron-left text-[10px]"></i>',disabled:currentPage===1});prev.onclick=()=>{if(currentPage>1){currentPage--;applyPagination();}};nav.appendChild(prev);for(let i=1;i<=tp;i++){const b=Object.assign(document.createElement('button'),{type:'button',className:`${bc} ${i===currentPage?ac:nc}`,textContent:i});b.onclick=()=>{currentPage=i;applyPagination();};nav.appendChild(b);}const next=Object.assign(document.createElement('button'),{type:'button',className:`${bc} ${currentPage===tp?dc:nc}`,innerHTML:'<i class="fas fa-chevron-right text-[10px]"></i>',disabled:currentPage===tp});next.onclick=()=>{if(currentPage<tp){currentPage++;applyPagination();}};nav.appendChild(next);}
         document.getElementById('searchInput').addEventListener('input',function(){const q=this.value.toLowerCase().trim();filtered=q===''?[...allRows]:allRows.filter(r=>r.dataset.search.includes(q));currentPage=1;applyPagination();});
         document.getElementById('perPage').addEventListener('change',function(){perPage=parseInt(this.value);currentPage=1;applyPagination();});
         applyPagination();

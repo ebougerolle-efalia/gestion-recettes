@@ -11,36 +11,36 @@
     <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
 
         {# Marque réelle — la seule marge opposable, calculée sur les prix pratiqués #}
-        <div class="rounded-2xl border border-gray-200 bg-white px-5 py-4">
-            <p class="text-[10px] font-semibold uppercase tracking-wider text-gray-400">Marque réelle médiane</p>
-            <p class="text-3xl font-bold mt-1 {{ kpis.median_markup is null ? 'text-gray-300' : (kpis.median_markup >= 40 ? 'text-emerald-600' : (kpis.median_markup >= 25 ? 'text-amber-500' : 'text-red-500')) }}">
+        <div class="rounded-2xl border border-trait bg-white px-5 py-4">
+            <p class="text-[10px] font-semibold uppercase tracking-wider text-ardoise-faible">Marque réelle médiane</p>
+            <p class="text-3xl font-bold mt-1 {{ kpis.median_markup is null ? 'text-ardoise-faible' : (kpis.median_markup >= 40 ? 'text-pousse' : (kpis.median_markup >= 25 ? 'text-laiton-patine' : 'text-sang')) }}">
                 {{ kpis.median_markup is null ? '—' : kpis.median_markup|number_format(1, ',', ' ') ~ ' %' }}
             </p>
-            <p class="text-[10px] text-gray-400 mt-2">sur {{ kpis.priced_count }} recette(s) tarifée(s)</p>
+            <p class="text-[10px] text-ardoise-faible mt-2">sur {{ kpis.priced_count }} recette(s) tarifée(s)</p>
         </div>
 
         {# Sous l'objectif #}
-        <div class="rounded-2xl border {{ underpriced|length ? 'border-red-200 bg-red-50/40' : 'border-gray-200 bg-white' }} px-5 py-4">
-            <p class="text-[10px] font-semibold uppercase tracking-wider {{ underpriced|length ? 'text-red-600' : 'text-gray-400' }}">Sous le prix conseillé</p>
-            <p class="text-3xl font-bold mt-1 {{ underpriced|length ? 'text-red-700' : 'text-[#1c2434]' }}">{{ underpriced|length }}</p>
-            <p class="text-[10px] text-gray-400 mt-2">écart supérieur à 2 %</p>
+        <div class="rounded-2xl border {{ underpriced|length ? 'border-sang/30 bg-sang-voile/40' : 'border-trait bg-white' }} px-5 py-4">
+            <p class="text-[10px] font-semibold uppercase tracking-wider {{ underpriced|length ? 'text-sang' : 'text-ardoise-faible' }}">Sous le prix conseillé</p>
+            <p class="text-3xl font-bold mt-1 {{ underpriced|length ? 'text-sang' : 'text-ardoise' }}">{{ underpriced|length }}</p>
+            <p class="text-[10px] text-ardoise-faible mt-2">écart supérieur à 2 %</p>
         </div>
 
         {# Dérive des coûts #}
-        <div class="rounded-2xl border {{ cost_drift|length ? 'border-amber-200 bg-amber-50/40' : 'border-gray-200 bg-white' }} px-5 py-4">
-            <p class="text-[10px] font-semibold uppercase tracking-wider {{ cost_drift|length ? 'text-amber-600' : 'text-gray-400' }}">Coûts en hausse (30 j)</p>
-            <p class="text-3xl font-bold mt-1 {{ cost_drift|length ? 'text-amber-700' : 'text-[#1c2434]' }}">{{ cost_drift|length }}</p>
-            <p class="text-[10px] text-gray-400 mt-2">recettes touchées par une hausse de prix</p>
+        <div class="rounded-2xl border {{ cost_drift|length ? 'border-laiton/40 bg-laiton-voile/40' : 'border-trait bg-white' }} px-5 py-4">
+            <p class="text-[10px] font-semibold uppercase tracking-wider {{ cost_drift|length ? 'text-laiton-patine' : 'text-ardoise-faible' }}">Coûts en hausse (30 j)</p>
+            <p class="text-3xl font-bold mt-1 {{ cost_drift|length ? 'text-laiton-patine' : 'text-ardoise' }}">{{ cost_drift|length }}</p>
+            <p class="text-[10px] text-ardoise-faible mt-2">recettes touchées par une hausse de prix</p>
         </div>
 
         {# Factures à valider #}
-        <div class="rounded-2xl border {{ kpis.pending_invoices ? 'border-blue-200 bg-blue-50/40' : 'border-gray-200 bg-white' }} px-5 py-4">
-            <p class="text-[10px] font-semibold uppercase tracking-wider {{ kpis.pending_invoices ? 'text-blue-600' : 'text-gray-400' }}">Factures à valider</p>
-            <p class="text-3xl font-bold mt-1 {{ kpis.pending_invoices ? 'text-blue-700' : 'text-[#1c2434]' }}">{{ kpis.pending_invoices }}</p>
+        <div class="rounded-2xl border {{ kpis.pending_invoices ? 'border-laiton/40 bg-voile/40' : 'border-trait bg-white' }} px-5 py-4">
+            <p class="text-[10px] font-semibold uppercase tracking-wider {{ kpis.pending_invoices ? 'text-laiton-patine' : 'text-ardoise-faible' }}">Factures à valider</p>
+            <p class="text-3xl font-bold mt-1 {{ kpis.pending_invoices ? 'text-ardoise-fort' : 'text-ardoise' }}">{{ kpis.pending_invoices }}</p>
             {% if kpis.pending_invoices %}
-                <a href="{{ path('app_invoice_index') }}" class="text-[10px] text-blue-700 hover:underline mt-2 inline-block">traiter maintenant</a>
+                <a href="{{ path('app_invoice_index') }}" class="text-[10px] text-ardoise-fort hover:underline mt-2 inline-block">traiter maintenant</a>
             {% else %}
-                <p class="text-[10px] text-gray-400 mt-2">rien en attente</p>
+                <p class="text-[10px] text-ardoise-faible mt-2">rien en attente</p>
             {% endif %}
         </div>
     </div>
@@ -48,24 +48,24 @@
     {# ── Dérive des coûts : le bloc qu'aucun concurrent ne peut afficher,
           faute de recevoir les factures automatiquement. Muet si rien ne bouge. ── #}
     {% if cost_drift|length %}
-        <div class="rounded-2xl border border-amber-200 bg-white mb-6 overflow-hidden">
-            <div class="px-5 py-3 bg-amber-50/70 border-b border-amber-100 flex items-center gap-2">
-                <i class="fas fa-arrow-trend-up text-amber-600 text-sm"></i>
-                <h3 class="font-semibold text-[14px] text-amber-900">Coûts en hausse sur 30 jours</h3>
-                <span class="text-[11px] text-amber-700/70 ml-auto">comparé aux prix en vigueur il y a 30 jours</span>
+        <div class="rounded-2xl border border-laiton/40 bg-white mb-6 overflow-hidden">
+            <div class="px-5 py-3 bg-laiton-voile/70 border-b border-laiton/40 flex items-center gap-2">
+                <i class="fas fa-arrow-trend-up text-laiton-patine text-sm"></i>
+                <h3 class="font-semibold text-[14px] text-laiton-patine">Coûts en hausse sur 30 jours</h3>
+                <span class="text-[11px] text-laiton-patine/70 ml-auto">comparé aux prix en vigueur il y a 30 jours</span>
             </div>
-            <div class="divide-y divide-gray-50">
+            <div class="divide-y divide-trait-fin">
                 {% for d in cost_drift %}
                     <div class="flex items-center gap-4 px-5 py-3">
-                        <a href="{{ path('app_recipe_show', {id: d.recipe_id}) }}" class="flex-1 min-w-0 font-medium text-sm text-blue-600 hover:text-blue-800">{{ d.recipe_name }}</a>
-                        <div class="text-right text-xs text-gray-500 w-48 flex-shrink-0">
+                        <a href="{{ path('app_recipe_show', {id: d.recipe_id}) }}" class="flex-1 min-w-0 font-medium text-sm text-laiton-patine hover:text-ardoise">{{ d.recipe_name }}</a>
+                        <div class="text-right text-xs text-ardoise-doux w-48 flex-shrink-0">
                             {{ d.cost_then|number_format(2, ',', ' ') }} €
-                            <i class="fas fa-arrow-right text-[9px] text-gray-300 mx-1"></i>
-                            <strong class="text-gray-700">{{ d.cost_now|number_format(2, ',', ' ') }} €</strong>
+                            <i class="fas fa-arrow-right text-[9px] text-ardoise-faible mx-1"></i>
+                            <strong class="text-ardoise">{{ d.cost_now|number_format(2, ',', ' ') }} €</strong>
                             / {{ d.output_unit }}
                         </div>
                         <div class="text-right w-20 flex-shrink-0">
-                            <span class="font-bold text-sm {{ d.delta_percent >= 10 ? 'text-red-600' : 'text-amber-600' }}">+{{ d.delta_percent|number_format(1, ',', ' ') }} %</span>
+                            <span class="font-bold text-sm {{ d.delta_percent >= 10 ? 'text-sang' : 'text-laiton-patine' }}">+{{ d.delta_percent|number_format(1, ',', ' ') }} %</span>
                         </div>
                     </div>
                 {% endfor %}
@@ -75,32 +75,32 @@
 
     {# ── Vendu sous l'objectif ── #}
     {% if underpriced|length %}
-        <div class="rounded-2xl border border-red-200 bg-white mb-6 overflow-hidden">
-            <div class="px-5 py-3 bg-red-50/70 border-b border-red-100 flex items-center gap-2">
-                <i class="fas fa-triangle-exclamation text-red-500 text-sm"></i>
-                <h3 class="font-semibold text-[14px] text-red-800">
+        <div class="rounded-2xl border border-sang/30 bg-white mb-6 overflow-hidden">
+            <div class="px-5 py-3 bg-sang-voile/70 border-b border-sang/30 flex items-center gap-2">
+                <i class="fas fa-triangle-exclamation text-sang text-sm"></i>
+                <h3 class="font-semibold text-[14px] text-sang">
                     {{ underpriced|length }} recette(s) vendue(s) sous le prix conseillé
                 </h3>
             </div>
-            <div class="divide-y divide-gray-50">
+            <div class="divide-y divide-trait-fin">
                 {% for r in underpriced|slice(0, 5) %}
                     <div class="flex items-center gap-4 px-5 py-3">
-                        <a href="{{ path('app_recipe_show', {id: r.id}) }}" class="flex-1 min-w-0 font-medium text-sm text-blue-600 hover:text-blue-800">{{ r.name }}</a>
-                        <div class="text-right text-xs text-gray-500 w-44 flex-shrink-0">
-                            pratiqué <strong class="text-gray-700">{{ r.sellPriceTtc|number_format(2, ',', ' ') }} €</strong>
+                        <a href="{{ path('app_recipe_show', {id: r.id}) }}" class="flex-1 min-w-0 font-medium text-sm text-laiton-patine hover:text-ardoise">{{ r.name }}</a>
+                        <div class="text-right text-xs text-ardoise-doux w-44 flex-shrink-0">
+                            pratiqué <strong class="text-ardoise">{{ r.sellPriceTtc|number_format(2, ',', ' ') }} €</strong>
                             · conseillé {{ r.costCache.advisedSellTtc|number_format(2, ',', ' ') }} €
                         </div>
                         <div class="text-right w-20 flex-shrink-0">
-                            <span class="font-bold text-red-600 text-sm">{{ r.priceGapPercent|number_format(1, ',', ' ') }} %</span>
+                            <span class="font-bold text-sang text-sm">{{ r.priceGapPercent|number_format(1, ',', ' ') }} %</span>
                         </div>
-                        <div class="text-right w-32 flex-shrink-0 text-xs text-gray-500">
-                            marque <strong class="{{ r.realMarkupPercent < 15 ? 'text-red-600' : 'text-gray-700' }}">{{ r.realMarkupPercent|number_format(1, ',', ' ') }} %</strong>
+                        <div class="text-right w-32 flex-shrink-0 text-xs text-ardoise-doux">
+                            marque <strong class="{{ r.realMarkupPercent < 15 ? 'text-sang' : 'text-ardoise' }}">{{ r.realMarkupPercent|number_format(1, ',', ' ') }} %</strong>
                         </div>
                     </div>
                 {% endfor %}
             </div>
             {% if underpriced|length > 5 %}
-                <p class="px-5 py-2.5 text-[11px] text-gray-500 bg-gray-50/70 border-t border-gray-100">
+                <p class="px-5 py-2.5 text-[11px] text-ardoise-doux bg-voile/70 border-t border-trait-fin">
                     et {{ underpriced|length - 5 }} autre(s) — de la plus grosse perte à la plus faible.
                 </p>
             {% endif %}
@@ -113,15 +113,15 @@
     <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
 
         {# Recettes #}
-        <div class="rounded-2xl border border-gray-200 bg-white px-5 py-4">
-            <p class="text-[10px] font-semibold uppercase tracking-wider text-gray-400">Recettes</p>
-            <p class="text-3xl font-bold text-[#1c2434] mt-1">{{ kpis.total_recipes }}</p>
+        <div class="rounded-2xl border border-trait bg-white px-5 py-4">
+            <p class="text-[10px] font-semibold uppercase tracking-wider text-ardoise-faible">Recettes</p>
+            <p class="text-3xl font-bold text-ardoise mt-1">{{ kpis.total_recipes }}</p>
             <div class="mt-2 flex gap-2 flex-wrap">
-            <span class="text-[10px] bg-emerald-50 text-emerald-700 rounded-full px-2 py-0.5 font-medium">
+            <span class="text-[10px] bg-pousse-voile text-pousse rounded-full px-2 py-0.5 font-medium">
                 {{ kpis.recipes_with_cost }} avec coût
             </span>
                 {% if kpis.recipes_no_cost > 0 %}
-                    <span class="text-[10px] bg-amber-50 text-amber-700 rounded-full px-2 py-0.5 font-medium">
+                    <span class="text-[10px] bg-laiton-voile text-laiton-patine rounded-full px-2 py-0.5 font-medium">
                 {{ kpis.recipes_no_cost }} sans coût
             </span>
                 {% endif %}
@@ -129,15 +129,15 @@
         </div>
 
         {# Ingrédients #}
-        <div class="rounded-2xl border border-gray-200 bg-white px-5 py-4">
-            <p class="text-[10px] font-semibold uppercase tracking-wider text-gray-400">Ingrédients</p>
-            <p class="text-3xl font-bold text-[#1c2434] mt-1">{{ kpis.total_ingredients }}</p>
+        <div class="rounded-2xl border border-trait bg-white px-5 py-4">
+            <p class="text-[10px] font-semibold uppercase tracking-wider text-ardoise-faible">Ingrédients</p>
+            <p class="text-3xl font-bold text-ardoise mt-1">{{ kpis.total_ingredients }}</p>
             <div class="mt-2 flex gap-2 flex-wrap">
-            <span class="text-[10px] bg-emerald-50 text-emerald-700 rounded-full px-2 py-0.5 font-medium">
+            <span class="text-[10px] bg-pousse-voile text-pousse rounded-full px-2 py-0.5 font-medium">
                 {{ kpis.ings_with_price }} avec prix
             </span>
                 {% if kpis.ings_no_price > 0 %}
-                    <span class="text-[10px] bg-red-50 text-red-700 rounded-full px-2 py-0.5 font-medium">
+                    <span class="text-[10px] bg-sang-voile text-sang rounded-full px-2 py-0.5 font-medium">
                 {{ kpis.ings_no_price }} sans prix
             </span>
                 {% endif %}
@@ -145,21 +145,21 @@
         </div>
 
         {# Marque conseillée — la théorie, à distinguer de la marque réelle ci-dessus #}
-        <div class="rounded-2xl border border-gray-200 bg-white px-5 py-4">
-            <p class="text-[10px] font-semibold uppercase tracking-wider text-gray-400">Marque conseillée moyenne</p>
-            <p class="text-3xl font-bold mt-1 {{ kpis.avg_margin >= 60 ? 'text-emerald-600' : (kpis.avg_margin >= 40 ? 'text-amber-500' : 'text-red-500') }}">
+        <div class="rounded-2xl border border-trait bg-white px-5 py-4">
+            <p class="text-[10px] font-semibold uppercase tracking-wider text-ardoise-faible">Marque conseillée moyenne</p>
+            <p class="text-3xl font-bold mt-1 {{ kpis.avg_margin >= 60 ? 'text-pousse' : (kpis.avg_margin >= 40 ? 'text-laiton-patine' : 'text-sang') }}">
                 {{ kpis.avg_margin > 0 ? kpis.avg_margin ~ ' %' : '—' }}
             </p>
-            <p class="text-[10px] text-gray-400 mt-2">théorique · {{ kpis.recipes_with_cost }} recettes calculées</p>
+            <p class="text-[10px] text-ardoise-faible mt-2">théorique · {{ kpis.recipes_with_cost }} recettes calculées</p>
         </div>
 
         {# Apprentissage du rapprochement de factures : le seul chiffre
            « technique » qui dise quelque chose d'utile — plus il monte, moins
            l'utilisateur a de lignes à trier à chaque facture. #}
-        <div class="rounded-2xl border border-gray-200 bg-white px-5 py-4">
-            <p class="text-[10px] font-semibold uppercase tracking-wider text-gray-400">Libellés fournisseurs appris</p>
-            <p class="text-3xl font-bold text-[#1c2434] mt-1">{{ mapping_count }}</p>
-            <p class="text-[10px] text-gray-400 mt-2">reconnus automatiquement à l'import</p>
+        <div class="rounded-2xl border border-trait bg-white px-5 py-4">
+            <p class="text-[10px] font-semibold uppercase tracking-wider text-ardoise-faible">Libellés fournisseurs appris</p>
+            <p class="text-3xl font-bold text-ardoise mt-1">{{ mapping_count }}</p>
+            <p class="text-[10px] text-ardoise-faible mt-2">reconnus automatiquement à l'import</p>
         </div>
 
     </div>
@@ -173,18 +173,18 @@
 
             {# Ingrédients sans prix #}
             {% if alerts.no_price|length > 0 %}
-                <div class="rounded-2xl border border-red-200 bg-red-50/50 px-5 py-4">
+                <div class="rounded-2xl border border-sang/30 bg-sang-voile/50 px-5 py-4">
                     <div class="flex items-start gap-3">
-                        <i class="fas fa-exclamation-circle text-red-500 mt-0.5"></i>
+                        <i class="fas fa-exclamation-circle text-sang mt-0.5"></i>
                         <div class="flex-1">
-                            <p class="text-sm font-semibold text-red-700">
+                            <p class="text-sm font-semibold text-sang">
                                 {{ alerts.no_price|length }} ingrédient{{ alerts.no_price|length > 1 ? 's' : '' }} sans prix — le coût des recettes utilisant ces ingrédients est faux
                             </p>
                             <div class="mt-2 flex flex-wrap gap-1.5">
                                 {% for ing in alerts.no_price %}
                                     <a href="{{ path('app_ingredient_show', {id: ing.id}) }}"
-                                       class="text-[11px] bg-white border border-red-200 text-red-600 rounded-lg px-2.5 py-1 hover:bg-red-50 transition-colors">
-                                        {{ ing.name }}{% if ing.category %} <span class="text-red-400">({{ ing.category }})</span>{% endif %}
+                                       class="text-[11px] bg-white border border-sang/30 text-sang rounded-lg px-2.5 py-1 hover:bg-sang-voile transition-colors">
+                                        {{ ing.name }}{% if ing.category %} <span class="text-sang">({{ ing.category }})</span>{% endif %}
                                     </a>
                                 {% endfor %}
                             </div>
@@ -195,18 +195,18 @@
 
             {# Prix anciens #}
             {% if alerts.old_prices|length > 0 %}
-                <div class="rounded-2xl border border-amber-200 bg-amber-50/50 px-5 py-4">
+                <div class="rounded-2xl border border-laiton/40 bg-laiton-voile/50 px-5 py-4">
                     <div class="flex items-start gap-3">
-                        <i class="fas fa-clock text-amber-500 mt-0.5"></i>
+                        <i class="fas fa-clock text-laiton-patine mt-0.5"></i>
                         <div class="flex-1">
-                            <p class="text-sm font-semibold text-amber-700">
+                            <p class="text-sm font-semibold text-laiton-patine">
                                 {{ alerts.old_prices|length }} ingrédient{{ alerts.old_prices|length > 1 ? 's' : '' }} avec des prix datant de plus de 90 jours
                             </p>
                             <div class="mt-2 flex flex-wrap gap-1.5">
                                 {% for row in alerts.old_prices %}
                                     <a href="{{ path('app_ingredient_show', {id: row.id}) }}"
-                                       class="text-[11px] bg-white border border-amber-200 text-amber-700 rounded-lg px-2.5 py-1 hover:bg-amber-50 transition-colors">
-                                        {{ row.name }} <span class="text-amber-400">{{ row.days_old }}j</span>
+                                       class="text-[11px] bg-white border border-laiton/40 text-laiton-patine rounded-lg px-2.5 py-1 hover:bg-laiton-voile transition-colors">
+                                        {{ row.name }} <span class="text-laiton-patine">{{ row.days_old }}j</span>
                                     </a>
                                 {% endfor %}
                             </div>
@@ -217,17 +217,17 @@
 
             {# Recettes vides #}
             {% if alerts.empty|length > 0 %}
-                <div class="rounded-2xl border border-gray-200 bg-gray-50/50 px-5 py-4">
+                <div class="rounded-2xl border border-trait bg-voile/50 px-5 py-4">
                     <div class="flex items-start gap-3">
-                        <i class="fas fa-file-circle-xmark text-gray-400 mt-0.5"></i>
+                        <i class="fas fa-file-circle-xmark text-ardoise-faible mt-0.5"></i>
                         <div class="flex-1">
-                            <p class="text-sm font-semibold text-gray-600">
+                            <p class="text-sm font-semibold text-ardoise-doux">
                                 {{ alerts.empty|length }} recette{{ alerts.empty|length > 1 ? 's' : '' }} sans aucun ingrédient
                             </p>
                             <div class="mt-2 flex flex-wrap gap-1.5">
                                 {% for r in alerts.empty %}
                                     <a href="{{ path('app_recipe_show', {id: r.id}) }}"
-                                       class="text-[11px] bg-white border border-gray-200 text-gray-600 rounded-lg px-2.5 py-1 hover:bg-gray-50 transition-colors">
+                                       class="text-[11px] bg-white border border-trait text-ardoise-doux rounded-lg px-2.5 py-1 hover:bg-voile transition-colors">
                                         {{ r.name }}
                                     </a>
                                 {% endfor %}
@@ -245,24 +245,24 @@
           les plus chers » ne disaient rien d'actionnable : un ingrédient cher
           n'est pas un problème, un ingrédient qui grimpe en est un. ── #}
     {% if ingredient_rises|length %}
-        <div class="rounded-2xl border border-gray-200 bg-white mb-6 overflow-hidden">
-            <div class="px-5 py-4 border-b border-gray-100 flex items-center gap-2">
-                <div class="w-2 h-2 rounded-full bg-amber-500"></div>
-                <h3 class="font-semibold text-[15px] text-[#1c2434]">Ingrédients en hausse sur 30 jours</h3>
-                <span class="text-[11px] text-gray-400 ml-auto">à renégocier ou substituer</span>
+        <div class="rounded-2xl border border-trait bg-white mb-6 overflow-hidden">
+            <div class="px-5 py-4 border-b border-trait-fin flex items-center gap-2">
+                <div class="w-2 h-2 rounded-full bg-laiton"></div>
+                <h3 class="font-semibold text-[15px] text-ardoise">Ingrédients en hausse sur 30 jours</h3>
+                <span class="text-[11px] text-ardoise-faible ml-auto">à renégocier ou substituer</span>
             </div>
-            <div class="divide-y divide-gray-50">
+            <div class="divide-y divide-trait-fin">
                 {% for ing in ingredient_rises %}
                     <div class="flex items-center gap-4 px-5 py-3">
-                        <a href="{{ path('app_ingredient_show', {id: ing.id}) }}" class="flex-1 min-w-0 font-medium text-sm text-blue-600 hover:text-blue-800">{{ ing.name }}</a>
-                        <div class="text-right text-xs text-gray-500 w-52 flex-shrink-0">
+                        <a href="{{ path('app_ingredient_show', {id: ing.id}) }}" class="flex-1 min-w-0 font-medium text-sm text-laiton-patine hover:text-ardoise">{{ ing.name }}</a>
+                        <div class="text-right text-xs text-ardoise-doux w-52 flex-shrink-0">
                             {{ ing.old_price|number_format(4, ',', ' ') }} €
-                            <i class="fas fa-arrow-right text-[9px] text-gray-300 mx-1"></i>
-                            <strong class="text-gray-700">{{ ing.new_price|number_format(4, ',', ' ') }} €</strong>
+                            <i class="fas fa-arrow-right text-[9px] text-ardoise-faible mx-1"></i>
+                            <strong class="text-ardoise">{{ ing.new_price|number_format(4, ',', ' ') }} €</strong>
                             / {{ ing.base_unit }}
                         </div>
                         <div class="text-right w-20 flex-shrink-0">
-                            <span class="font-bold text-sm {{ ing.delta >= 10 ? 'text-red-600' : 'text-amber-600' }}">+{{ ing.delta|number_format(1, ',', ' ') }} %</span>
+                            <span class="font-bold text-sm {{ ing.delta >= 10 ? 'text-sang' : 'text-laiton-patine' }}">+{{ ing.delta|number_format(1, ',', ' ') }} %</span>
                         </div>
                     </div>
                 {% endfor %}

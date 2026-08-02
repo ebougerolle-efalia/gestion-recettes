@@ -7,167 +7,167 @@
     <form method="post" enctype="multipart/form-data" class="max-w-3xl space-y-6">
 
         {# ── Identité ── #}
-        <div class="rounded-2xl border border-gray-200 bg-white">
-            <div class="px-6 py-4 border-b border-gray-100">
+        <div class="rounded-2xl border border-trait bg-white">
+            <div class="px-6 py-4 border-b border-trait-fin">
                 <div class="flex items-center gap-2">
-                    <div class="w-2 h-2 rounded-full bg-blue-500"></div>
-                    <h3 class="font-semibold text-[15px] text-[#1c2434]">Identité de l'établissement</h3>
+                    <div class="w-2 h-2 rounded-full bg-ardoise"></div>
+                    <h3 class="font-semibold text-[15px] text-ardoise">Identité de l'établissement</h3>
                 </div>
             </div>
             <div class="p-6 space-y-4">
 
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
-                        <label class="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5">
-                            Nom de l'établissement <span class="text-red-400">*</span>
+                        <label class="block text-xs font-semibold text-ardoise-doux uppercase tracking-wider mb-1.5">
+                            Nom de l'établissement <span class="text-sang">*</span>
                         </label>
                         <input type="text" name="nom_etablissement"
                                value="{{ config.nomEtablissement }}"
                                required
-                               class="w-full rounded-xl border border-gray-200 px-4 py-2.5 text-sm outline-none focus:border-blue-400 focus:ring-1 focus:ring-blue-100">
+                               class="w-full rounded-xl border border-trait px-4 py-2.5 text-sm outline-none focus:border-laiton-patine focus:ring-1 focus:ring-laiton/30">
                     </div>
                     <div>
-                        <label class="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5">Sous-titre / Activité</label>
+                        <label class="block text-xs font-semibold text-ardoise-doux uppercase tracking-wider mb-1.5">Sous-titre / Activité</label>
                         <input type="text" name="sous_titre"
                                value="{{ config.sousTitre ?: '' }}"
                                placeholder="ex : Charcutier-Traiteur"
-                               class="w-full rounded-xl border border-gray-200 px-4 py-2.5 text-sm outline-none focus:border-blue-400 focus:ring-1 focus:ring-blue-100">
+                               class="w-full rounded-xl border border-trait px-4 py-2.5 text-sm outline-none focus:border-laiton-patine focus:ring-1 focus:ring-laiton/30">
                     </div>
                 </div>
 
                 <div>
-                    <label class="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5">Adresse</label>
+                    <label class="block text-xs font-semibold text-ardoise-doux uppercase tracking-wider mb-1.5">Adresse</label>
                     <input type="text" name="adresse"
                            value="{{ config.adresse ?: '' }}"
                            placeholder="Rue, numéro..."
-                           class="w-full rounded-xl border border-gray-200 px-4 py-2.5 text-sm outline-none focus:border-blue-400 focus:ring-1 focus:ring-blue-100">
+                           class="w-full rounded-xl border border-trait px-4 py-2.5 text-sm outline-none focus:border-laiton-patine focus:ring-1 focus:ring-laiton/30">
                 </div>
 
                 <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
                     <div>
-                        <label class="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5">Code postal</label>
+                        <label class="block text-xs font-semibold text-ardoise-doux uppercase tracking-wider mb-1.5">Code postal</label>
                         <input type="text" name="code_postal" value="{{ config.codePostal ?: '' }}"
-                               class="w-full rounded-xl border border-gray-200 px-4 py-2.5 text-sm outline-none focus:border-blue-400">
+                               class="w-full rounded-xl border border-trait px-4 py-2.5 text-sm outline-none focus:border-laiton-patine">
                     </div>
                     <div class="col-span-1 md:col-span-3">
-                        <label class="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5">Ville</label>
+                        <label class="block text-xs font-semibold text-ardoise-doux uppercase tracking-wider mb-1.5">Ville</label>
                         <input type="text" name="ville" value="{{ config.ville ?: '' }}"
-                               class="w-full rounded-xl border border-gray-200 px-4 py-2.5 text-sm outline-none focus:border-blue-400">
+                               class="w-full rounded-xl border border-trait px-4 py-2.5 text-sm outline-none focus:border-laiton-patine">
                     </div>
                 </div>
 
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
                     <div>
-                        <label class="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5">Téléphone</label>
+                        <label class="block text-xs font-semibold text-ardoise-doux uppercase tracking-wider mb-1.5">Téléphone</label>
                         <input type="text" name="telephone" value="{{ config.telephone ?: '' }}"
-                               class="w-full rounded-xl border border-gray-200 px-4 py-2.5 text-sm outline-none focus:border-blue-400">
+                               class="w-full rounded-xl border border-trait px-4 py-2.5 text-sm outline-none focus:border-laiton-patine">
                     </div>
                     <div>
-                        <label class="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5">Email</label>
+                        <label class="block text-xs font-semibold text-ardoise-doux uppercase tracking-wider mb-1.5">Email</label>
                         <input type="email" name="email" value="{{ config.email ?: '' }}"
-                               class="w-full rounded-xl border border-gray-200 px-4 py-2.5 text-sm outline-none focus:border-blue-400">
+                               class="w-full rounded-xl border border-trait px-4 py-2.5 text-sm outline-none focus:border-laiton-patine">
                     </div>
                     <div>
-                        <label class="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5">SIRET</label>
+                        <label class="block text-xs font-semibold text-ardoise-doux uppercase tracking-wider mb-1.5">SIRET</label>
                         <input type="text" name="siret" value="{{ config.siret ?: '' }}"
                                placeholder="14 chiffres"
-                               class="w-full rounded-xl border border-gray-200 px-4 py-2.5 text-sm font-mono outline-none focus:border-blue-400">
+                               class="w-full rounded-xl border border-trait px-4 py-2.5 text-sm font-mono outline-none focus:border-laiton-patine">
                     </div>
                 </div>
             </div>
         </div>
 
         {# ── Logo ── #}
-        <div class="rounded-2xl border border-gray-200 bg-white">
-            <div class="px-6 py-4 border-b border-gray-100">
+        <div class="rounded-2xl border border-trait bg-white">
+            <div class="px-6 py-4 border-b border-trait-fin">
                 <div class="flex items-center gap-2">
                     <div class="w-2 h-2 rounded-full bg-violet-500"></div>
-                    <h3 class="font-semibold text-[15px] text-[#1c2434]">Logo</h3>
+                    <h3 class="font-semibold text-[15px] text-ardoise">Logo</h3>
                 </div>
             </div>
             <div class="p-6 flex items-center gap-6">
                 {% if config.logoPath %}
-                    <div class="w-24 h-24 rounded-xl border border-gray-200 bg-gray-50 flex items-center justify-center overflow-hidden flex-shrink-0">
+                    <div class="w-24 h-24 rounded-xl border border-trait bg-voile flex items-center justify-center overflow-hidden flex-shrink-0">
                         <img src="/{{ config.logoPath }}" alt="Logo" class="max-w-full max-h-full object-contain p-2">
                     </div>
                 {% else %}
-                    <div class="w-24 h-24 rounded-xl border-2 border-dashed border-gray-200 bg-gray-50 flex items-center justify-center flex-shrink-0">
-                        <i class="fas fa-image text-2xl text-gray-300"></i>
+                    <div class="w-24 h-24 rounded-xl border-2 border-dashed border-trait bg-voile flex items-center justify-center flex-shrink-0">
+                        <i class="fas fa-image text-2xl text-ardoise-faible"></i>
                     </div>
                 {% endif %}
                 <div class="flex-1">
-                    <label class="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5">
+                    <label class="block text-xs font-semibold text-ardoise-doux uppercase tracking-wider mb-1.5">
                         {{ config.logoPath ? 'Remplacer le logo' : 'Choisir un logo' }}
                     </label>
                     <input type="file" name="logo_file" accept="image/png,image/jpeg,image/svg+xml"
-                           class="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100">
-                    <p class="text-xs text-gray-400 mt-1.5">PNG, JPG ou SVG · Fond transparent recommandé</p>
+                           class="block w-full text-sm text-ardoise-doux file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-voile file:text-ardoise-fort hover:file:bg-voile">
+                    <p class="text-xs text-ardoise-faible mt-1.5">PNG, JPG ou SVG · Fond transparent recommandé</p>
                 </div>
             </div>
         </div>
 
         {# ── Paramètres métier ── #}
-        <div class="rounded-2xl border border-gray-200 bg-white">
-            <div class="px-6 py-4 border-b border-gray-100">
+        <div class="rounded-2xl border border-trait bg-white">
+            <div class="px-6 py-4 border-b border-trait-fin">
                 <div class="flex items-center gap-2">
-                    <div class="w-2 h-2 rounded-full bg-amber-500"></div>
-                    <h3 class="font-semibold text-[15px] text-[#1c2434]">Paramètres de calcul</h3>
+                    <div class="w-2 h-2 rounded-full bg-laiton"></div>
+                    <h3 class="font-semibold text-[15px] text-ardoise">Paramètres de calcul</h3>
                 </div>
             </div>
             <div class="p-6 grid grid-cols-1 md:grid-cols-3 gap-5">
                 <div>
-                    <label class="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5">
+                    <label class="block text-xs font-semibold text-ardoise-doux uppercase tracking-wider mb-1.5">
                         TVA par défaut (%)
                     </label>
                     <input type="number" name="tva_defaut" step="0.01" min="0" max="100"
                            value="{{ config.tvaDefaut }}"
-                           class="w-full rounded-xl border border-gray-200 px-4 py-2.5 text-sm outline-none focus:border-blue-400">
-                    <p class="text-xs text-gray-400 mt-1">Appliquée aux nouveaux ingrédients</p>
+                           class="w-full rounded-xl border border-trait px-4 py-2.5 text-sm outline-none focus:border-laiton-patine">
+                    <p class="text-xs text-ardoise-faible mt-1">Appliquée aux nouveaux ingrédients</p>
                 </div>
                 <div>
-                    <label class="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5">
+                    <label class="block text-xs font-semibold text-ardoise-doux uppercase tracking-wider mb-1.5">
                         Coefficient de vente par défaut
                     </label>
                     <input type="number" name="coef_defaut" step="0.001" min="1" max="10"
                            value="{{ config.coefDefaut }}"
-                           class="w-full rounded-xl border border-gray-200 px-4 py-2.5 text-sm outline-none focus:border-blue-400">
-                    <p class="text-xs text-gray-400 mt-1">Prix de vente = coût × coef</p>
+                           class="w-full rounded-xl border border-trait px-4 py-2.5 text-sm outline-none focus:border-laiton-patine">
+                    <p class="text-xs text-ardoise-faible mt-1">Prix de vente = coût × coef</p>
                 </div>
                 <div>
-                    <label class="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5">
+                    <label class="block text-xs font-semibold text-ardoise-doux uppercase tracking-wider mb-1.5">
                         Taux horaire main d'œuvre (€ HT)
                     </label>
                     <div class="relative">
                         <input type="number" name="taux_horaire_mo" step="0.5" min="0"
                                value="{{ config.tauxHoraireMo }}"
-                               class="w-full rounded-xl border border-gray-200 pl-4 pr-10 py-2.5 text-sm outline-none focus:border-blue-400">
-                        <span class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 text-xs">€/h</span>
+                               class="w-full rounded-xl border border-trait pl-4 pr-10 py-2.5 text-sm outline-none focus:border-laiton-patine">
+                        <span class="absolute right-3 top-1/2 -translate-y-1/2 text-ardoise-faible text-xs">€/h</span>
                     </div>
-                    <p class="text-xs text-gray-400 mt-1">Utilisé pour convertir les minutes de fabrication</p>
+                    <p class="text-xs text-ardoise-faible mt-1">Utilisé pour convertir les minutes de fabrication</p>
                 </div>
             </div>
         </div>
 
         {# ── Mention pied PDF ── #}
-        <div class="rounded-2xl border border-gray-200 bg-white">
-            <div class="px-6 py-4 border-b border-gray-100">
+        <div class="rounded-2xl border border-trait bg-white">
+            <div class="px-6 py-4 border-b border-trait-fin">
                 <div class="flex items-center gap-2">
-                    <div class="w-2 h-2 rounded-full bg-gray-400"></div>
-                    <h3 class="font-semibold text-[15px] text-[#1c2434]">Mention pied de page PDF</h3>
+                    <div class="w-2 h-2 rounded-full bg-trait"></div>
+                    <h3 class="font-semibold text-[15px] text-ardoise">Mention pied de page PDF</h3>
                 </div>
             </div>
             <div class="p-6">
             <textarea name="mention_pied" rows="3"
                       placeholder="Mentions légales, conditions, texte libre..."
-                      class="w-full rounded-xl border border-gray-200 px-4 py-2.5 text-sm outline-none focus:border-blue-400 resize-none">{{ config.mentionPied ?: '' }}</textarea>
-                <p class="text-xs text-gray-400 mt-1">Apparaît en bas des fiches recettes imprimées</p>
+                      class="w-full rounded-xl border border-trait px-4 py-2.5 text-sm outline-none focus:border-laiton-patine resize-none">{{ config.mentionPied ?: '' }}</textarea>
+                <p class="text-xs text-ardoise-faible mt-1">Apparaît en bas des fiches recettes imprimées</p>
             </div>
         </div>
 
         {# ── Bouton ── #}
         <div class="flex justify-end">
             <button type="submit"
-                    class="inline-flex items-center gap-2 rounded-xl bg-blue-500 hover:bg-blue-600 px-8 py-3 text-sm font-semibold text-white transition-colors">
+                    class="inline-flex items-center gap-2 rounded-xl bg-ardoise hover:bg-ardoise-clair px-8 py-3 text-sm font-semibold text-white transition-colors">
                 <i class="fas fa-save text-[11px]"></i>
                 Enregistrer les paramètres
             </button>

@@ -12,56 +12,61 @@
             {label: 'Vérifier les correspondances',  icon: 'fa-check-double', done: false, active: true},
             {label: 'Prix mis à jour',               icon: 'fa-tags',         done: false, active: false},
         ] %}
-            <div class="rounded-xl border {{ step.active ? 'border-blue-300 bg-blue-50' : (step.done ? 'border-emerald-200 bg-emerald-50' : 'border-gray-200 bg-white') }} px-4 py-3 text-center">
-                <div class="w-7 h-7 rounded-full {{ step.active ? 'bg-blue-500' : (step.done ? 'bg-emerald-500' : 'bg-gray-200') }} flex items-center justify-center mx-auto mb-2">
-                    <i class="fas {{ step.icon }} text-{{ (step.active or step.done) ? 'white' : 'gray-400' }} text-xs"></i>
+            <div class="rounded-xl border {{ step.active ? 'border-laiton/40 bg-voile' : (step.done ? 'border-pousse/30 bg-pousse-voile' : 'border-trait bg-white') }} px-4 py-3 text-center">
+                <div class="w-7 h-7 rounded-full {{ step.active ? 'bg-ardoise' : (step.done ? 'bg-pousse' : 'bg-trait') }} flex items-center justify-center mx-auto mb-2">
+                    {# Nom de classe ENTIER dans chaque branche, jamais « text-{{ … }} » :
+                       Tailwind compile en lisant les fichiers, il ne voit donc que
+                       des chaînes complètes. Une classe assemblée à l'exécution
+                       n'existerait pas dans la feuille — le CDN la fabriquait à la
+                       volée en lisant le DOM, la compilation ne le peut pas. #}
+                    <i class="fas {{ step.icon }} {{ (step.active or step.done) ? 'text-white' : 'text-ardoise-faible' }} text-xs"></i>
                 </div>
-                <p class="text-xs font-medium {{ step.active ? 'text-blue-700' : (step.done ? 'text-emerald-700' : 'text-gray-400') }}">{{ step.label }}</p>
+                <p class="text-xs font-medium {{ step.active ? 'text-ardoise-fort' : (step.done ? 'text-pousse' : 'text-ardoise-faible') }}">{{ step.label }}</p>
             </div>
         {% endfor %}
     </div>
 
     {# ── KPI ── #}
     <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-        <div class="rounded-2xl border border-gray-200 bg-white px-5 py-4">
-            <p class="text-[10px] font-semibold uppercase tracking-wider text-gray-400">Lignes</p>
-            <p class="text-2xl font-bold text-[#1c2434] mt-1">{{ stats.total }}</p>
+        <div class="rounded-2xl border border-trait bg-white px-5 py-4">
+            <p class="text-[10px] font-semibold uppercase tracking-wider text-ardoise-faible">Lignes</p>
+            <p class="text-2xl font-bold text-ardoise mt-1">{{ stats.total }}</p>
         </div>
-        <div class="rounded-2xl border border-emerald-200 bg-emerald-50/50 px-5 py-4">
-            <p class="text-[10px] font-semibold uppercase tracking-wider text-emerald-600">Reconnus</p>
-            <p class="text-2xl font-bold text-emerald-700 mt-1">{{ stats.mapped + stats.fuzzy }}</p>
-            <p class="text-[10px] text-emerald-500">{{ stats.mapped }} mémorisés · {{ stats.fuzzy }} fuzzy</p>
+        <div class="rounded-2xl border border-pousse/30 bg-pousse-voile/50 px-5 py-4">
+            <p class="text-[10px] font-semibold uppercase tracking-wider text-pousse">Reconnus</p>
+            <p class="text-2xl font-bold text-pousse mt-1">{{ stats.mapped + stats.fuzzy }}</p>
+            <p class="text-[10px] text-pousse">{{ stats.mapped }} mémorisés · {{ stats.fuzzy }} fuzzy</p>
         </div>
-        <div class="rounded-2xl border border-amber-200 bg-amber-50/50 px-5 py-4">
-            <p class="text-[10px] font-semibold uppercase tracking-wider text-amber-600">À traiter</p>
-            <p class="text-2xl font-bold text-amber-700 mt-1">{{ stats.unmatched }}</p>
+        <div class="rounded-2xl border border-laiton/40 bg-laiton-voile/50 px-5 py-4">
+            <p class="text-[10px] font-semibold uppercase tracking-wider text-laiton-patine">À traiter</p>
+            <p class="text-2xl font-bold text-laiton-patine mt-1">{{ stats.unmatched }}</p>
         </div>
-        <div class="rounded-2xl border border-gray-200 bg-white px-5 py-4">
-            <p class="text-[10px] font-semibold uppercase tracking-wider text-gray-400">Fournisseur</p>
-            <p class="text-sm font-semibold text-[#1c2434] mt-1 leading-tight">{{ invoice.seller_name|slice(0,28) }}</p>
+        <div class="rounded-2xl border border-trait bg-white px-5 py-4">
+            <p class="text-[10px] font-semibold uppercase tracking-wider text-ardoise-faible">Fournisseur</p>
+            <p class="text-sm font-semibold text-ardoise mt-1 leading-tight">{{ invoice.seller_name|slice(0,28) }}</p>
         </div>
     </div>
 
     {# ── Formulaire ── #}
     <form method="post" id="confirm-form" action="{{ path('app_invoice_apply', {id: purchaseInvoice.id}) }}">
-        <div class="rounded-2xl border border-gray-200 bg-white">
+        <div class="rounded-2xl border border-trait bg-white">
 
-            <div class="px-6 py-4 border-b border-gray-100 flex items-center justify-between">
+            <div class="px-6 py-4 border-b border-trait-fin flex items-center justify-between">
                 <div class="flex items-center gap-2">
-                    <div class="w-2 h-2 rounded-full bg-amber-500"></div>
-                    <h3 class="font-semibold text-[15px] text-[#1c2434]">Correspondances à confirmer</h3>
+                    <div class="w-2 h-2 rounded-full bg-laiton"></div>
+                    <h3 class="font-semibold text-[15px] text-ardoise">Correspondances à confirmer</h3>
                 </div>
-                <label class="flex items-center gap-2 text-xs text-gray-500 cursor-pointer select-none">
+                <label class="flex items-center gap-2 text-xs text-ardoise-doux cursor-pointer select-none">
                     <input type="checkbox" id="check-all" class="rounded" onchange="toggleAll(this)">
                     Tout sélectionner
                 </label>
             </div>
 
-            <div class="divide-y divide-gray-50">
+            <div class="divide-y divide-trait-fin">
                 {% for i, line in invoice.lines %}
 
                     {# ═══ LIGNE ═══ #}
-                <div class="px-5 py-4 {{ line.match_source == 'none' ? 'bg-amber-50/20' : '' }}" id="row-{{ i }}">
+                <div class="px-5 py-4 {{ line.match_source == 'none' ? 'bg-laiton-voile/20' : '' }}" id="row-{{ i }}">
                     <div class="flex items-start gap-3">
 
                     {# Checkbox #}
@@ -70,27 +75,27 @@
                                name="lines[{{ i }}][confirmed]"
                                value="1"
                                id="check-{{ i }}"
-                               class="line-check rounded border-gray-300 w-4 h-4"
+                               class="line-check rounded border-trait w-4 h-4"
                                 {{ line.match_source != 'none' ? 'checked' : '' }}>
                     </div>
 
                     {# Libellé fournisseur #}
                     <div class="w-56 flex-shrink-0">
-                        <p class="font-medium text-gray-800 text-sm leading-snug">{{ line.name }}</p>
+                        <p class="font-medium text-ardoise text-sm leading-snug">{{ line.name }}</p>
                         {% if line.supplier_ref %}
-                            <p class="text-[10px] text-gray-400 font-mono mt-0.5">{{ line.supplier_ref }}</p>
+                            <p class="text-[10px] text-ardoise-faible font-mono mt-0.5">{{ line.supplier_ref }}</p>
                         {% endif %}
-                        <p class="text-[10px] text-gray-400 mt-1">
+                        <p class="text-[10px] text-ardoise-faible mt-1">
                             {{ line.qty_billed|number_format(3, ',', ' ') }} {{ line.unit_code }}
                             · TVA {{ line.vat_rate }}%
                         </p>
-                        <p class="text-[10px] text-gray-400 mt-0.5">
+                        <p class="text-[10px] text-ardoise-faible mt-0.5">
                             facturé {{ line.billed_price|number_format(4, ',', ' ') }} € / {{ line.billed_unit }}
                         </p>
                     </div>
 
                     {# Flèche #}
-                    <div class="pt-2.5 text-gray-300 flex-shrink-0">
+                    <div class="pt-2.5 text-ardoise-faible flex-shrink-0">
                         <i class="fas fa-arrow-right text-xs"></i>
                     </div>
 
@@ -108,21 +113,21 @@
                                 id="tab-existing-{{ i }}"
                                 onclick="setMode({{ i }}, 'existing')"
                                 class="tab-btn px-3 py-1 rounded-lg text-xs font-medium border transition-colors
-                                   {{ line.match_source != 'none' ? 'bg-blue-500 border-blue-500 text-white' : 'bg-white border-gray-200 text-gray-500 hover:border-blue-300' }}">
+                                   {{ line.match_source != 'none' ? 'bg-ardoise border-laiton/40 text-white' : 'bg-white border-trait text-ardoise-doux hover:border-laiton/40' }}">
                             <i class="fas fa-search text-[9px] mr-1"></i>Associer
                         </button>
                         <button type="button"
                                 id="tab-create-{{ i }}"
                                 onclick="setMode({{ i }}, 'create')"
                                 class="tab-btn px-3 py-1 rounded-lg text-xs font-medium border transition-colors
-                                   {{ line.match_source == 'none' ? 'bg-emerald-500 border-emerald-500 text-white' : 'bg-white border-gray-200 text-gray-500 hover:border-emerald-300' }}">
+                                   {{ line.match_source == 'none' ? 'bg-pousse border-pousse/40 text-white' : 'bg-white border-trait text-ardoise-doux hover:border-pousse/30' }}">
                             <i class="fas fa-plus text-[9px] mr-1"></i>Créer
                         </button>
                         <button type="button"
                                 id="tab-ignore-{{ i }}"
                                 onclick="setMode({{ i }}, 'ignore')"
                                 class="tab-btn px-3 py-1 rounded-lg text-xs font-medium border transition-colors
-                                   bg-white border-gray-200 text-gray-400 hover:border-gray-300">
+                                   bg-white border-trait text-ardoise-faible hover:border-trait">
                             <i class="fas fa-ban text-[9px] mr-1"></i>Ignorer
                         </button>
                     </div>
@@ -131,7 +136,7 @@
                     <div id="panel-existing-{{ i }}"
                          class="{{ line.match_source == 'none' ? 'hidden' : '' }}">
                         <select name="lines[{{ i }}][ingredient_id]"
-                                class="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm bg-white outline-none focus:border-blue-400"
+                                class="w-full rounded-lg border border-trait px-3 py-2 text-sm bg-white outline-none focus:border-laiton-patine"
                                 onchange="document.getElementById('check-{{ i }}').checked = true">
                             <option value="">-- Choisir un ingrédient --</option>
                             {% set currentId = line.matched_ingredient ? line.matched_ingredient.id : 0 %}
@@ -146,25 +151,25 @@
                     {# ── Panel : Créer un nouvel ingrédient ── #}
                     <div id="panel-create-{{ i }}"
                          class="{{ line.match_source != 'none' ? 'hidden' : '' }}">
-                        <div class="rounded-xl border border-emerald-200 bg-emerald-50/30 p-3 space-y-2">
+                        <div class="rounded-xl border border-pousse/30 bg-pousse-voile/30 p-3 space-y-2">
 
                             {# Nom #}
                             <div>
-                                <label class="text-[10px] font-semibold text-gray-500 uppercase tracking-wider">Nom de l'ingrédient</label>
+                                <label class="text-[10px] font-semibold text-ardoise-doux uppercase tracking-wider">Nom de l'ingrédient</label>
                                 <input type="text"
                                        name="lines[{{ i }}][new_ingredient_name]"
                                        value="{{ line.name }}"
                                        placeholder="Nom dans le catalogue..."
-                                       class="mt-1 w-full rounded-lg border border-gray-200 px-3 py-1.5 text-sm outline-none focus:border-emerald-400"
+                                       class="mt-1 w-full rounded-lg border border-trait px-3 py-1.5 text-sm outline-none focus:border-pousse/40"
                                        onchange="document.getElementById('check-{{ i }}').checked = true">
                             </div>
 
                             <div class="grid grid-cols-3 gap-2">
                                 {# Catégorie #}
                                 <div>
-                                    <label class="text-[10px] font-semibold text-gray-500 uppercase tracking-wider">Catégorie</label>
+                                    <label class="text-[10px] font-semibold text-ardoise-doux uppercase tracking-wider">Catégorie</label>
                                     <select name="lines[{{ i }}][new_ingredient_category_id]"
-                                            class="mt-1 w-full rounded-lg border border-gray-200 px-2 py-1.5 text-xs outline-none focus:border-emerald-400">
+                                            class="mt-1 w-full rounded-lg border border-trait px-2 py-1.5 text-xs outline-none focus:border-pousse/40">
                                         <option value="">-- Aucune --</option>
                                         {% for cat in categories %}
                                             <option value="{{ cat.id }}">{{ cat.name }}</option>
@@ -174,9 +179,9 @@
 
                                 {# Unité de base #}
                                 <div>
-                                    <label class="text-[10px] font-semibold text-gray-500 uppercase tracking-wider">Unité</label>
+                                    <label class="text-[10px] font-semibold text-ardoise-doux uppercase tracking-wider">Unité</label>
                                     <select name="lines[{{ i }}][new_ingredient_unit]"
-                                            class="mt-1 w-full rounded-lg border border-gray-200 px-2 py-1.5 text-xs outline-none focus:border-emerald-400">
+                                            class="mt-1 w-full rounded-lg border border-trait px-2 py-1.5 text-xs outline-none focus:border-pousse/40">
                                         {% set units = {'kg': 'kg', 'g': 'g', 'litre': 'litre', 'piece': 'pièce'} %}
                                         {% for val, label in units %}
                                             <option value="{{ val }}" {{ val == line.unit ? 'selected' : '' }}>{{ label }}</option>
@@ -186,9 +191,9 @@
 
                                 {# TVA #}
                                 <div>
-                                    <label class="text-[10px] font-semibold text-gray-500 uppercase tracking-wider">TVA %</label>
+                                    <label class="text-[10px] font-semibold text-ardoise-doux uppercase tracking-wider">TVA %</label>
                                     <select name="lines[{{ i }}][new_ingredient_vat]"
-                                            class="mt-1 w-full rounded-lg border border-gray-200 px-2 py-1.5 text-xs outline-none focus:border-emerald-400">
+                                            class="mt-1 w-full rounded-lg border border-trait px-2 py-1.5 text-xs outline-none focus:border-pousse/40">
                                         <option value="5.5"  {{ line.vat_rate == 5.5  ? 'selected' : '' }}>5,5 %</option>
                                         <option value="10"   {{ line.vat_rate == 10   ? 'selected' : '' }}>10 %</option>
                                         <option value="20"   {{ line.vat_rate == 20   ? 'selected' : '' }}>20 %</option>
@@ -197,7 +202,7 @@
                                 </div>
                             </div>
 
-                            <p class="text-[10px] text-emerald-600">
+                            <p class="text-[10px] text-pousse">
                                 <i class="fas fa-info-circle mr-1"></i>
                                 L'ingrédient sera créé et cette association mémorisée pour les prochains imports.
                             </p>
@@ -209,61 +214,61 @@
                     {# Prix + Date — le prix saisi est TOUJOURS dans l'unité de
                        base de l'ingrédient, pas dans celle de la facture. #}
                     <div class="flex-shrink-0 w-28">
-                        <label class="text-[10px] font-semibold text-gray-500 uppercase tracking-wider">Prix HT</label>
+                        <label class="text-[10px] font-semibold text-ardoise-doux uppercase tracking-wider">Prix HT</label>
                         <div class="relative mt-1">
                             <input type="number"
                                    name="lines[{{ i }}][price_ht]"
                                    value="{{ line.price_ht is null ? '' : line.price_ht }}"
                                    step="0.0001" min="0"
                                    {{ line.conversion == 'none' ? 'required placeholder="à saisir"' : '' }}
-                                   class="w-full rounded-lg border {{ line.conversion == 'none' ? 'border-red-300 bg-red-50/40' : 'border-gray-200' }} px-3 py-1.5 text-sm text-right outline-none focus:border-blue-400"
+                                   class="w-full rounded-lg border {{ line.conversion == 'none' ? 'border-sang/30 bg-sang-voile/40' : 'border-trait' }} px-3 py-1.5 text-sm text-right outline-none focus:border-laiton-patine"
                                    onchange="document.getElementById('check-{{ i }}').checked = true">
                         </div>
-                        <p class="text-[10px] text-gray-400 text-right mt-0.5">€ / {{ line.unit }}</p>
+                        <p class="text-[10px] text-ardoise-faible text-right mt-0.5">€ / {{ line.unit }}</p>
                         {% if line.conversion == 'none' %}
-                            <p class="text-[10px] text-red-600 text-right mt-1 leading-tight">
+                            <p class="text-[10px] text-sang text-right mt-1 leading-tight">
                                 <i class="fas fa-triangle-exclamation text-[9px]"></i>
                                 {{ line.billed_unit }} → {{ line.unit }} impossible : saisir le prix au {{ line.unit }}
                             </p>
                         {% elseif line.conversion == 'approx' %}
-                            <p class="text-[10px] text-amber-600 text-right mt-1">converti (densité 1)</p>
+                            <p class="text-[10px] text-laiton-patine text-right mt-1">converti (densité 1)</p>
                         {% elseif line.billed_unit != line.unit %}
-                            <p class="text-[10px] text-blue-500 text-right mt-1">converti depuis {{ line.billed_unit }}</p>
+                            <p class="text-[10px] text-laiton-patine text-right mt-1">converti depuis {{ line.billed_unit }}</p>
                         {% endif %}
                         {# Écart avec le dernier prix connu : un +400 % signale
                            un changement de conditionnement, pas une inflation. #}
                         {% if line.delta_percent is not null %}
                             {% set strong = line.delta_percent|abs >= 15 %}
-                            <p class="text-[10px] text-right mt-1 {{ strong ? 'font-bold text-red-600' : 'text-gray-400' }}"
+                            <p class="text-[10px] text-right mt-1 {{ strong ? 'font-bold text-sang' : 'text-ardoise-faible' }}"
                                title="Dernier prix connu : {{ line.previous_price|number_format(4, ',', ' ') }} €">
                                 {{ line.delta_percent > 0 ? '+' : '' }}{{ line.delta_percent|number_format(1, ',', ' ') }} %
                                 {% if strong %}<i class="fas fa-triangle-exclamation text-[9px]"></i>{% endif %}
                             </p>
                         {% elseif line.matched_ingredient %}
-                            <p class="text-[10px] text-gray-300 text-right mt-1">1ᵉʳ prix</p>
+                            <p class="text-[10px] text-ardoise-faible text-right mt-1">1ᵉʳ prix</p>
                         {% endif %}
                     </div>
 
                     <div class="flex-shrink-0 w-32">
-                        <label class="text-[10px] font-semibold text-gray-500 uppercase tracking-wider">Date effective</label>
+                        <label class="text-[10px] font-semibold text-ardoise-doux uppercase tracking-wider">Date effective</label>
                         <input type="date"
                                name="lines[{{ i }}][effective_date]"
                                value="{{ invoice.issue_date }}"
-                               class="mt-1 w-full rounded-lg border border-gray-200 px-2 py-1.5 text-sm outline-none focus:border-blue-400">
+                               class="mt-1 w-full rounded-lg border border-trait px-2 py-1.5 text-sm outline-none focus:border-laiton-patine">
                     </div>
 
                     {# Badge confiance #}
                     <div class="flex-shrink-0 w-24 pt-1 text-right">
                         {% if line.match_source == 'mapping' %}
-                            <span class="inline-flex items-center rounded-full bg-emerald-50 px-2 py-1 text-[10px] font-semibold text-emerald-700">
+                            <span class="inline-flex items-center rounded-full bg-pousse-voile px-2 py-1 text-[10px] font-semibold text-pousse">
                         <i class="fas fa-bookmark text-[8px] mr-1"></i>Mémorisé
                     </span>
                         {% elseif line.match_source == 'fuzzy' %}
-                            <span class="inline-flex items-center rounded-full bg-blue-50 px-2 py-1 text-[10px] font-semibold text-blue-700">
+                            <span class="inline-flex items-center rounded-full bg-voile px-2 py-1 text-[10px] font-semibold text-ardoise-fort">
                         <i class="fas fa-wand-magic-sparkles text-[8px] mr-1"></i>{{ line.match_score }}%
                     </span>
                         {% else %}
-                            <span class="inline-flex items-center rounded-full bg-amber-50 px-2 py-1 text-[10px] font-semibold text-amber-700">
+                            <span class="inline-flex items-center rounded-full bg-laiton-voile px-2 py-1 text-[10px] font-semibold text-laiton-patine">
                         <i class="fas fa-question text-[8px] mr-1"></i>Non reconnu
                     </span>
                         {% endif %}
@@ -276,18 +281,18 @@
             </div>{# fin divide-y #}
 
             {# Pied #}
-            <div class="px-6 py-4 border-t border-gray-100 bg-gray-50/50 flex items-center justify-between gap-4">
+            <div class="px-6 py-4 border-t border-trait-fin bg-voile/50 flex items-center justify-between gap-4">
                 <a href="{{ path('app_invoice_index') }}"
-                   class="inline-flex items-center gap-1.5 rounded-xl border border-gray-200 px-4 py-2.5 text-sm text-gray-600 hover:bg-white transition-colors">
+                   class="inline-flex items-center gap-1.5 rounded-xl border border-trait px-4 py-2.5 text-sm text-ardoise-doux hover:bg-white transition-colors">
                     <i class="fas fa-clock text-[10px]"></i> Reprendre plus tard
                 </a>
                 <div class="flex items-center gap-3">
-                    <p class="text-xs text-gray-400 max-w-xs text-right">
+                    <p class="text-xs text-ardoise-faible max-w-xs text-right">
                         Les lignes cochées seront enregistrées.<br>
                         Mode <strong>Créer</strong> : un nouvel ingrédient est ajouté au catalogue.
                     </p>
                     <button type="submit"
-                            class="inline-flex items-center gap-2 rounded-xl bg-emerald-500 hover:bg-emerald-600 px-6 py-2.5 text-sm font-semibold text-white transition-colors">
+                            class="inline-flex items-center gap-2 rounded-xl bg-pousse hover:bg-pousse px-6 py-2.5 text-sm font-semibold text-white transition-colors">
                         <i class="fas fa-check text-[11px]"></i>
                         Enregistrer les prix
                     </button>
@@ -302,8 +307,8 @@
           onsubmit="return confirm('Écarter cette facture sans enregistrer de prix ?')"
           class="mt-4 flex items-center gap-2">
         <input type="text" name="reason" placeholder="Motif (facultatif) : doublon, hors périmètre…"
-               class="flex-1 rounded-xl border border-gray-200 px-4 py-2 text-sm outline-none focus:border-gray-400">
-        <button class="inline-flex items-center gap-1.5 rounded-xl border border-red-200 px-4 py-2 text-sm text-red-500 hover:bg-red-50">
+               class="flex-1 rounded-xl border border-trait px-4 py-2 text-sm outline-none focus:border-trait">
+        <button class="inline-flex items-center gap-1.5 rounded-xl border border-sang/30 px-4 py-2 text-sm text-sang hover:bg-sang-voile">
             <i class="fas fa-ban text-[10px]"></i> Écarter la facture
         </button>
     </form>
@@ -362,7 +367,7 @@
             if (active) {
                 btn.classList.add('bg-' + color + '-500', 'border-' + color + '-500', 'text-white');
             } else {
-                btn.classList.add('bg-white', 'border-gray-200', 'text-gray-500');
+                btn.classList.add('bg-white', 'border-trait', 'text-ardoise-doux');
             }
         }
 

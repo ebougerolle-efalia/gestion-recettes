@@ -20,84 +20,88 @@
     <link rel="stylesheet" href="{{ asset('assets/vendor/fontawesome/css/fontawesome.min.css') }}">
     <link rel="stylesheet" href="{{ asset('assets/vendor/fontawesome/css/solid.min.css') }}">
 </head>
-<body class="h-full overflow-hidden bg-[#f1f5f9]">
+<body class="h-full overflow-hidden bg-inox">
 <div class="flex h-full">
 
-    <aside id="sidebar" class="fixed inset-y-0 left-0 z-50 w-[280px] bg-[#1c2434] text-white flex flex-col transform -translate-x-full lg:translate-x-0 transition-transform duration-300">
+    <aside id="sidebar" class="fixed inset-y-0 left-0 z-50 w-[280px] bg-ardoise text-white flex flex-col transform -translate-x-full lg:translate-x-0 transition-transform duration-300">
         <div class="px-7 py-6 border-b border-white/[.06]">
             <a href="{{ path('app_home') }}" class="flex items-start gap-3">
-                <span class="text-[#E3B558] shrink-0 mt-0.5">{% include 'partials/logo.html.twig' with {size: 30} %}</span>
+                <span class="text-laiton shrink-0 mt-0.5">{% include 'partials/logo.html.twig' with {size: 30} %}</span>
                 <span class="min-w-0">
                     <span class="flex items-center gap-2">
                         <h1 class="text-xl font-bold tracking-tight truncate">{{ boutique().nomEtablissement ?: 'Mon établissement' }}</h1>
                         {# Mention de version : visible sur chaque écran tant que le produit
                            est en évaluation, pour qu'un testeur sache ce qu'il manipule. #}
-                        <span class="shrink-0 rounded-full bg-[#E3B558]/15 text-[#E3B558] text-[9px] font-bold uppercase tracking-wider px-2 py-0.5 border border-[#E3B558]/30">Alpha</span>
+                        <span class="shrink-0 rounded-full bg-laiton/15 text-laiton text-[9px] font-bold uppercase tracking-wider px-2 py-0.5 border border-laiton/30">Alpha</span>
                     </span>
-                    <p class="text-[11px] text-gray-400 mt-0.5">{{ boutique().sousTitre ?: 'Gestion des recettes & coûts' }}</p>
+                    <p class="text-[11px] text-trait mt-0.5">{{ boutique().sousTitre ?: 'Gestion des recettes & coûts' }}</p>
                 </span>
             </a>
         </div>
 
         <nav class="flex-1 overflow-y-auto px-5 py-5 space-y-1.5">
-            <p class="text-[11px] font-semibold uppercase tracking-wider text-gray-500 px-3 mb-2">Production</p>
+            <p class="text-[11px] font-semibold uppercase tracking-wider text-trait px-3 mb-2">Production</p>
 
             {# Le tableau de bord ouvre le menu : c'est la page d'accueil et le
                point de départ d'une journée — ce qui a bougé, ce qui attend. #}
             {% if is_granted('ROLE_EDITOR') %}
                 <a href="{{ path('app_dashboard') }}" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors
-                    {{ app.request.attributes.get('_route') == 'app_dashboard' ? 'bg-white/[.08] text-white' : 'text-gray-400 hover:text-white hover:bg-white/[.04]' }}">
+                    {{ app.request.attributes.get('_route') == 'app_dashboard' ? 'bg-white/[.08] text-white' : 'text-trait hover:text-white hover:bg-white/[.04]' }}">
                     <i class="fas fa-chart-line w-5 text-center text-[13px]"></i> Tableau de bord
                 </a>
             {% endif %}
 
             <a href="{{ path('app_recipe_index') }}" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors
-                {{ app.request.attributes.get('_route') starts with 'app_recipe' ? 'bg-white/[.08] text-white' : 'text-gray-400 hover:text-white hover:bg-white/[.04]' }}">
+                {{ app.request.attributes.get('_route') starts with 'app_recipe' ? 'bg-white/[.08] text-white' : 'text-trait hover:text-white hover:bg-white/[.04]' }}">
                 <i class="fas fa-clipboard-list w-5 text-center text-[13px]"></i> Recettes
             </a>
 
             <a href="{{ path('app_ingredient_index') }}" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors
-                {{ app.request.attributes.get('_route') starts with 'app_ingredient' ? 'bg-white/[.08] text-white' : 'text-gray-400 hover:text-white hover:bg-white/[.04]' }}">
+                {{ app.request.attributes.get('_route') starts with 'app_ingredient' ? 'bg-white/[.08] text-white' : 'text-trait hover:text-white hover:bg-white/[.04]' }}">
                 <i class="fas fa-carrot w-5 text-center text-[13px]"></i> Ingrédients
             </a>
 
             {% if is_granted('ROLE_EDITOR') %}
-                <p class="text-[11px] font-semibold uppercase tracking-wider text-gray-500 px-3 mt-5 mb-2">Achats</p>
+                <p class="text-[11px] font-semibold uppercase tracking-wider text-trait px-3 mt-5 mb-2">Achats</p>
 
                 {# La file d'attente est le point d'entrée : des factures peuvent
                    y arriver sans qu'on soit passé par l'écran d'import. #}
                 <a href="{{ path('app_invoice_index') }}" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors
-                {{ app.request.attributes.get('_route') starts with 'app_invoice' ? 'bg-white/[.08] text-white' : 'text-gray-400 hover:text-white hover:bg-white/[.04]' }}">
+                {{ app.request.attributes.get('_route') starts with 'app_invoice' ? 'bg-white/[.08] text-white' : 'text-trait hover:text-white hover:bg-white/[.04]' }}">
                     <i class="fas fa-file-invoice w-5 text-center text-[13px]"></i> Factures d'achat
                     {% if invoice_pending_count() > 0 %}
-                        <span class="ml-auto rounded-full bg-amber-500 px-1.5 py-0.5 text-[10px] font-bold text-white">{{ invoice_pending_count() }}</span>
+                        {# Texte ardoise et non blanc : le laiton est une couleur
+                           claire, le blanc n'y atteint que 2,6:1. L'ardoise donne
+                           6,3:1. Le défaut préexistait — c'était bg-amber-500
+                           text-white, tout aussi illisible. #}
+                        <span class="ml-auto rounded-full bg-laiton px-1.5 py-0.5 text-[10px] font-bold text-ardoise">{{ invoice_pending_count() }}</span>
                     {% endif %}
                 </a>
 
                 <a href="{{ path('app_supplier_index') }}" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors
-                {{ app.request.attributes.get('_route') starts with 'app_supplier' ? 'bg-white/[.08] text-white' : 'text-gray-400 hover:text-white hover:bg-white/[.04]' }}">
+                {{ app.request.attributes.get('_route') starts with 'app_supplier' ? 'bg-white/[.08] text-white' : 'text-trait hover:text-white hover:bg-white/[.04]' }}">
                     <i class="fas fa-truck w-5 text-center text-[13px]"></i> Fournisseurs
                 </a>
             {% endif %}
 
             {% if is_granted('ROLE_ADMIN') %}
-                <p class="text-[11px] font-semibold uppercase tracking-wider text-gray-500 px-3 mt-5 mb-2">Administration</p>
+                <p class="text-[11px] font-semibold uppercase tracking-wider text-trait px-3 mt-5 mb-2">Administration</p>
 
                 <a href="{{ path('app_admin_categories') }}" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors
-                {{ app.request.attributes.get('_route') == 'app_admin_categories' ? 'bg-white/[.08] text-white' : 'text-gray-400 hover:text-white hover:bg-white/[.04]' }}">
+                {{ app.request.attributes.get('_route') == 'app_admin_categories' ? 'bg-white/[.08] text-white' : 'text-trait hover:text-white hover:bg-white/[.04]' }}">
                     <i class="fas fa-tags w-5 text-center text-[13px]"></i> Catégories
                 </a>
                 <a href="{{ path('app_admin_families') }}" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors
-                {{ app.request.attributes.get('_route') == 'app_admin_families' ? 'bg-white/[.08] text-white' : 'text-gray-400 hover:text-white hover:bg-white/[.04]' }}">
+                {{ app.request.attributes.get('_route') == 'app_admin_families' ? 'bg-white/[.08] text-white' : 'text-trait hover:text-white hover:bg-white/[.04]' }}">
                     <i class="fas fa-layer-group w-5 text-center text-[13px]"></i> Familles
                 </a>
                 <a href="{{ path('app_admin_users') }}" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors
-                {{ app.request.attributes.get('_route') == 'app_admin_users' ? 'bg-white/[.08] text-white' : 'text-gray-400 hover:text-white hover:bg-white/[.04]' }}">
+                {{ app.request.attributes.get('_route') == 'app_admin_users' ? 'bg-white/[.08] text-white' : 'text-trait hover:text-white hover:bg-white/[.04]' }}">
                     <i class="fas fa-users w-5 text-center text-[13px]"></i> Utilisateurs
                 </a>
 
                 <a href="{{ path('app_admin_parametres') }}" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors
-                {{ app.request.attributes.get('_route') == 'app_admin_parametres' ? 'bg-white/[.08] text-white' : 'text-gray-400 hover:text-white hover:bg-white/[.04]' }}">
+                {{ app.request.attributes.get('_route') == 'app_admin_parametres' ? 'bg-white/[.08] text-white' : 'text-trait hover:text-white hover:bg-white/[.04]' }}">
                     <i class="fas fa-store w-5 text-center text-[13px]"></i> Paramètres
                 </a>
             {% endif %}
@@ -105,8 +109,8 @@
 
         <div class="border-t border-white/[.06] px-7 py-4">
             {% if app.user %}
-                <p class="text-[12px] text-gray-400">{{ app.user.username }} <span class="text-gray-600">({{ app.user.role }})</span></p>
-                <a href="{{ path('app_logout') }}" class="text-[11px] text-red-400 hover:text-red-300">Déconnexion</a>
+                <p class="text-[12px] text-trait">{{ app.user.username }} <span class="text-trait">({{ app.user.role }})</span></p>
+                <a href="{{ path('app_logout') }}" class="text-[11px] text-sang-clair hover:text-white">Déconnexion</a>
             {% endif %}
         </div>
     </aside>
@@ -114,14 +118,14 @@
     <div id="sidebarOverlay" class="fixed inset-0 bg-black/50 z-40 hidden lg:hidden" onclick="toggleSidebar()"></div>
 
     <div class="flex-1 flex flex-col lg:ml-[280px] h-full overflow-hidden">
-        <header class="flex-shrink-0 z-40 bg-white border-b border-gray-200/80 px-4 lg:px-8 min-h-[72px] h-[72px] flex items-center justify-between shadow-sm overflow-hidden">
+        <header class="flex-shrink-0 z-40 bg-white border-b border-trait/80 px-4 lg:px-8 min-h-[72px] h-[72px] flex items-center justify-between shadow-sm overflow-hidden">
             <div class="flex items-center gap-4">
-                <button onclick="toggleSidebar()" class="lg:hidden w-9 h-9 flex items-center justify-center rounded-lg border border-gray-200 text-gray-600 hover:bg-gray-50">
+                <button onclick="toggleSidebar()" class="lg:hidden w-9 h-9 flex items-center justify-center rounded-lg border border-trait text-ardoise-doux hover:bg-voile">
                     <i class="fas fa-bars text-sm"></i>
                 </button>
                 <div>
-                    <h1 class="text-lg font-semibold text-[#1c2434] leading-tight">{% block page_title %}{% endblock %}</h1>
-                    <p class="text-xs text-gray-400 leading-tight h-4">{% block page_subtitle %}{% endblock %}&nbsp;</p>
+                    <h1 class="text-lg font-semibold text-ardoise leading-tight">{% block page_title %}{% endblock %}</h1>
+                    <p class="text-xs text-ardoise-faible leading-tight h-4">{% block page_subtitle %}{% endblock %}&nbsp;</p>
                 </div>
             </div>
             <div class="flex items-center gap-3">
@@ -133,10 +137,10 @@
             {% for type, messages in app.flashes %}
                 {% for message in messages %}
                     <div class="mb-4 flex items-center gap-3 rounded-xl px-5 py-3.5 text-sm border
-                    {{ type == 'success' ? 'bg-green-50 border-green-200 text-green-700' : '' }}
-                    {{ type == 'danger'  ? 'bg-red-50 border-red-200 text-red-700'       : '' }}
-                    {{ type == 'warning' ? 'bg-amber-50 border-amber-200 text-amber-700' : '' }}
-                    {{ type == 'info'    ? 'bg-blue-50 border-blue-200 text-blue-700'    : '' }}
+                    {{ type == 'success' ? 'bg-pousse-voile border-pousse/30 text-pousse' : '' }}
+                    {{ type == 'danger'  ? 'bg-sang-voile border-sang/30 text-sang'       : '' }}
+                    {{ type == 'warning' ? 'bg-laiton-voile border-laiton/40 text-laiton-patine' : '' }}
+                    {{ type == 'info'    ? 'bg-voile border-laiton/40 text-ardoise-fort'    : '' }}
                     flash-msg" onclick="this.remove()">
                         <i class="fas fa-{{ type == 'success' ? 'check-circle' : (type == 'danger' ? 'exclamation-circle' : (type == 'info' ? 'info-circle' : 'exclamation-triangle')) }}"></i>
                         {{ message }}

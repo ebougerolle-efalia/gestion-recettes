@@ -5,54 +5,54 @@
 
 {% block page_actions %}
     <button onclick="openAddModal()"
-            class="inline-flex items-center gap-2 rounded-xl bg-blue-500 hover:bg-blue-600 px-4 py-2.5 text-sm font-semibold text-white transition-colors">
+            class="inline-flex items-center gap-2 rounded-xl bg-ardoise hover:bg-ardoise-clair px-4 py-2.5 text-sm font-semibold text-white transition-colors">
         <i class="fas fa-plus text-[11px]"></i> Ajouter
     </button>
 {% endblock %}
 
 {% block body %}
-    <div class="rounded-2xl border border-gray-200 bg-white">
-        <div class="px-6 py-4 border-b border-gray-100 flex items-center justify-between">
+    <div class="rounded-2xl border border-trait bg-white">
+        <div class="px-6 py-4 border-b border-trait-fin flex items-center justify-between">
             <div class="flex items-center gap-2">
-                <div class="w-2 h-2 rounded-full bg-blue-500"></div>
-                <h3 class="font-semibold text-[15px] text-[#1c2434]">Liste des catégories</h3>
+                <div class="w-2 h-2 rounded-full bg-ardoise"></div>
+                <h3 class="font-semibold text-[15px] text-ardoise">Liste des catégories</h3>
             </div>
-            <p class="text-xs text-gray-400">Cliquez sur <i class="fas fa-pen text-[10px]"></i> pour modifier le nom ou l'ordre</p>
+            <p class="text-xs text-ardoise-faible">Cliquez sur <i class="fas fa-pen text-[10px]"></i> pour modifier le nom ou l'ordre</p>
         </div>
 
         <table class="w-full text-sm">
             <thead>
-            <tr class="border-b border-gray-100 bg-gray-50/50">
-                <th class="py-3 px-5 text-left text-xs font-semibold uppercase tracking-wider text-gray-400">Nom</th>
-                <th class="py-3 px-4 text-center text-xs font-semibold uppercase tracking-wider text-gray-400 w-24">Ordre</th>
-                <th class="py-3 px-4 text-center text-xs font-semibold uppercase tracking-wider text-gray-400 w-28">Ingrédients</th>
-                <th class="py-3 px-5 text-center text-xs font-semibold uppercase tracking-wider text-gray-400 w-24">Actions</th>
+            <tr class="border-b border-trait-fin bg-voile/50">
+                <th class="py-3 px-5 text-left text-xs font-semibold uppercase tracking-wider text-ardoise-faible">Nom</th>
+                <th class="py-3 px-4 text-center text-xs font-semibold uppercase tracking-wider text-ardoise-faible w-24">Ordre</th>
+                <th class="py-3 px-4 text-center text-xs font-semibold uppercase tracking-wider text-ardoise-faible w-28">Ingrédients</th>
+                <th class="py-3 px-5 text-center text-xs font-semibold uppercase tracking-wider text-ardoise-faible w-24">Actions</th>
             </tr>
             </thead>
-            <tbody class="divide-y divide-gray-50">
+            <tbody class="divide-y divide-trait-fin">
             {% for c in categories %}
-                <tr class="hover:bg-gray-50/50 transition-colors">
-                    <td class="py-3.5 px-5 font-medium text-gray-800">{{ c.name }}</td>
+                <tr class="hover:bg-voile/50 transition-colors">
+                    <td class="py-3.5 px-5 font-medium text-ardoise">{{ c.name }}</td>
                     <td class="py-3.5 px-4 text-center">
-                <span class="inline-flex items-center justify-center w-8 h-8 rounded-lg bg-gray-100 text-gray-600 text-sm font-semibold">
+                <span class="inline-flex items-center justify-center w-8 h-8 rounded-lg bg-voile text-ardoise-doux text-sm font-semibold">
                     {{ c.sortOrder }}
                 </span>
                     </td>
                     <td class="py-3.5 px-4 text-center">
                         {% set nb = c.ingredients|length %}
                         {% if nb > 0 %}
-                            <span class="inline-flex items-center justify-center rounded-full bg-blue-50 text-blue-700 text-xs font-semibold px-3 py-1">
+                            <span class="inline-flex items-center justify-center rounded-full bg-voile text-ardoise-fort text-xs font-semibold px-3 py-1">
                     {{ nb }} ingrédient{{ nb > 1 ? 's' : '' }}
                 </span>
                         {% else %}
-                            <span class="text-gray-300 text-xs">vide</span>
+                            <span class="text-ardoise-faible text-xs">vide</span>
                         {% endif %}
                     </td>
                     <td class="py-3.5 px-5">
                         <div class="flex items-center justify-center gap-1">
                             {# Bouton modifier #}
                             <button onclick="openEditModal({{ c.id }}, '{{ c.name|e('js') }}', {{ c.sortOrder }})"
-                                    class="w-8 h-8 inline-flex items-center justify-center rounded-lg text-gray-400 hover:text-blue-500 hover:bg-blue-50 transition-colors"
+                                    class="w-8 h-8 inline-flex items-center justify-center rounded-lg text-ardoise-faible hover:text-laiton-patine hover:bg-voile transition-colors"
                                     title="Modifier">
                                 <i class="fas fa-pen text-xs"></i>
                             </button>
@@ -60,13 +60,13 @@
                             {% if c.ingredients|length == 0 %}
                                 <form method="post" action="{{ path('app_admin_category_delete', {id: c.id}) }}"
                                       onsubmit="return confirm('Supprimer la catégorie « {{ c.name }} » ?')">
-                                    <button class="w-8 h-8 inline-flex items-center justify-center rounded-lg text-gray-400 hover:text-red-500 hover:bg-red-50 transition-colors"
+                                    <button class="w-8 h-8 inline-flex items-center justify-center rounded-lg text-ardoise-faible hover:text-sang hover:bg-sang-voile transition-colors"
                                             title="Supprimer">
                                         <i class="fas fa-trash text-xs"></i>
                                     </button>
                                 </form>
                             {% else %}
-                                <span class="w-8 h-8 inline-flex items-center justify-center rounded-lg text-gray-200 cursor-not-allowed"
+                                <span class="w-8 h-8 inline-flex items-center justify-center rounded-lg text-ardoise-faible cursor-not-allowed"
                                       title="{{ c.ingredients|length }} ingrédient(s) — suppression impossible">
                         <i class="fas fa-trash text-xs"></i>
                     </span>
@@ -76,8 +76,8 @@
                 </tr>
             {% else %}
                 <tr>
-                    <td colspan="4" class="py-12 text-center text-gray-400">
-                        <i class="fas fa-tags text-2xl mb-2 block text-gray-200"></i>
+                    <td colspan="4" class="py-12 text-center text-ardoise-faible">
+                        <i class="fas fa-tags text-2xl mb-2 block text-ardoise-faible"></i>
                         Aucune catégorie — cliquez sur "Ajouter" pour commencer
                     </td>
                 </tr>
@@ -91,36 +91,36 @@
     >
         <form id="editForm" method="post" action=""
               class="bg-white rounded-2xl shadow-xl w-full max-w-sm mx-4">
-            <div class="px-6 py-4 border-b border-gray-100 flex items-center justify-between">
-                <h3 class="font-semibold text-[#1c2434]">Modifier la catégorie</h3>
-                <button type="button" onclick="closeEditModal()" class="text-gray-400 hover:text-gray-600">
+            <div class="px-6 py-4 border-b border-trait-fin flex items-center justify-between">
+                <h3 class="font-semibold text-ardoise">Modifier la catégorie</h3>
+                <button type="button" onclick="closeEditModal()" class="text-ardoise-faible hover:text-ardoise-doux">
                     <i class="fas fa-times"></i>
                 </button>
             </div>
             <div class="p-6 space-y-4">
                 <div>
-                    <label class="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5">
-                        Nom <span class="text-red-400">*</span>
+                    <label class="block text-xs font-semibold text-ardoise-doux uppercase tracking-wider mb-1.5">
+                        Nom <span class="text-sang">*</span>
                     </label>
                     <input type="text" id="editName" name="name" required
-                           class="w-full rounded-xl border border-gray-200 px-4 py-2.5 text-sm outline-none focus:border-blue-400 focus:ring-1 focus:ring-blue-100">
+                           class="w-full rounded-xl border border-trait px-4 py-2.5 text-sm outline-none focus:border-laiton-patine focus:ring-1 focus:ring-laiton/30">
                 </div>
                 <div>
-                    <label class="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5">
+                    <label class="block text-xs font-semibold text-ardoise-doux uppercase tracking-wider mb-1.5">
                         Ordre d'affichage
                     </label>
                     <input type="number" id="editOrder" name="sort_order" min="0"
-                           class="w-full rounded-xl border border-gray-200 px-4 py-2.5 text-sm outline-none focus:border-blue-400 focus:ring-1 focus:ring-blue-100">
-                    <p class="text-xs text-gray-400 mt-1">Les catégories sont triées par ordre croissant</p>
+                           class="w-full rounded-xl border border-trait px-4 py-2.5 text-sm outline-none focus:border-laiton-patine focus:ring-1 focus:ring-laiton/30">
+                    <p class="text-xs text-ardoise-faible mt-1">Les catégories sont triées par ordre croissant</p>
                 </div>
             </div>
-            <div class="px-6 py-4 border-t border-gray-100 flex justify-end gap-3">
+            <div class="px-6 py-4 border-t border-trait-fin flex justify-end gap-3">
                 <button type="button" onclick="closeEditModal()"
-                        class="rounded-xl border border-gray-200 px-4 py-2 text-sm text-gray-600 hover:bg-gray-50 transition-colors">
+                        class="rounded-xl border border-trait px-4 py-2 text-sm text-ardoise-doux hover:bg-voile transition-colors">
                     Annuler
                 </button>
                 <button type="submit"
-                        class="rounded-xl bg-blue-500 hover:bg-blue-600 px-5 py-2 text-sm font-semibold text-white transition-colors">
+                        class="rounded-xl bg-ardoise hover:bg-ardoise-clair px-5 py-2 text-sm font-semibold text-white transition-colors">
                     <i class="fas fa-save text-[10px] mr-1.5"></i> Enregistrer
                 </button>
             </div>
@@ -132,35 +132,35 @@
     >
         <form method="post" action="{{ path('app_admin_category_create') }}"
               class="bg-white rounded-2xl shadow-xl w-full max-w-sm mx-4">
-            <div class="px-6 py-4 border-b border-gray-100 flex items-center justify-between">
-                <h3 class="font-semibold text-[#1c2434]">Nouvelle catégorie</h3>
-                <button type="button" onclick="closeAddModal()" class="text-gray-400 hover:text-gray-600">
+            <div class="px-6 py-4 border-b border-trait-fin flex items-center justify-between">
+                <h3 class="font-semibold text-ardoise">Nouvelle catégorie</h3>
+                <button type="button" onclick="closeAddModal()" class="text-ardoise-faible hover:text-ardoise-doux">
                     <i class="fas fa-times"></i>
                 </button>
             </div>
             <div class="p-6 space-y-4">
                 <div>
-                    <label class="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5">
-                        Nom <span class="text-red-400">*</span>
+                    <label class="block text-xs font-semibold text-ardoise-doux uppercase tracking-wider mb-1.5">
+                        Nom <span class="text-sang">*</span>
                     </label>
                     <input type="text" name="name" required autofocus
-                           class="w-full rounded-xl border border-gray-200 px-4 py-2.5 text-sm outline-none focus:border-blue-400 focus:ring-1 focus:ring-blue-100">
+                           class="w-full rounded-xl border border-trait px-4 py-2.5 text-sm outline-none focus:border-laiton-patine focus:ring-1 focus:ring-laiton/30">
                 </div>
                 <div>
-                    <label class="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5">
+                    <label class="block text-xs font-semibold text-ardoise-doux uppercase tracking-wider mb-1.5">
                         Ordre d'affichage
                     </label>
                     <input type="number" name="sort_order" value="{{ categories|length * 10 }}" min="0"
-                           class="w-full rounded-xl border border-gray-200 px-4 py-2.5 text-sm outline-none focus:border-blue-400 focus:ring-1 focus:ring-blue-100">
+                           class="w-full rounded-xl border border-trait px-4 py-2.5 text-sm outline-none focus:border-laiton-patine focus:ring-1 focus:ring-laiton/30">
                 </div>
             </div>
-            <div class="px-6 py-4 border-t border-gray-100 flex justify-end gap-3">
+            <div class="px-6 py-4 border-t border-trait-fin flex justify-end gap-3">
                 <button type="button" onclick="closeAddModal()"
-                        class="rounded-xl border border-gray-200 px-4 py-2 text-sm text-gray-600 hover:bg-gray-50 transition-colors">
+                        class="rounded-xl border border-trait px-4 py-2 text-sm text-ardoise-doux hover:bg-voile transition-colors">
                     Annuler
                 </button>
                 <button type="submit"
-                        class="rounded-xl bg-blue-500 hover:bg-blue-600 px-5 py-2 text-sm font-semibold text-white transition-colors">
+                        class="rounded-xl bg-ardoise hover:bg-ardoise-clair px-5 py-2 text-sm font-semibold text-white transition-colors">
                     <i class="fas fa-plus text-[10px] mr-1.5"></i> Créer
                 </button>
             </div>

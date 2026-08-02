@@ -55,6 +55,50 @@ class FeuilleDeStyleCompileeTest extends TestCase
         ));
     }
 
+    /**
+     * Aucune classe ne doit être assemblée à l'exécution.
+     *
+     * Tailwind compile en LISANT les fichiers : il ne reconnaît que des chaînes
+     * complètes. Un « text-{{ actif ? 'white' : 'gray-400' }} » ne produit donc
+     * aucun sélecteur, et l'élément s'affiche sans mise en forme.
+     *
+     * Le CDN, lui, fabriquait ces classes à la volée en lisant le DOM : le
+     * piège n'existait pas avant la compilation. Deux occurrences dormaient
+     * dans les écrans de facture ; elles ne fonctionnaient que par accident,
+     * une autre page employant par hasard la même classe.
+     *
+     * Écrire le nom entier dans chaque branche :
+     *     {{ actif ? 'text-white' : 'text-ardoise-faible' }}
+     */
+    public function testAucuneClasseNEstAssembleeALExecution(): void
+    {
+        $fautives = [];
+
+        foreach ($this->fichiersTwig() as $fichier) {
+            // Les commentaires Twig sont retirés : ils citent volontairement le
+            // motif interdit pour l'expliquer, et le test se signalerait
+            // lui-même — ce qu'il a fait à la première exécution.
+            $contenu = preg_replace('/\{#.*?#\}/s', '', (string) file_get_contents($fichier->getPathname())) ?? '';
+
+            // Un préfixe d'utilitaire collé à une expression Twig.
+            if (preg_match_all(
+                '/\b(?:text|bg|border|ring|divide|from|to|via|fill|stroke|shadow)-\{\{[^}]*\}\}/',
+                $contenu,
+                $trouvees
+            )) {
+                foreach ($trouvees[0] as $extrait) {
+                    $fautives[] = sprintf('%s : %s', $fichier->getFilename(), $extrait);
+                }
+            }
+        }
+
+        self::assertSame([], $fautives, sprintf(
+            "Ces classes sont assemblées à l'exécution et n'existeront pas dans le CSS compilé :\n  %s\n\n"
+            . "Écrire le nom entier dans chaque branche du ternaire.",
+            implode("\n  ", $fautives)
+        ));
+    }
+
     /** La feuille ne doit pas être vide ni tronquée par une compilation interrompue. */
     public function testLaFeuilleCompileeNEstPasTronquee(): void
     {
@@ -78,15 +122,7 @@ class FeuilleDeStyleCompileeTest extends TestCase
     {
         $trouvees = [];
 
-        $fichiers = new \RecursiveIteratorIterator(
-            new \RecursiveDirectoryIterator(__DIR__ . '/../../templates')
-        );
-
-        foreach ($fichiers as $fichier) {
-            if (!$fichier->isFile() || !str_ends_with($fichier->getFilename(), '.twig')) {
-                continue;
-            }
-
+        foreach ($this->fichiersTwig() as $fichier) {
             $contenu = (string) file_get_contents($fichier->getPathname());
 
             preg_match_all('/class="([^"]*)"/', $contenu, $attributs);
@@ -104,6 +140,24 @@ class FeuilleDeStyleCompileeTest extends TestCase
         }
 
         return array_keys($trouvees);
+    }
+
+    /** @return list<\SplFileInfo> */
+    private function fichiersTwig(): array
+    {
+        $liste = [];
+
+        $parcours = new \RecursiveIteratorIterator(
+            new \RecursiveDirectoryIterator(__DIR__ . '/../../templates')
+        );
+
+        foreach ($parcours as $fichier) {
+            if ($fichier->isFile() && str_ends_with($fichier->getFilename(), '.twig')) {
+                $liste[] = $fichier;
+            }
+        }
+
+        return $liste;
     }
 
     /**
